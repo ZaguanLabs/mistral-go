@@ -41,6 +41,15 @@ func TestChatWithMock(t *testing.T) {
 			t.Errorf("Expected path /v1/chat/completions, got %s", r.URL.Path)
 		}
 
+		// Verify User-Agent header is present
+		userAgent := r.Header.Get("User-Agent")
+		if userAgent == "" {
+			t.Error("User-Agent header should be set")
+		}
+		if !strings.Contains(userAgent, "mistral-go") {
+			t.Errorf("User-Agent should contain 'mistral-go', got '%s'", userAgent)
+		}
+
 		body := ReadRequestBody(r)
 		if !strings.Contains(body, "Hello") {
 			t.Error("Request body should contain 'Hello'")
@@ -431,5 +440,30 @@ func TestRetryLogicWithMock(t *testing.T) {
 
 	if attemptCount < 2 {
 		t.Errorf("Expected at least 2 attempts, got %d", attemptCount)
+	}
+}
+
+func TestUserAgentHeaderWithMock(t *testing.T) {
+	mock := NewMockHTTPServer(t, func(w http.ResponseWriter, r *http.Request) {
+		// Verify User-Agent header is present and correct
+		userAgent := r.Header.Get("User-Agent")
+		if userAgent == "" {
+			t.Error("User-Agent header must be set to avoid Cloudflare 400 errors")
+		}
+
+		expectedUserAgent := "mistral-go/2.0.1"
+		if userAgent != expectedUserAgent {
+			t.Errorf("Expected User-Agent '%s', got '%s'", expectedUserAgent, userAgent)
+		}
+
+		MockListModelsResponse().Write(w)
+	})
+	defer mock.Close()
+
+	client := mock.GetClient()
+	_, err := client.ListModels()
+
+	if err != nil {
+		t.Fatalf("Request failed: %v", err)
 	}
 }

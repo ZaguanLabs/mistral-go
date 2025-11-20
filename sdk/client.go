@@ -87,6 +87,7 @@ func (c *MistralClient) request(method string, jsonData map[string]interface{}, 
 
 	req.Header.Set("Authorization", "Bearer "+c.apiKey)
 	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("User-Agent", UserAgent)
 
 	client := &http.Client{
 		Timeout: c.timeout,

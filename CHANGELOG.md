@@ -5,6 +5,15 @@ All notable changes to the Mistral Go SDK will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.1] - 2025-11-20
+
+### Fixed
+- **Critical**: Added `User-Agent` header to all HTTP requests to prevent Cloudflare 400 errors
+  - Cloudflare-protected endpoints require a User-Agent header or they reject requests with 400 Bad Request
+  - All requests now include `User-Agent: mistral-go/2.0.1` header
+  - Added comprehensive test coverage to prevent regression
+  - This fix resolves issues when using the SDK directly or through proxies/gateways
+
 ## [2.0.0] - 2025-11-20
 
 ### 🎉 Major Release - 100% Feature Parity Achieved!

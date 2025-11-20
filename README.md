@@ -1,6 +1,6 @@
 # Mistral Go SDK
 
-**Version 2.0.0** - 100% Feature Parity with Python SDK 🎉
+**Version 2.0.1** - Critical Bug Fix Release 🔧
 
 [![Zero Dependencies](https://img.shields.io/badge/dependencies-0-brightgreen.svg)](https://github.com/ZaguanLabs/mistral-go)
 [![Go Version](https://img.shields.io/badge/go-%3E%3D1.20-blue.svg)](https://golang.org/)
@@ -27,7 +27,18 @@ A Go SDK for the Mistral AI API., designed to provide developers with powerful t
 - **OCR API**: Document processing and text extraction from images
 - **Audio/Transcriptions API**: Speech-to-text transcription with timestamp support
 
-## Recent Major Improvements
+## Version 2.0.1 - Critical Bug Fix
+
+🔧 **Fixed Cloudflare 400 Errors**: Added `User-Agent` header to all HTTP requests. This resolves issues where Cloudflare-protected endpoints (including the official Mistral API) would reject requests with 400 Bad Request errors.
+
+This fix is critical for production deployments and resolves issues when using the SDK:
+- Directly with Mistral API
+- Through proxies or gateways (e.g., Zaguán)
+- Behind any Cloudflare or similar CDN/security service
+
+See [docs/CLOUDFLARE_400_FIX.md](docs/CLOUDFLARE_400_FIX.md) for technical details.
+
+## Recent Major Improvements (v2.0.0)
 
 This SDK has been significantly enhanced based on deep analysis of the official Mistral Python SDK:
 
