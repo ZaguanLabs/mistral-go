@@ -7,6 +7,8 @@
 *.dll
 *.so
 *.dylib
+/main
+/sdk.test
 
 # Test binary, built with `go test -c`
 *.test
@@ -22,3 +24,25 @@ go.work
 
 .vscode/
 .idea/
+docs/client-python-1.9.11
+*.tar.gz
+
+# Example binaries
+examples/chat/chat
+examples/tools/tools
+examples/embeddings/embeddings
+examples/fim/fim
+examples/agents/agents
+examples/moderation/moderation
+examples/models/models
+examples/main*.exe
+
+# Compiled binaries
+examples/*/chat
+examples/*/tools
+examples/*/embeddings
+examples/*/fim
+examples/*/agents
+examples/*/moderation
+examples/*/models
+examples/main

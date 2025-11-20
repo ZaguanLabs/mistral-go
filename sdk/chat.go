@@ -1,4 +1,4 @@
-package mistral
+package sdk
 
 import (
 	"bufio"
@@ -11,22 +11,42 @@ import (
 
 // ChatRequestParams represents the parameters for the Chat/ChatStream method of MistralClient.
 type ChatRequestParams struct {
-	Temperature    float64        `json:"temperature"` // The temperature to use for sampling. Higher values like 0.8 will make the output more random, while lower values like 0.2 will make it more focused and deterministic. We generally recommend altering this or TopP but not both.
-	TopP           float64        `json:"top_p"`       // An alternative to sampling with temperature, called nucleus sampling, where the model considers the results of the tokens with top_p probability mass. So 0.1 means only the tokens comprising the top 10% probability mass are considered. We generally recommend altering this or Temperature but not both.
-	RandomSeed     int            `json:"random_seed"`
-	MaxTokens      int            `json:"max_tokens"`
-	SafePrompt     bool           `json:"safe_prompt"` // Adds a Mistral defined safety message to the system prompt to enforce guardrailing
-	Tools          []Tool         `json:"tools"`
-	ToolChoice     string         `json:"tool_choice"`
-	ResponseFormat ResponseFormat `json:"response_format"`
+	// Sampling parameters
+	Temperature *float64 `json:"temperature,omitempty"` // The temperature to use for sampling, between 0.0 and 0.7. Higher values make output more random.
+	TopP        *float64 `json:"top_p,omitempty"`       // Nucleus sampling parameter. We recommend altering this or Temperature but not both.
+	RandomSeed  *int     `json:"random_seed,omitempty"` // Seed for deterministic results
+
+	// Token limits
+	MaxTokens *int `json:"max_tokens,omitempty"` // Maximum tokens to generate
+	MinTokens *int `json:"min_tokens,omitempty"` // Minimum tokens to generate (for FIM)
+
+	// Stop sequences
+	Stop []string `json:"stop,omitempty"` // Stop generation if these tokens are detected
+
+	// Response format
+	ResponseFormat ResponseFormat `json:"response_format,omitempty"` // Format for the response (text or json_object)
+
+	// Tools and function calling
+	Tools             []Tool `json:"tools,omitempty"`               // Available tools for the model
+	ToolChoice        string `json:"tool_choice,omitempty"`         // How to select tools (auto, any, none, or specific tool)
+	ParallelToolCalls *bool  `json:"parallel_tool_calls,omitempty"` // Whether to enable parallel tool calls
+
+	// Penalties for repetition
+	PresencePenalty  *float64 `json:"presence_penalty,omitempty"`  // Penalize repetition of words/phrases
+	FrequencyPenalty *float64 `json:"frequency_penalty,omitempty"` // Penalize based on frequency
+
+	// Multiple completions
+	N *int `json:"n,omitempty"` // Number of completions to return
+
+	// Advanced features
+	Prediction *Prediction        `json:"prediction,omitempty"`  // Speculative decoding prediction
+	PromptMode *MistralPromptMode `json:"prompt_mode,omitempty"` // Prompt mode (e.g., "reasoning")
+	SafePrompt *bool              `json:"safe_prompt,omitempty"` // Inject safety prompt
 }
 
-var DefaultChatRequestParams = ChatRequestParams{
-	Temperature: 1,
-	TopP:        1,
-	RandomSeed:  42069,
-	MaxTokens:   4000,
-	SafePrompt:  false,
+// NewChatRequestParams creates a new ChatRequestParams with sensible defaults
+func NewChatRequestParams() *ChatRequestParams {
+	return &ChatRequestParams{}
 }
 
 // ChatCompletionResponseChoice represents a choice in the chat completion response.
@@ -73,19 +93,54 @@ type UsageInfo struct {
 
 func (c *MistralClient) Chat(model string, messages []ChatMessage, params *ChatRequestParams) (*ChatCompletionResponse, error) {
 	if params == nil {
-		params = &DefaultChatRequestParams
+		params = NewChatRequestParams()
 	}
 
 	requestData := map[string]interface{}{
-		"model":       model,
-		"messages":    messages,
-		"temperature": params.Temperature,
-		"max_tokens":  params.MaxTokens,
-		"top_p":       params.TopP,
-		"random_seed": params.RandomSeed,
-		"safe_prompt": params.SafePrompt,
+		"model":    model,
+		"messages": messages,
 	}
 
+	// Add optional parameters only if set
+	if params.Temperature != nil {
+		requestData["temperature"] = *params.Temperature
+	}
+	if params.TopP != nil {
+		requestData["top_p"] = *params.TopP
+	}
+	if params.RandomSeed != nil {
+		requestData["random_seed"] = *params.RandomSeed
+	}
+	if params.MaxTokens != nil {
+		requestData["max_tokens"] = *params.MaxTokens
+	}
+	if params.MinTokens != nil {
+		requestData["min_tokens"] = *params.MinTokens
+	}
+	if params.Stop != nil {
+		requestData["stop"] = params.Stop
+	}
+	if params.SafePrompt != nil {
+		requestData["safe_prompt"] = *params.SafePrompt
+	}
+	if params.PresencePenalty != nil {
+		requestData["presence_penalty"] = *params.PresencePenalty
+	}
+	if params.FrequencyPenalty != nil {
+		requestData["frequency_penalty"] = *params.FrequencyPenalty
+	}
+	if params.N != nil {
+		requestData["n"] = *params.N
+	}
+	if params.Prediction != nil {
+		requestData["prediction"] = params.Prediction
+	}
+	if params.PromptMode != nil {
+		requestData["prompt_mode"] = *params.PromptMode
+	}
+	if params.ParallelToolCalls != nil {
+		requestData["parallel_tool_calls"] = *params.ParallelToolCalls
+	}
 	if params.Tools != nil {
 		requestData["tools"] = params.Tools
 	}
@@ -118,22 +173,57 @@ func (c *MistralClient) Chat(model string, messages []ChatMessage, params *ChatR
 // ChatStream sends a chat message and returns a channel to receive streaming responses.
 func (c *MistralClient) ChatStream(model string, messages []ChatMessage, params *ChatRequestParams) (<-chan ChatCompletionStreamResponse, error) {
 	if params == nil {
-		params = &DefaultChatRequestParams
+		params = NewChatRequestParams()
 	}
 
 	responseChannel := make(chan ChatCompletionStreamResponse)
 
 	requestData := map[string]interface{}{
-		"model":       model,
-		"messages":    messages,
-		"temperature": params.Temperature,
-		"max_tokens":  params.MaxTokens,
-		"top_p":       params.TopP,
-		"random_seed": params.RandomSeed,
-		"safe_prompt": params.SafePrompt,
-		"stream":      true,
+		"model":    model,
+		"messages": messages,
+		"stream":   true,
 	}
 
+	// Add optional parameters only if set
+	if params.Temperature != nil {
+		requestData["temperature"] = *params.Temperature
+	}
+	if params.TopP != nil {
+		requestData["top_p"] = *params.TopP
+	}
+	if params.RandomSeed != nil {
+		requestData["random_seed"] = *params.RandomSeed
+	}
+	if params.MaxTokens != nil {
+		requestData["max_tokens"] = *params.MaxTokens
+	}
+	if params.MinTokens != nil {
+		requestData["min_tokens"] = *params.MinTokens
+	}
+	if params.Stop != nil {
+		requestData["stop"] = params.Stop
+	}
+	if params.SafePrompt != nil {
+		requestData["safe_prompt"] = *params.SafePrompt
+	}
+	if params.PresencePenalty != nil {
+		requestData["presence_penalty"] = *params.PresencePenalty
+	}
+	if params.FrequencyPenalty != nil {
+		requestData["frequency_penalty"] = *params.FrequencyPenalty
+	}
+	if params.N != nil {
+		requestData["n"] = *params.N
+	}
+	if params.Prediction != nil {
+		requestData["prediction"] = params.Prediction
+	}
+	if params.PromptMode != nil {
+		requestData["prompt_mode"] = *params.PromptMode
+	}
+	if params.ParallelToolCalls != nil {
+		requestData["parallel_tool_calls"] = *params.ParallelToolCalls
+	}
 	if params.Tools != nil {
 		requestData["tools"] = params.Tools
 	}

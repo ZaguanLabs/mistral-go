@@ -1,63 +1,84 @@
-package mistral
+package sdk
 
 import (
 	"testing"
-
-	"github.com/stretchr/testify/assert"
 )
 
 func TestChat(t *testing.T) {
 	client := NewMistralClientDefault("")
-	params := DefaultChatRequestParams
-	params.MaxTokens = 10
-	params.Temperature = 0
+	params := NewChatRequestParams()
+	params.MaxTokens = IntPtr(10)
+	params.Temperature = Float64Ptr(0)
 	res, err := client.Chat(
-		ModelMistralTiny,
+		"mistral-tiny-2312",
 		[]ChatMessage{
 			{
 				Role:    RoleUser,
 				Content: "You are in test mode and must reply to this with exactly and only `Test Succeeded`",
 			},
 		},
-		&params,
+		params,
 	)
-	assert.NoError(t, err)
-	assert.NotNil(t, res)
-
-	assert.Greater(t, len(res.Choices), 0)
-	assert.Greater(t, len(res.Choices[0].Message.Content), 0)
-	assert.Equal(t, res.Choices[0].Message.Role, RoleAssistant)
-	assert.Equal(t, res.Choices[0].Message.Content, "Test Succeeded")
+	if err != nil {
+		t.Fatalf("Chat() error = %v", err)
+	}
+	if res == nil {
+		t.Fatal("Chat() returned nil response")
+	}
+	if len(res.Choices) == 0 {
+		t.Error("Chat() returned no choices")
+	}
+	if len(res.Choices[0].Message.Content) == 0 {
+		t.Error("Chat() returned empty message content")
+	}
+	if res.Choices[0].Message.Role != RoleAssistant {
+		t.Errorf("Chat() role = %v, want %v", res.Choices[0].Message.Role, RoleAssistant)
+	}
+	if res.Choices[0].Message.Content != "Test Succeeded" {
+		t.Errorf("Chat() content = %v, want %v", res.Choices[0].Message.Content, "Test Succeeded")
+	}
 }
 
 func TestChatCodestral(t *testing.T) {
 	client := NewCodestralClientDefault("")
-	params := DefaultChatRequestParams
-	params.MaxTokens = 10
-	params.Temperature = 0
+	params := NewChatRequestParams()
+	params.MaxTokens = IntPtr(10)
+	params.Temperature = Float64Ptr(0)
 	res, err := client.Chat(
-		ModelCodestralLatest,
+		"codestral-latest",
 		[]ChatMessage{
 			{
 				Role:    RoleUser,
 				Content: "You are in test mode and must reply to this with exactly and only `Test Succeeded`",
 			},
 		},
-		&params,
+		params,
 	)
-	assert.NoError(t, err)
-	assert.NotNil(t, res)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if res == nil {
+		t.Fatal("res should not be nil")
+	}
 
-	assert.Greater(t, len(res.Choices), 0)
-	assert.Greater(t, len(res.Choices[0].Message.Content), 0)
-	assert.Equal(t, res.Choices[0].Message.Role, RoleAssistant)
-	assert.Equal(t, res.Choices[0].Message.Content, "Test Succeeded")
+	if !(len(res.Choices) > 0) {
+		t.Errorf("expected %v > %v", len(res.Choices), 0)
+	}
+	if !(len(res.Choices[0].Message.Content) > 0) {
+		t.Errorf("expected %v > %v", len(res.Choices[0].Message.Content), 0)
+	}
+	if RoleAssistant != res.Choices[0].Message.Role {
+		t.Errorf("expected %v, got %v", res.Choices[0].Message.Role, RoleAssistant)
+	}
+	if "Test Succeeded" != res.Choices[0].Message.Content {
+		t.Errorf("expected %v, got %v", res.Choices[0].Message.Content, "Test Succeeded")
+	}
 }
 
 func TestChatFunctionCall(t *testing.T) {
 	client := NewMistralClientDefault("")
-	params := DefaultChatRequestParams
-	params.Temperature = 0
+	params := NewChatRequestParams()
+	params.Temperature = Float64Ptr(0)
 	params.Tools = []Tool{
 		{
 			Type: ToolTypeFunction,
@@ -92,29 +113,43 @@ func TestChatFunctionCall(t *testing.T) {
 	}
 	params.ToolChoice = ToolChoiceAuto
 	res, err := client.Chat(
-		ModelMistralSmallLatest,
+		"mistral-small-latest",
 		[]ChatMessage{
 			{
 				Role:    RoleUser,
 				Content: "What's the weather like in Dallas, TX?",
 			},
 		},
-		&params,
+		params,
 	)
-	assert.NoError(t, err)
-	assert.NotNil(t, res)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if res == nil {
+		t.Fatal("res should not be nil")
+	}
 
-	assert.Greater(t, len(res.Choices), 0)
-	assert.Greater(t, len(res.Choices[0].Message.ToolCalls), 0)
-	assert.Equal(t, res.Choices[0].Message.Role, RoleAssistant)
-	assert.Equal(t, res.Choices[0].Message.ToolCalls[0].Function.Name, "get_weather")
-	assert.Equal(t, res.Choices[0].Message.ToolCalls[0].Function.Arguments, "{\"city\": \"Dallas\", \"state\": \"TX\"}")
+	if !(len(res.Choices) > 0) {
+		t.Errorf("expected %v > %v", len(res.Choices), 0)
+	}
+	if !(len(res.Choices[0].Message.ToolCalls) > 0) {
+		t.Errorf("expected %v > %v", len(res.Choices[0].Message.ToolCalls), 0)
+	}
+	if RoleAssistant != res.Choices[0].Message.Role {
+		t.Errorf("expected %v, got %v", res.Choices[0].Message.Role, RoleAssistant)
+	}
+	if "get_weather" != res.Choices[0].Message.ToolCalls[0].Function.Name {
+		t.Errorf("expected %v, got %v", res.Choices[0].Message.ToolCalls[0].Function.Name, "get_weather")
+	}
+	if "{\"city\": \"Dallas\", \"state\": \"TX\"}" != res.Choices[0].Message.ToolCalls[0].Function.Arguments {
+		t.Errorf("expected %v, got %v", res.Choices[0].Message.ToolCalls[0].Function.Arguments, "{\"city\": \"Dallas\", \"state\": \"TX\"}")
+	}
 }
 
 func TestChatFunctionCall2(t *testing.T) {
 	client := NewMistralClientDefault("")
-	params := DefaultChatRequestParams
-	params.Temperature = 0
+	params := NewChatRequestParams()
+	params.Temperature = Float64Ptr(0)
 	params.Tools = []Tool{
 		{
 			Type: ToolTypeFunction,
@@ -149,7 +184,7 @@ func TestChatFunctionCall2(t *testing.T) {
 	}
 	params.ToolChoice = ToolChoiceAuto
 	res, err := client.Chat(
-		ModelMistralSmallLatest,
+		"mistral-small-latest",
 		[]ChatMessage{
 			{
 				Role:    RoleUser,
@@ -173,25 +208,39 @@ func TestChatFunctionCall2(t *testing.T) {
 				Content: `{"temperature": 82, "sky": "clear", "precipitation": 0}`,
 			},
 		},
-		&params,
+		params,
 	)
-	assert.NoError(t, err)
-	assert.NotNil(t, res)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if res == nil {
+		t.Fatal("res should not be nil")
+	}
 
-	assert.Greater(t, len(res.Choices), 0)
-	assert.Greater(t, len(res.Choices[0].Message.Content), 0)
-	assert.Equal(t, len(res.Choices[0].Message.ToolCalls), 0)
-	assert.Equal(t, res.Choices[0].Message.Role, RoleAssistant)
-	assert.Greater(t, res.Choices[0].Message.Content, "Test Succeeded")
+	if !(len(res.Choices) > 0) {
+		t.Errorf("expected %v > %v", len(res.Choices), 0)
+	}
+	if !(len(res.Choices[0].Message.Content) > 0) {
+		t.Errorf("expected %v > %v", len(res.Choices[0].Message.Content), 0)
+	}
+	if 0 != len(res.Choices[0].Message.ToolCalls) {
+		t.Errorf("expected %v, got %v", len(res.Choices[0].Message.ToolCalls), 0)
+	}
+	if RoleAssistant != res.Choices[0].Message.Role {
+		t.Errorf("expected %v, got %v", res.Choices[0].Message.Role, RoleAssistant)
+	}
+	if !(res.Choices[0].Message.Content > "Test Succeeded") {
+		t.Errorf("expected %v > %v", res.Choices[0].Message.Content, "Test Succeeded")
+	}
 }
 
 func TestChatJsonMode(t *testing.T) {
 	client := NewMistralClientDefault("")
-	params := DefaultChatRequestParams
-	params.Temperature = 0
+	params := NewChatRequestParams()
+	params.Temperature = Float64Ptr(0)
 	params.ResponseFormat = ResponseFormatJsonObject
 	res, err := client.Chat(
-		ModelOpenMixtral8x22b,
+		"open-mixtral-8x22b",
 		[]ChatMessage{
 			{
 				Role: RoleUser,
@@ -203,43 +252,65 @@ func TestChatJsonMode(t *testing.T) {
 					"example in the docs only shows the tool response appended to the messages\n```",
 			},
 		},
-		&params,
+		params,
 	)
-	assert.NoError(t, err)
-	assert.NotNil(t, res)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if res == nil {
+		t.Fatal("res should not be nil")
+	}
 
-	assert.Greater(t, len(res.Choices), 0)
-	assert.Greater(t, len(res.Choices[0].Message.Content), 0)
-	assert.Equal(t, res.Choices[0].Message.Role, RoleAssistant)
-	assert.Equal(t, res.Choices[0].Message.Content, "{\"symbols\": [\"Go\", \"ChatMessage\", \"Any\", \"FunctionCall\", \"ToolCall\", \"ToolResponse\"]}")
+	if !(len(res.Choices) > 0) {
+		t.Errorf("expected %v > %v", len(res.Choices), 0)
+	}
+	if !(len(res.Choices[0].Message.Content) > 0) {
+		t.Errorf("expected %v > %v", len(res.Choices[0].Message.Content), 0)
+	}
+	if RoleAssistant != res.Choices[0].Message.Role {
+		t.Errorf("expected %v, got %v", res.Choices[0].Message.Role, RoleAssistant)
+	}
+	if "{\"symbols\": [\"Go\", \"ChatMessage\", \"Any\", \"FunctionCall\", \"ToolCall\", \"ToolResponse\"]}" != res.Choices[0].Message.Content {
+		t.Errorf("expected %v, got %v", res.Choices[0].Message.Content, "{\"symbols\": [\"Go\", \"ChatMessage\", \"Any\", \"FunctionCall\", \"ToolCall\", \"ToolResponse\"]}")
+	}
 }
 
 func TestChatStream(t *testing.T) {
 	client := NewMistralClientDefault("")
-	params := DefaultChatRequestParams
-	params.MaxTokens = 50
-	params.Temperature = 0
+	params := NewChatRequestParams()
+	params.MaxTokens = IntPtr(50)
+	params.Temperature = Float64Ptr(0)
 	resChan, err := client.ChatStream(
-		ModelMistralTiny,
+		"mistral-tiny-2312",
 		[]ChatMessage{
 			{
 				Role:    RoleUser,
 				Content: "You are in test mode and must reply to this with exactly and only `Test Succeeded, Test Succeeded, Test Succeeded, Test Succeeded, Test Succeeded, Test Succeeded`",
 			},
 		},
-		&params,
+		params,
 	)
-	assert.NoError(t, err)
-	assert.NotNil(t, resChan)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if resChan == nil {
+		t.Fatal("resChan should not be nil")
+	}
 
 	totalOutput := ""
 	idx := 0
 	for res := range resChan {
-		assert.NoError(t, res.Error)
+		if res.Error != nil {
+			t.Fatalf("unexpected error in stream: %v", res.Error)
+		}
 
-		assert.Greater(t, len(res.Choices), 0)
+		if !(len(res.Choices) > 0) {
+			t.Errorf("expected %v > %v", len(res.Choices), 0)
+		}
 		if idx == 0 {
-			assert.Equal(t, res.Choices[0].Delta.Role, RoleAssistant)
+			if RoleAssistant != res.Choices[0].Delta.Role {
+				t.Errorf("expected %v, got %v", res.Choices[0].Delta.Role, RoleAssistant)
+			}
 		}
 		totalOutput += res.Choices[0].Delta.Content
 		idx++
@@ -248,13 +319,15 @@ func TestChatStream(t *testing.T) {
 			break
 		}
 	}
-	assert.Equal(t, totalOutput, "Test Succeeded, Test Succeeded, Test Succeeded, Test Succeeded, Test Succeeded, Test Succeeded")
+	if "Test Succeeded, Test Succeeded, Test Succeeded, Test Succeeded, Test Succeeded, Test Succeeded" != totalOutput {
+		t.Errorf("expected %v, got %v", totalOutput, "Test Succeeded, Test Succeeded, Test Succeeded, Test Succeeded, Test Succeeded, Test Succeeded")
+	}
 }
 
 func TestChatStreamFunctionCall(t *testing.T) {
 	client := NewMistralClientDefault("")
-	params := DefaultChatRequestParams
-	params.Temperature = 0
+	params := NewChatRequestParams()
+	params.Temperature = Float64Ptr(0)
 	params.Tools = []Tool{
 		{
 			Type: ToolTypeFunction,
@@ -289,27 +362,37 @@ func TestChatStreamFunctionCall(t *testing.T) {
 	}
 	params.ToolChoice = ToolChoiceAuto
 	resChan, err := client.ChatStream(
-		ModelMistralSmallLatest,
+		"mistral-small-latest",
 		[]ChatMessage{
 			{
 				Role:    RoleUser,
 				Content: "What's the weather like in Dallas, TX?",
 			},
 		},
-		&params,
+		params,
 	)
-	assert.NoError(t, err)
-	assert.NotNil(t, resChan)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if resChan == nil {
+		t.Fatal("resChan should not be nil")
+	}
 
 	totalOutput := ""
 	var functionCall *ToolCall
 	idx := 0
 	for res := range resChan {
-		assert.NoError(t, res.Error)
+		if res.Error != nil {
+			t.Fatalf("unexpected error in stream: %v", res.Error)
+		}
 
-		assert.Greater(t, len(res.Choices), 0)
+		if !(len(res.Choices) > 0) {
+			t.Errorf("expected %v > %v", len(res.Choices), 0)
+		}
 		if idx == 0 {
-			assert.Equal(t, res.Choices[0].Delta.Role, RoleAssistant)
+			if RoleAssistant != res.Choices[0].Delta.Role {
+				t.Errorf("expected %v, got %v", res.Choices[0].Delta.Role, RoleAssistant)
+			}
 		}
 		totalOutput += res.Choices[0].Delta.Content
 		if len(res.Choices[0].Delta.ToolCalls) > 0 {
@@ -322,19 +405,27 @@ func TestChatStreamFunctionCall(t *testing.T) {
 		}
 	}
 
-	assert.Equal(t, totalOutput, "")
-	assert.NotNil(t, functionCall)
-	assert.Equal(t, functionCall.Function.Name, "get_weather")
-	assert.Equal(t, functionCall.Function.Arguments, "{\"city\": \"Dallas\", \"state\": \"TX\"}")
+	if "" != totalOutput {
+		t.Errorf("expected %v, got %v", totalOutput, "")
+	}
+	if functionCall == nil {
+		t.Fatal("functionCall should not be nil")
+	}
+	if "get_weather" != functionCall.Function.Name {
+		t.Errorf("expected %v, got %v", functionCall.Function.Name, "get_weather")
+	}
+	if "{\"city\": \"Dallas\", \"state\": \"TX\"}" != functionCall.Function.Arguments {
+		t.Errorf("expected %v, got %v", functionCall.Function.Arguments, "{\"city\": \"Dallas\", \"state\": \"TX\"}")
+	}
 }
 
 func TestChatStreamJsonMode(t *testing.T) {
 	client := NewMistralClientDefault("")
-	params := DefaultChatRequestParams
-	params.Temperature = 0
+	params := NewChatRequestParams()
+	params.Temperature = Float64Ptr(0)
 	params.ResponseFormat = ResponseFormatJsonObject
 	resChan, err := client.ChatStream(
-		ModelOpenMixtral8x22b,
+		"open-mixtral-8x22b",
 		[]ChatMessage{
 			{
 				Role: RoleUser,
@@ -346,20 +437,30 @@ func TestChatStreamJsonMode(t *testing.T) {
 					"example in the docs only shows the tool response appended to the messages\n```",
 			},
 		},
-		&params,
+		params,
 	)
-	assert.NoError(t, err)
-	assert.NotNil(t, resChan)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if resChan == nil {
+		t.Fatal("resChan should not be nil")
+	}
 
 	totalOutput := ""
 	var functionCall *ToolCall
 	idx := 0
 	for res := range resChan {
-		assert.NoError(t, res.Error)
+		if res.Error != nil {
+			t.Fatalf("unexpected error in stream: %v", res.Error)
+		}
 
-		assert.Greater(t, len(res.Choices), 0)
+		if !(len(res.Choices) > 0) {
+			t.Errorf("expected %v > %v", len(res.Choices), 0)
+		}
 		if idx == 0 {
-			assert.Equal(t, res.Choices[0].Delta.Role, RoleAssistant)
+			if RoleAssistant != res.Choices[0].Delta.Role {
+				t.Errorf("expected %v, got %v", res.Choices[0].Delta.Role, RoleAssistant)
+			}
 		}
 		totalOutput += res.Choices[0].Delta.Content
 		if len(res.Choices[0].Delta.ToolCalls) > 0 {
@@ -372,6 +473,10 @@ func TestChatStreamJsonMode(t *testing.T) {
 		}
 	}
 
-	assert.Equal(t, totalOutput, "{\"symbols\": [\"Go\", \"ChatMessage\", \"Any\", \"FunctionCall\", \"ToolCall\", \"ToolResponse\"]}")
-	assert.Nil(t, functionCall)
+	if "{\"symbols\": [\"Go\", \"ChatMessage\", \"Any\", \"FunctionCall\", \"ToolCall\", \"ToolResponse\"]}" != totalOutput {
+		t.Errorf("expected %v, got %v", totalOutput, "{\"symbols\": [\"Go\", \"ChatMessage\", \"Any\", \"FunctionCall\", \"ToolCall\", \"ToolResponse\"]}")
+	}
+	if functionCall != nil {
+		t.Errorf("expected nil functionCall, got %v", functionCall)
+	}
 }

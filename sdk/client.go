@@ -1,4 +1,4 @@
-package mistral
+package sdk
 
 import (
 	"bytes"

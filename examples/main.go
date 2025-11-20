@@ -3,22 +3,22 @@ package main
 import (
 	"log"
 
-	"github.com/gage-technologies/mistral-go"
+	sdk "github.com/ZaguanLabs/mistral-go/v2/sdk"
 )
 
 func main() {
 	// If api key is empty it will load from MISTRAL_API_KEY env var
-	client := mistral.NewMistralClientDefault("your-api-key")
+	client := sdk.NewMistralClientDefault("your-api-key")
 
 	// Example: Using Chat Completions
-	chatRes, err := client.Chat("mistral-tiny", []mistral.ChatMessage{{Content: "Hello, world!", Role: mistral.RoleUser}}, nil)
+	chatRes, err := client.Chat("mistral-small-latest", []sdk.ChatMessage{{Content: "Hello, world!", Role: sdk.RoleUser}}, nil)
 	if err != nil {
 		log.Fatalf("Error getting chat completion: %v", err)
 	}
 	log.Printf("Chat completion: %+v\n", chatRes)
 
 	// Example: Using Chat Completions Stream
-	chatResChan, err := client.ChatStream("mistral-tiny", []mistral.ChatMessage{{Content: "Hello, world!", Role: mistral.RoleUser}}, nil)
+	chatResChan, err := client.ChatStream("mistral-small-latest", []sdk.ChatMessage{{Content: "Hello, world!", Role: sdk.RoleUser}}, nil)
 	if err != nil {
 		log.Fatalf("Error getting chat completion stream: %v", err)
 	}
