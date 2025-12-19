@@ -1,6 +1,6 @@
 # Mistral Go SDK
 
-**Version 2.0.1** - Critical Bug Fix Release 🔧
+**Version 2.1.0** - Python SDK v1.10.0 Compatibility 🚀
 
 [![Zero Dependencies](https://img.shields.io/badge/dependencies-0-brightgreen.svg)](https://github.com/ZaguanLabs/mistral-go)
 [![Go Version](https://img.shields.io/badge/go-%3E%3D1.20-blue.svg)](https://golang.org/)
@@ -26,6 +26,14 @@ A Go SDK for the Mistral AI API., designed to provide developers with powerful t
 - **Classifiers API**: Content moderation and classification for safety and compliance
 - **OCR API**: Document processing and text extraction from images
 - **Audio/Transcriptions API**: Speech-to-text transcription with timestamp support
+
+## Version 2.1.0 - Python SDK v1.10.0 Compatibility
+
+🚀 **Full compatibility with Mistral Python SDK v1.10.0** - Implements all new features and breaking changes to maintain 100% feature parity.
+
+Includes new features (table extraction in OCR, metadata parameters, delete operations) and breaking changes (Library, Document, and Files API updates).
+
+**⚠️ Contains Breaking Changes** - See [CHANGELOG.md](CHANGELOG.md) for complete details and migration guide.
 
 ## Version 2.0.1 - Critical Bug Fix
 
@@ -458,6 +466,11 @@ if err != nil {
 for _, page := range response.Pages {
 	fmt.Printf("Page %d:\n%s\n", page.PageNumber, page.Text)
 	fmt.Printf("Found %d images\n", len(page.Images))
+	
+	// New in v2.1.0: Table extraction
+	for _, table := range page.Tables {
+		fmt.Printf("Table %s (%s format):\n%s\n", table.ID, table.Format, table.Content)
+	}
 }
 
 // Process from base64-encoded document
