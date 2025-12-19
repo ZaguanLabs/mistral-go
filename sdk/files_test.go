@@ -270,14 +270,14 @@ func TestListFilesOutStructure(t *testing.T) {
 			{ID: "file-2", Filename: "file2.jsonl"},
 		},
 		Object: "list",
-		Total:  2,
+		Total:  IntPtr(2),
 	}
 
 	if len(out.Data) != 2 {
 		t.Error("ListFilesOut Data length incorrect")
 	}
 
-	if out.Total != 2 {
+	if out.Total == nil || *out.Total != 2 {
 		t.Error("ListFilesOut Total incorrect")
 	}
 }

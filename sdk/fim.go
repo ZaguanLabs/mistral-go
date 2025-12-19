@@ -11,16 +11,17 @@ import (
 
 // FIMRequestParams represents the parameters for the FIM method of MistralClient.
 type FIMRequestParams struct {
-	Model       string   `json:"model"`
-	Prompt      string   `json:"prompt"`
-	Suffix      *string  `json:"suffix,omitempty"`
-	MaxTokens   *int     `json:"max_tokens,omitempty"`
-	Temperature *float64 `json:"temperature,omitempty"`
-	TopP        *float64 `json:"top_p,omitempty"`
-	MinTokens   *int     `json:"min_tokens,omitempty"`
-	RandomSeed  *int     `json:"random_seed,omitempty"`
-	Stop        []string `json:"stop,omitempty"`
-	Stream      *bool    `json:"stream,omitempty"`
+	Model       string         `json:"model"`
+	Prompt      string         `json:"prompt"`
+	Suffix      *string        `json:"suffix,omitempty"`
+	MaxTokens   *int           `json:"max_tokens,omitempty"`
+	Temperature *float64       `json:"temperature,omitempty"`
+	TopP        *float64       `json:"top_p,omitempty"`
+	MinTokens   *int           `json:"min_tokens,omitempty"`
+	RandomSeed  *int           `json:"random_seed,omitempty"`
+	Stop        []string       `json:"stop,omitempty"`
+	Stream      *bool          `json:"stream,omitempty"`
+	Metadata    map[string]any `json:"metadata,omitempty"` // Custom metadata (added in v1.10.0)
 }
 
 // FIMCompletionResponse represents the response from the FIM completion endpoint.

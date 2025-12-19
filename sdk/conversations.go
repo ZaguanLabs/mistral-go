@@ -215,3 +215,14 @@ func (c *MistralClient) RestartConversation(conversationID string, inputs []Conv
 
 	return &convResponse, nil
 }
+
+// DeleteConversation deletes a conversation
+//
+// Parameters:
+//   - conversationID: The ID of the conversation to delete
+//
+// Returns an error if the deletion fails
+func (c *MistralClient) DeleteConversation(conversationID string) error {
+	_, err := c.request(http.MethodDelete, nil, fmt.Sprintf("v1/conversations/%s", conversationID), false, nil)
+	return err
+}

@@ -12,15 +12,26 @@ import (
 
 // Document represents a document in a library
 type Document struct {
-	ID          string  `json:"id"`
-	Object      string  `json:"object"`
-	LibraryID   string  `json:"library_id"`
-	Name        string  `json:"name"`
-	Status      string  `json:"status"`
-	Size        int64   `json:"size"`
-	Created     int64   `json:"created"`
-	Updated     int64   `json:"updated"`
-	Description *string `json:"description,omitempty"`
+	ID                          string         `json:"id"`
+	Object                      string         `json:"object,omitempty"`
+	LibraryID                   string         `json:"library_id"`
+	Hash                        *string        `json:"hash"`
+	MimeType                    *string        `json:"mime_type"`
+	Extension                   *string        `json:"extension"`
+	Size                        *int64         `json:"size"`
+	Name                        string         `json:"name"`
+	CreatedAt                   int64          `json:"created_at"`
+	ProcessingStatus            string         `json:"processing_status"`
+	UploadedByID                *string        `json:"uploaded_by_id"`
+	UploadedByType              string         `json:"uploaded_by_type"`
+	TokensProcessingTotal       int            `json:"tokens_processing_total"`
+	Summary                     *string        `json:"summary,omitempty"`
+	LastProcessedAt             *int64         `json:"last_processed_at,omitempty"`
+	NumberOfPages               *int           `json:"number_of_pages,omitempty"`
+	TokensProcessingMainContent *int           `json:"tokens_processing_main_content,omitempty"`
+	TokensProcessingSummary     *int           `json:"tokens_processing_summary,omitempty"`
+	URL                         *string        `json:"url,omitempty"`
+	Attributes                  map[string]any `json:"attributes,omitempty"`
 }
 
 // DocumentListResponse represents a list of documents
@@ -39,8 +50,9 @@ type DocumentUploadResponse struct {
 
 // UpdateDocumentRequest represents a request to update a document
 type UpdateDocumentRequest struct {
-	Name        *string `json:"name,omitempty"`
-	Description *string `json:"description,omitempty"`
+	Name        *string        `json:"name,omitempty"`
+	Description *string        `json:"description,omitempty"`
+	Attributes  map[string]any `json:"attributes,omitempty"`
 }
 
 // DeleteDocumentResponse represents the response from deleting a document
@@ -171,6 +183,9 @@ func (c *MistralClient) UpdateDocument(libraryID, documentID string, req *Update
 	}
 	if req.Description != nil {
 		reqMap["description"] = *req.Description
+	}
+	if req.Attributes != nil {
+		reqMap["attributes"] = req.Attributes
 	}
 
 	response, err := c.request(http.MethodPatch, reqMap, fmt.Sprintf("v1/libraries/%s/documents/%s", libraryID, documentID), false, nil)

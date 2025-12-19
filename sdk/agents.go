@@ -17,6 +17,7 @@ type AgentCompletionRequest struct {
 	Stream            *bool               `json:"stream,omitempty"`
 	Stop              interface{}         `json:"stop,omitempty"` // string or []string
 	RandomSeed        *int                `json:"random_seed,omitempty"`
+	Metadata          map[string]any      `json:"metadata,omitempty"`
 	ResponseFormat    *ResponseFormatSpec `json:"response_format,omitempty"`
 	Tools             []Tool              `json:"tools,omitempty"`
 	ToolChoice        interface{}         `json:"tool_choice,omitempty"` // string or ToolChoice object
@@ -70,6 +71,9 @@ func (c *MistralClient) AgentComplete(agentID string, messages []ChatMessage, pa
 	}
 	if params.RandomSeed != nil {
 		reqMap["random_seed"] = params.RandomSeed
+	}
+	if params.Metadata != nil {
+		reqMap["metadata"] = params.Metadata
 	}
 	if params.ResponseFormat != nil {
 		reqMap["response_format"] = params.ResponseFormat
@@ -155,6 +159,9 @@ func (c *MistralClient) AgentCompleteStream(agentID string, messages []ChatMessa
 	}
 	if params.RandomSeed != nil {
 		reqMap["random_seed"] = params.RandomSeed
+	}
+	if params.Metadata != nil {
+		reqMap["metadata"] = params.Metadata
 	}
 	if params.ResponseFormat != nil {
 		reqMap["response_format"] = params.ResponseFormat

@@ -42,6 +42,7 @@ type ChatRequestParams struct {
 	Prediction *Prediction        `json:"prediction,omitempty"`  // Speculative decoding prediction
 	PromptMode *MistralPromptMode `json:"prompt_mode,omitempty"` // Prompt mode (e.g., "reasoning")
 	SafePrompt *bool              `json:"safe_prompt,omitempty"` // Inject safety prompt
+	Metadata   map[string]any     `json:"metadata,omitempty"`    // Custom metadata (added in v1.10.0)
 }
 
 // NewChatRequestParams creates a new ChatRequestParams with sensible defaults

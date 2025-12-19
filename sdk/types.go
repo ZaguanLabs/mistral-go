@@ -184,3 +184,12 @@ func StringPtr(v string) *string {
 func MistralPromptModePtr(v MistralPromptMode) *MistralPromptMode {
 	return &v
 }
+
+// RequestSource represents the source of a request (API, playground, or agent builder)
+type RequestSource string
+
+const (
+	RequestSourceAPI            RequestSource = "api"
+	RequestSourcePlayground     RequestSource = "playground"
+	RequestSourceAgentBuilderV1 RequestSource = "agent_builder_v1"
+)

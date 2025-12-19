@@ -38,12 +38,31 @@ type OCRImageObject struct {
 	BBox        []float64 `json:"bbox,omitempty"` // [x, y, width, height]
 }
 
+// OCRTableFormat represents the format of extracted tables
+type OCRTableFormat string
+
+const (
+	OCRTableFormatMarkdown OCRTableFormat = "markdown"
+	OCRTableFormatHTML     OCRTableFormat = "html"
+)
+
+// OCRTableObject represents an extracted table from the document
+type OCRTableObject struct {
+	ID      string         `json:"id"`      // Table ID for extracted table in a page
+	Content string         `json:"content"` // Content of the table in the given format
+	Format  OCRTableFormat `json:"format"`  // Format of the table
+}
+
 // OCRPageObject represents a processed page
 type OCRPageObject struct {
 	PageNumber int                `json:"page_number"`
 	Dimensions *OCRPageDimensions `json:"dimensions,omitempty"`
 	Text       string             `json:"text"`
 	Images     []OCRImageObject   `json:"images,omitempty"`
+	Tables     []OCRTableObject   `json:"tables,omitempty"`     // List of all extracted tables in the page
+	Hyperlinks []string           `json:"hyperlinks,omitempty"` // List of all hyperlinks in the page
+	Header     *string            `json:"header,omitempty"`     // Header of the page
+	Footer     *string            `json:"footer,omitempty"`     // Footer of the page
 }
 
 // OCRUsageInfo represents usage information for OCR

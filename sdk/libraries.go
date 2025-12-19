@@ -7,12 +7,23 @@ import (
 
 // Library represents a document library for RAG
 type Library struct {
-	ID          string  `json:"id"`
-	Object      string  `json:"object"`
-	Name        string  `json:"name"`
-	Description *string `json:"description,omitempty"`
-	Created     int64   `json:"created"`
-	Updated     int64   `json:"updated"`
+	ID                            string  `json:"id"`
+	Object                        string  `json:"object,omitempty"`
+	Name                          string  `json:"name"`
+	CreatedAt                     int64   `json:"created_at"`
+	UpdatedAt                     int64   `json:"updated_at"`
+	OwnerID                       *string `json:"owner_id"`
+	OwnerType                     string  `json:"owner_type"`
+	TotalSize                     int     `json:"total_size"`
+	NbDocuments                   int     `json:"nb_documents"`
+	ChunkSize                     *int    `json:"chunk_size"`
+	Emoji                         *string `json:"emoji,omitempty"`
+	Description                   *string `json:"description,omitempty"`
+	GeneratedDescription          *string `json:"generated_description,omitempty"`
+	ExplicitUserMembersCount      *int    `json:"explicit_user_members_count,omitempty"`
+	ExplicitWorkspaceMembersCount *int    `json:"explicit_workspace_members_count,omitempty"`
+	OrgSharingRole                *string `json:"org_sharing_role,omitempty"`
+	GeneratedName                 *string `json:"generated_name,omitempty"`
 }
 
 // LibraryListResponse represents a list of libraries

@@ -165,8 +165,12 @@ func TestListFilesWithMock(t *testing.T) {
 		t.Fatal("Response should not be nil")
 	}
 
-	if response.Total != 1 {
-		t.Errorf("Expected total 1, got %d", response.Total)
+	if response.Total == nil || *response.Total != 1 {
+		if response.Total == nil {
+			t.Error("Expected total 1, got nil")
+		} else {
+			t.Errorf("Expected total 1, got %d", *response.Total)
+		}
 	}
 }
 
@@ -451,7 +455,7 @@ func TestUserAgentHeaderWithMock(t *testing.T) {
 			t.Error("User-Agent header must be set to avoid Cloudflare 400 errors")
 		}
 
-		expectedUserAgent := "mistral-go/2.0.1"
+		expectedUserAgent := "mistral-go/2.1.0"
 		if userAgent != expectedUserAgent {
 			t.Errorf("Expected User-Agent '%s', got '%s'", expectedUserAgent, userAgent)
 		}

@@ -5,6 +5,136 @@ All notable changes to the Mistral Go SDK will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.0] - 2025-12-19
+
+### Added - Python SDK v1.10.0 Compatibility
+
+#### New Types
+- **`RequestSource`** - Type for filtering agents by source (API, playground, agent_builder_v1)
+- **`OCRTableObject`** - Table extraction from documents with markdown/HTML format support
+- **`ModelCapabilities`** - Model capability flags including new classification, moderation, and audio fields
+
+#### New Operations
+- **`DeleteMistralAgent()`** - Delete agents
+- **`DeleteConversation()`** - Delete conversations
+
+#### New Parameters
+- **`Metadata`** field added to:
+  - `ChatRequestParams` - Custom metadata for chat completions
+  - `FIMRequestParams` - Custom metadata for FIM completions
+  - `AgentCompletionRequest` - Custom metadata for agent completions
+- **`IncludeTotal`** - Optional parameter in `ListFilesParams`
+
+### Changed - Breaking Changes
+
+#### Library API
+- **Field Renames:**
+  - `Created` → `CreatedAt`
+  - `Updated` → `UpdatedAt`
+- **New Required Fields:**
+  - `OwnerID` (*string, nullable)
+  - `OwnerType` (string)
+  - `TotalSize` (int)
+  - `NbDocuments` (int)
+  - `ChunkSize` (*int, nullable)
+- **New Optional Fields:**
+  - `Emoji`, `GeneratedDescription`, `ExplicitUserMembersCount`, `ExplicitWorkspaceMembersCount`, `OrgSharingRole`, `GeneratedName`
+
+#### Document API
+- **Field Renames:**
+  - `Created` → `CreatedAt`
+  - `Status` → `ProcessingStatus`
+- **Field Type Changes:**
+  - `Size` → *int64 (now nullable)
+- **New Required Fields:**
+  - `Hash`, `MimeType`, `Extension` (all nullable strings)
+  - `UploadedByID` (*string, nullable)
+  - `UploadedByType` (string)
+  - `TokensProcessingTotal` (int)
+- **New Optional Fields:**
+  - `Summary`, `LastProcessedAt`, `NumberOfPages`, `TokensProcessingMainContent`, `TokensProcessingSummary`, `URL`, `Attributes`
+- **New Request Fields:**
+  - `UpdateDocumentRequest.Attributes` (map[string]any)
+
+#### Files API
+- **Field Type Changes:**
+  - `ListFilesOut.Total` → *int (now nullable/optional)
+
+#### Model API
+- **New Fields:**
+  - `ModelCard.Capabilities` (*ModelCapabilities) - includes classification, moderation, audio flags
+
+#### OCR API
+- **Enhanced Fields:**
+  - `OCRPageObject.Tables` ([]OCRTableObject) - extracted tables
+  - `OCRPageObject.Hyperlinks` ([]string) - page hyperlinks
+  - `OCRPageObject.Header` (*string) - page header
+  - `OCRPageObject.Footer` (*string) - page footer
+
+### Migration Guide
+
+#### Library Type Updates
+```go
+// Before v2.1.0
+library.Created  // int64
+library.Updated  // int64
+
+// After v2.1.0
+library.CreatedAt  // int64
+library.UpdatedAt  // int64
+library.OwnerID    // *string (new, nullable)
+library.OwnerType  // string (new, required)
+```
+
+#### Document Type Updates
+```go
+// Before v2.1.0
+doc.Status  // string
+doc.Size    // int64
+
+// After v2.1.0
+doc.ProcessingStatus  // string (renamed)
+doc.Size              // *int64 (now nullable)
+doc.UploadedByType    // string (new, required)
+doc.Attributes        // map[string]any (new, optional)
+```
+
+#### Files API Updates
+```go
+// Before v2.1.0
+response.Total  // int
+
+// After v2.1.0
+response.Total  // *int (now nullable)
+if response.Total != nil {
+    total := *response.Total
+}
+```
+
+#### Metadata Parameters
+```go
+// Chat with metadata
+params := &ChatRequestParams{
+    Metadata: map[string]any{
+        "user_id": "123",
+        "session": "abc",
+    },
+}
+
+// FIM with metadata
+fimParams := &FIMRequestParams{
+    Metadata: map[string]any{
+        "tracking": "enabled",
+    },
+}
+```
+
+### Documentation
+- Added `docs/BREAKING_CHANGES_v1.10.0.md` - Comprehensive breaking changes documentation
+- Added `docs/V2.1.0_IMPLEMENTATION_PLAN.md` - Implementation plan and tracking
+- Updated all affected types with inline documentation
+- All tests updated to reflect new types
+
 ## [2.0.1] - 2025-11-20
 
 ### Fixed
@@ -197,6 +327,8 @@ Initial release with basic functionality.
 
 ---
 
+[2.1.0]: https://github.com/ZaguanLabs/mistral-go/compare/v2.0.1...v2.1.0
+[2.0.1]: https://github.com/ZaguanLabs/mistral-go/compare/v2.0.0...v2.0.1
 [2.0.0]: https://github.com/ZaguanLabs/mistral-go/compare/v1.1.0...v2.0.0
 [1.1.0]: https://github.com/ZaguanLabs/mistral-go/releases/tag/v1.1.0
 [1.0.0]: https://github.com/ZaguanLabs/mistral-go/releases/tag/v1.0.0

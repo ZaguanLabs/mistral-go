@@ -14,8 +14,8 @@ func TestListDocuments(t *testing.T) {
 		response := DocumentListResponse{
 			Object: "list",
 			Data: []Document{
-				{ID: "doc-1", Name: "Document 1", Status: "processed"},
-				{ID: "doc-2", Name: "Document 2", Status: "processing"},
+				{ID: "doc-1", Name: "Document 1", ProcessingStatus: "processed", LibraryID: "lib-123", UploadedByType: "user", TokensProcessingTotal: 0},
+				{ID: "doc-2", Name: "Document 2", ProcessingStatus: "processing", LibraryID: "lib-123", UploadedByType: "user", TokensProcessingTotal: 0},
 			},
 			Total: 2,
 		}
@@ -67,9 +67,12 @@ func TestUploadDocument(t *testing.T) {
 func TestGetDocument(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		response := Document{
-			ID:     "doc-123",
-			Name:   "Test Document",
-			Status: "processed",
+			ID:                    "doc-123",
+			Name:                  "Test Document",
+			ProcessingStatus:      "processed",
+			LibraryID:             "lib-123",
+			UploadedByType:        "user",
+			TokensProcessingTotal: 0,
 		}
 		json.NewEncoder(w).Encode(response)
 	}))

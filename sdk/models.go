@@ -21,15 +21,29 @@ type ModelPermission struct {
 	IsBlocking         bool   `json:"is_blocking"`
 }
 
+// ModelCapabilities represents the capabilities of a model
+type ModelCapabilities struct {
+	CompletionChat  bool `json:"completion_chat,omitempty"`
+	FunctionCalling bool `json:"function_calling,omitempty"`
+	CompletionFIM   bool `json:"completion_fim,omitempty"`
+	FineTuning      bool `json:"fine_tuning,omitempty"`
+	Vision          bool `json:"vision,omitempty"`
+	OCR             bool `json:"ocr,omitempty"`
+	Classification  bool `json:"classification,omitempty"` // Added in v1.10.0
+	Moderation      bool `json:"moderation,omitempty"`     // Added in v1.10.0
+	Audio           bool `json:"audio,omitempty"`          // Added in v1.10.0
+}
+
 // ModelCard represents a model card.
 type ModelCard struct {
-	ID         string            `json:"id"`
-	Object     string            `json:"object"`
-	Created    int               `json:"created"`
-	OwnedBy    string            `json:"owned_by"`
-	Root       string            `json:"root,omitempty"`
-	Parent     string            `json:"parent,omitempty"`
-	Permission []ModelPermission `json:"permission"`
+	ID           string             `json:"id"`
+	Object       string             `json:"object"`
+	Created      int                `json:"created"`
+	OwnedBy      string             `json:"owned_by"`
+	Root         string             `json:"root,omitempty"`
+	Parent       string             `json:"parent,omitempty"`
+	Permission   []ModelPermission  `json:"permission"`
+	Capabilities *ModelCapabilities `json:"capabilities,omitempty"` // Added in v1.10.0
 }
 
 // ModelList represents a list of models.

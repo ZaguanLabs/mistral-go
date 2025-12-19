@@ -69,7 +69,7 @@ type UploadFileOut struct {
 type ListFilesOut struct {
 	Data   []FileSchema `json:"data"`
 	Object string       `json:"object"`
-	Total  int          `json:"total"`
+	Total  *int         `json:"total,omitempty"` // Changed to optional in v1.10.0
 }
 
 // RetrieveFileOut represents the response from retrieving a file
@@ -101,12 +101,13 @@ type FileSignedURL struct {
 
 // ListFilesParams represents parameters for listing files
 type ListFilesParams struct {
-	Page       *int         `json:"page,omitempty"`
-	PageSize   *int         `json:"page_size,omitempty"`
-	SampleType []SampleType `json:"sample_type,omitempty"`
-	Source     []Source     `json:"source,omitempty"`
-	Search     *string      `json:"search,omitempty"`
-	Purpose    *FilePurpose `json:"purpose,omitempty"`
+	Page         *int         `json:"page,omitempty"`
+	PageSize     *int         `json:"page_size,omitempty"`
+	SampleType   []SampleType `json:"sample_type,omitempty"`
+	Source       []Source     `json:"source,omitempty"`
+	Search       *string      `json:"search,omitempty"`
+	Purpose      *FilePurpose `json:"purpose,omitempty"`
+	IncludeTotal *bool        `json:"include_total,omitempty"` // Added in v1.10.0
 }
 
 // UploadFile uploads a file that can be used across various endpoints.
