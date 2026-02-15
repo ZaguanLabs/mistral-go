@@ -60,6 +60,12 @@ type BatchJobsOut struct {
 	Total  int           `json:"total"`
 }
 
+// BatchRequest represents an individual request for inline batching
+type BatchRequest struct {
+	CustomID string                 `json:"custom_id"`
+	Body     map[string]interface{} `json:"body"`
+}
+
 // CreateBatchJobRequest represents the request to create a batch job
 type CreateBatchJobRequest struct {
 	InputFiles   []string       `json:"input_files"`
@@ -67,6 +73,7 @@ type CreateBatchJobRequest struct {
 	Model        *string        `json:"model,omitempty"`
 	Metadata     map[string]any `json:"metadata,omitempty"`
 	TimeoutHours *int           `json:"timeout_hours,omitempty"`
+	Requests     []BatchRequest `json:"requests,omitempty"`
 }
 
 // ListBatchJobsParams represents parameters for listing batch jobs
@@ -82,13 +89,24 @@ type ListBatchJobsParams struct {
 
 // CreateBatchJob creates a new batch job
 func (c *MistralClient) CreateBatchJob(req *CreateBatchJobRequest) (*BatchJobOut, error) {
-	response, err := c.request(http.MethodPost, map[string]interface{}{
-		"input_files":   req.InputFiles,
+	payload := map[string]interface{}{
 		"endpoint":      req.Endpoint,
 		"model":         req.Model,
 		"metadata":      req.Metadata,
 		"timeout_hours": req.TimeoutHours,
-	}, "v1/batch/jobs", false, nil)
+	}
+
+	if len(req.InputFiles) > 0 && len(req.Requests) > 0 {
+		return nil, fmt.Errorf("only one of input_files or requests should be provided, not both")
+	} else if len(req.InputFiles) > 0 {
+		payload["input_files"] = req.InputFiles
+	} else if len(req.Requests) > 0 {
+		payload["requests"] = req.Requests
+	} else {
+		return nil, fmt.Errorf("either input_files or requests must be provided")
+	}
+
+	response, err := c.request(http.MethodPost, payload, "v1/batch/jobs", false, nil)
 	if err != nil {
 		return nil, err
 	}

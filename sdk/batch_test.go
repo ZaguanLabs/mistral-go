@@ -255,6 +255,120 @@ func TestCreateBatchJobRequestWithMultipleFiles(t *testing.T) {
 	}
 }
 
+func TestCreateBatchJobRequestWithRequests(t *testing.T) {
+	// Test inline batching with Requests field
+	req := &CreateBatchJobRequest{
+		Requests: []BatchRequest{
+			{
+				CustomID: "request-1",
+				Body: map[string]interface{}{
+					"model": "mistral-small-latest",
+					"messages": []map[string]string{
+						{"role": "user", "content": "Hello!"},
+					},
+				},
+			},
+			{
+				CustomID: "request-2",
+				Body: map[string]interface{}{
+					"model": "mistral-small-latest",
+					"messages": []map[string]string{
+						{"role": "user", "content": "How are you?"},
+					},
+				},
+			},
+		},
+		Endpoint: BatchEndpointChat,
+	}
+
+	if len(req.Requests) != 2 {
+		t.Error("Should support multiple requests")
+	}
+
+	if req.Requests[0].CustomID != "request-1" {
+		t.Error("First request CustomID not set correctly")
+	}
+
+	if req.Requests[1].CustomID != "request-2" {
+		t.Error("Second request CustomID not set correctly")
+	}
+}
+
+func TestCreateBatchJobRequestValidationStrict(t *testing.T) {
+	// Test that providing both InputFiles and Requests returns an error
+	client := NewMistralClientDefault("")
+
+	req := &CreateBatchJobRequest{
+		InputFiles: []string{"file-123"},
+		Requests: []BatchRequest{
+			{
+				CustomID: "request-1",
+				Body: map[string]interface{}{
+					"model": "mistral-small-latest",
+				},
+			},
+		},
+		Endpoint: BatchEndpointChat,
+	}
+
+	_, err := client.CreateBatchJob(req)
+
+	if err == nil {
+		t.Error("Should return error when both InputFiles and Requests are provided")
+	} else if err.Error() != "only one of input_files or requests should be provided, not both" {
+		t.Errorf("Unexpected error message: %v", err)
+	}
+}
+
+func TestCreateBatchJobRequestNoFieldsError(t *testing.T) {
+	// Test that providing neither InputFiles nor Requests returns an error
+	client := NewMistralClientDefault("")
+
+	req := &CreateBatchJobRequest{
+		Endpoint: BatchEndpointChat,
+	}
+
+	_, err := client.CreateBatchJob(req)
+
+	if err == nil {
+		t.Error("Should return error when neither InputFiles nor Requests are provided")
+	} else if err.Error() != "either input_files or requests must be provided" {
+		t.Errorf("Unexpected error message: %v", err)
+	}
+}
+
+func TestCreateBatchJobRequestRequestsOnly(t *testing.T) {
+	// Test that Requests-only batch job creation works (even if it will fail at API level without auth)
+	client := NewMistralClientDefault("")
+
+	req := &CreateBatchJobRequest{
+		Requests: []BatchRequest{
+			{
+				CustomID: "test-request",
+				Body: map[string]interface{}{
+					"model": "mistral-small-latest",
+					"messages": []map[string]string{
+						{"role": "user", "content": "Test message"},
+					},
+				},
+			},
+		},
+		Endpoint: BatchEndpointChat,
+		Model:    StringPtr("mistral-small-latest"),
+		Metadata: map[string]any{
+			"job_type": "inline_batch",
+		},
+	}
+
+	_, err := client.CreateBatchJob(req)
+
+	// We expect this to fail due to authentication, not due to request structure
+	if err != nil && err.Error() == "only one of input_files or requests should be provided, not both" {
+		t.Error("Should not fail due to both fields being present")
+	}
+	// Other errors (like auth) are expected and okay for this test
+}
+
 func TestListBatchJobsParamsWithMetadata(t *testing.T) {
 	params := &ListBatchJobsParams{
 		Metadata: map[string]any{
