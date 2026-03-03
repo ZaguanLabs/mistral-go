@@ -49,6 +49,7 @@ type ResponseFormat string
 const (
 	ResponseFormatText       ResponseFormat = "text"
 	ResponseFormatJsonObject ResponseFormat = "json_object"
+	ResponseFormatJsonSchema ResponseFormat = "json_schema"
 )
 
 // ToolType type of tool defined for the llm
@@ -59,9 +60,10 @@ const (
 )
 
 const (
-	ToolChoiceAny  = "any"
-	ToolChoiceAuto = "auto"
-	ToolChoiceNone = "none"
+	ToolChoiceAny      = "any"
+	ToolChoiceAuto     = "auto"
+	ToolChoiceNone     = "none"
+	ToolChoiceRequired = "required"
 )
 
 // Tool definition of a tool that the llm can call

@@ -7,6 +7,7 @@ import (
 	"io"
 	"mime/multipart"
 	"net/http"
+	"net/url"
 	"path/filepath"
 )
 
@@ -69,9 +70,61 @@ type DocumentStatusResponse struct {
 	Error  *string `json:"error,omitempty"`
 }
 
+// DocumentSignedURLResponse represents a signed URL string response.
+type DocumentSignedURLResponse struct {
+	URL string `json:"url"`
+}
+
+// DocumentTextContent represents extracted text content for a document.
+type DocumentTextContent struct {
+	Content string `json:"content"`
+}
+
+// ListDocumentsParams represents query parameters for listing documents.
+type ListDocumentsParams struct {
+	Search            *string `json:"search,omitempty"`
+	PageSize          *int    `json:"page_size,omitempty"`
+	Page              *int    `json:"page,omitempty"`
+	FiltersAttributes *string `json:"filters_attributes,omitempty"`
+	SortBy            *string `json:"sort_by,omitempty"`
+	SortOrder         *string `json:"sort_order,omitempty"`
+}
+
 // ListDocuments lists all documents in a library
 func (c *MistralClient) ListDocuments(libraryID string, page int) (*DocumentListResponse, error) {
-	path := fmt.Sprintf("v1/libraries/%s/documents?page=%d", libraryID, page)
+	return c.ListDocumentsWithParams(libraryID, &ListDocumentsParams{Page: &page})
+}
+
+// ListDocumentsWithParams lists documents in a library with filters.
+func (c *MistralClient) ListDocumentsWithParams(libraryID string, params *ListDocumentsParams) (*DocumentListResponse, error) {
+	if params == nil {
+		params = &ListDocumentsParams{}
+	}
+
+	query := url.Values{}
+	if params.Search != nil {
+		query.Add("search", *params.Search)
+	}
+	if params.PageSize != nil {
+		query.Add("page_size", fmt.Sprintf("%d", *params.PageSize))
+	}
+	if params.Page != nil {
+		query.Add("page", fmt.Sprintf("%d", *params.Page))
+	}
+	if params.FiltersAttributes != nil {
+		query.Add("filters_attributes", *params.FiltersAttributes)
+	}
+	if params.SortBy != nil {
+		query.Add("sort_by", *params.SortBy)
+	}
+	if params.SortOrder != nil {
+		query.Add("sort_order", *params.SortOrder)
+	}
+
+	path := fmt.Sprintf("v1/libraries/%s/documents", libraryID)
+	if len(query) > 0 {
+		path += "?" + query.Encode()
+	}
 
 	response, err := c.request(http.MethodGet, nil, path, false, nil)
 	if err != nil {
@@ -247,4 +300,73 @@ func (c *MistralClient) GetDocumentStatus(libraryID, documentID string) (*Docume
 	}
 
 	return &statusResponse, nil
+}
+
+// GetDocumentTextContent retrieves extracted text content for a document.
+func (c *MistralClient) GetDocumentTextContent(libraryID, documentID string) (*DocumentTextContent, error) {
+	response, err := c.request(http.MethodGet, nil, fmt.Sprintf("v1/libraries/%s/documents/%s/text_content", libraryID, documentID), false, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	respData, ok := response.(map[string]interface{})
+	if !ok {
+		return nil, fmt.Errorf("invalid response type: %T", response)
+	}
+
+	var textContent DocumentTextContent
+	err = mapToStruct(respData, &textContent)
+	if err != nil {
+		return nil, err
+	}
+
+	return &textContent, nil
+}
+
+// GetDocumentSignedURL retrieves a signed URL for the document binary.
+func (c *MistralClient) GetDocumentSignedURL(libraryID, documentID string) (*DocumentSignedURLResponse, error) {
+	response, err := c.request(http.MethodGet, nil, fmt.Sprintf("v1/libraries/%s/documents/%s/signed-url", libraryID, documentID), false, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	respData, ok := response.(map[string]interface{})
+	if !ok {
+		return nil, fmt.Errorf("invalid response type: %T", response)
+	}
+
+	var signedURL DocumentSignedURLResponse
+	err = mapToStruct(respData, &signedURL)
+	if err != nil {
+		return nil, err
+	}
+
+	return &signedURL, nil
+}
+
+// GetDocumentExtractedTextSignedURL retrieves a signed URL for OCR extracted text.
+func (c *MistralClient) GetDocumentExtractedTextSignedURL(libraryID, documentID string) (*DocumentSignedURLResponse, error) {
+	response, err := c.request(http.MethodGet, nil, fmt.Sprintf("v1/libraries/%s/documents/%s/extracted-text-signed-url", libraryID, documentID), false, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	respData, ok := response.(map[string]interface{})
+	if !ok {
+		return nil, fmt.Errorf("invalid response type: %T", response)
+	}
+
+	var signedURL DocumentSignedURLResponse
+	err = mapToStruct(respData, &signedURL)
+	if err != nil {
+		return nil, err
+	}
+
+	return &signedURL, nil
+}
+
+// ReprocessDocument requests document reprocessing.
+func (c *MistralClient) ReprocessDocument(libraryID, documentID string) error {
+	_, err := c.request(http.MethodPost, map[string]interface{}{}, fmt.Sprintf("v1/libraries/%s/documents/%s/reprocess", libraryID, documentID), false, nil)
+	return err
 }

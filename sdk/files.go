@@ -108,6 +108,7 @@ type ListFilesParams struct {
 	Search       *string      `json:"search,omitempty"`
 	Purpose      *FilePurpose `json:"purpose,omitempty"`
 	IncludeTotal *bool        `json:"include_total,omitempty"` // Added in v1.10.0
+	Mimetypes    []string     `json:"mimetypes,omitempty"`
 }
 
 // UploadFile uploads a file that can be used across various endpoints.
@@ -152,6 +153,7 @@ func (c *MistralClient) UploadFile(file io.Reader, filename string, purpose File
 
 	req.Header.Set("Authorization", "Bearer "+c.apiKey)
 	req.Header.Set("Content-Type", writer.FormDataContentType())
+	req.Header.Set("User-Agent", UserAgent)
 
 	// Send request with retry logic
 	client := &http.Client{Timeout: c.timeout}
@@ -216,19 +218,25 @@ func (c *MistralClient) ListFiles(params *ListFilesParams) (*ListFilesOut, error
 	if params.Purpose != nil {
 		queryParams.Add("purpose", string(*params.Purpose))
 	}
+	if params.IncludeTotal != nil {
+		queryParams.Add("include_total", fmt.Sprintf("%t", *params.IncludeTotal))
+	}
 	for _, st := range params.SampleType {
 		queryParams.Add("sample_type", string(st))
 	}
 	for _, src := range params.Source {
 		queryParams.Add("source", string(src))
 	}
-
-	urlStr := c.endpoint + "/v1/files"
-	if len(queryParams) > 0 {
-		urlStr += "?" + queryParams.Encode()
+	for _, mt := range params.Mimetypes {
+		queryParams.Add("mimetypes", mt)
 	}
 
-	response, err := c.request(http.MethodGet, nil, "v1/files?"+queryParams.Encode(), false, nil)
+	path := "v1/files"
+	if len(queryParams) > 0 {
+		path += "?" + queryParams.Encode()
+	}
+
+	response, err := c.request(http.MethodGet, nil, path, false, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -299,6 +307,7 @@ func (c *MistralClient) DownloadFile(fileID string) ([]byte, error) {
 
 	req.Header.Set("Authorization", "Bearer "+c.apiKey)
 	req.Header.Set("Accept", "application/octet-stream")
+	req.Header.Set("User-Agent", UserAgent)
 
 	client := &http.Client{Timeout: c.timeout}
 	resp, err := client.Do(req)

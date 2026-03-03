@@ -5,6 +5,48 @@ All notable changes to the Mistral Go SDK will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.2.0] - 2026-03-03
+
+### Added - Python SDK v1.12.4 Parity Updates
+
+- Batch API improvements:
+  - Inline request validation for `CreateBatchJob()` (`input_files` xor `requests`)
+  - Support for `agent_id` and `order_by`
+  - `GetBatchJob(jobID, inline ...bool)` for inline retrieval
+- Classifiers API:
+  - `ModerateChat()`
+  - `Classify()`
+  - `ClassifyChat()`
+- Audio/Transcriptions API:
+  - `TranscribeStream()` (SSE)
+  - `diarize` and `context_bias` support
+- Conversations API:
+  - Stream operations (`StartConversationStream`, `AppendToConversationStream`, `RestartConversationStream`)
+  - `GetConversationMessages()`
+  - Extended request parameter support
+- Beta Agents API enhancements:
+  - Version management and alias CRUD operations
+  - Extended list/get/update support
+- Documents/Libraries API enhancements:
+  - Documents: advanced list params, text/signed URL helpers, reprocess
+  - Libraries: `chunk_size` support in create
+
+### Changed
+
+- Core request URL handling fixed to preserve query strings.
+- Core response JSON decoding now supports non-object payloads.
+- Files API list query support expanded (`include_total`, `mimetypes`) and direct HTTP calls include `User-Agent`.
+- Library update uses `PUT` for parity.
+- Access/share API aligned with beta share semantics while preserving backward-compatible wrappers.
+
+### Tests
+
+- Added targeted regression tests for:
+  - Batch validation paths
+  - Classifier chat/text classification endpoints
+  - Conversation messages and params
+  - Query param behavior (`inline`, `include_total`, `mimetypes`)
+
 ## [2.1.0] - 2025-12-19
 
 ### Added - Python SDK v1.10.0 Compatibility
@@ -327,6 +369,7 @@ Initial release with basic functionality.
 
 ---
 
+[2.2.0]: https://github.com/ZaguanLabs/mistral-go/compare/v2.1.0...v2.2.0
 [2.1.0]: https://github.com/ZaguanLabs/mistral-go/compare/v2.0.1...v2.1.0
 [2.0.1]: https://github.com/ZaguanLabs/mistral-go/compare/v2.0.0...v2.0.1
 [2.0.0]: https://github.com/ZaguanLabs/mistral-go/compare/v1.1.0...v2.0.0

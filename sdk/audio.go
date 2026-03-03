@@ -1,6 +1,7 @@
 package sdk
 
 import (
+	"bufio"
 	"bytes"
 	"encoding/json"
 	"fmt"
@@ -27,7 +28,16 @@ type TranscriptionRequest struct {
 	FileID                 *string                `json:"file_id,omitempty"`
 	Language               *string                `json:"language,omitempty"`
 	Temperature            *float64               `json:"temperature,omitempty"`
+	Diarize                *bool                  `json:"diarize,omitempty"`
+	ContextBias            []string               `json:"context_bias,omitempty"`
 	TimestampGranularities []TimestampGranularity `json:"timestamp_granularities,omitempty"`
+}
+
+// TranscriptionStreamEvent represents one SSE event from transcription streaming.
+type TranscriptionStreamEvent struct {
+	Type  string                 `json:"type,omitempty"`
+	Data  *TranscriptionResponse `json:"data,omitempty"`
+	Error error                  `json:"-"`
 }
 
 // TranscriptionWord represents a word in the transcription with timestamp
@@ -110,6 +120,20 @@ func (c *MistralClient) Transcribe(model string, file io.Reader, filename string
 		}
 	}
 
+	if params.Diarize != nil {
+		if err := writer.WriteField("diarize", fmt.Sprintf("%t", *params.Diarize)); err != nil {
+			return nil, fmt.Errorf("failed to write diarize field: %w", err)
+		}
+	}
+
+	if len(params.ContextBias) > 0 {
+		for _, bias := range params.ContextBias {
+			if err := writer.WriteField("context_bias[]", bias); err != nil {
+				return nil, fmt.Errorf("failed to write context_bias field: %w", err)
+			}
+		}
+	}
+
 	if len(params.TimestampGranularities) > 0 {
 		for _, gran := range params.TimestampGranularities {
 			if err := writer.WriteField("timestamp_granularities[]", string(gran)); err != nil {
@@ -130,6 +154,7 @@ func (c *MistralClient) Transcribe(model string, file io.Reader, filename string
 
 	req.Header.Set("Authorization", "Bearer "+c.apiKey)
 	req.Header.Set("Content-Type", writer.FormDataContentType())
+	req.Header.Set("User-Agent", UserAgent)
 
 	// Send request with retry logic
 	client := &http.Client{Timeout: c.timeout}
@@ -183,21 +208,7 @@ func (c *MistralClient) TranscribeFromURL(model string, fileURL string, params *
 	params.Model = model
 	params.FileURL = &fileURL
 
-	reqMap := map[string]interface{}{
-		"model":    model,
-		"file_url": fileURL,
-	}
-
-	// Add optional parameters
-	if params.Language != nil {
-		reqMap["language"] = params.Language
-	}
-	if params.Temperature != nil {
-		reqMap["temperature"] = params.Temperature
-	}
-	if len(params.TimestampGranularities) > 0 {
-		reqMap["timestamp_granularities"] = params.TimestampGranularities
-	}
+	reqMap := buildTranscriptionRequestMap(params)
 
 	response, err := c.request(http.MethodPost, reqMap, "v1/audio/transcriptions", false, nil)
 	if err != nil {
@@ -218,6 +229,160 @@ func (c *MistralClient) TranscribeFromURL(model string, fileURL string, params *
 	return &transcriptionResponse, nil
 }
 
+// TranscribeStream transcribes audio with SSE streaming responses.
+func (c *MistralClient) TranscribeStream(model string, file io.Reader, filename string, params *TranscriptionRequest) (<-chan TranscriptionStreamEvent, error) {
+	if params == nil {
+		params = &TranscriptionRequest{}
+	}
+
+	params.Model = model
+	params.File = file
+	params.Filename = filename
+
+	body := &bytes.Buffer{}
+	writer := multipart.NewWriter(body)
+
+	part, err := writer.CreateFormFile("file", filepath.Base(filename))
+	if err != nil {
+		return nil, fmt.Errorf("failed to create form file: %w", err)
+	}
+	if _, err := io.Copy(part, file); err != nil {
+		return nil, fmt.Errorf("failed to copy file content: %w", err)
+	}
+	if err := writer.WriteField("model", model); err != nil {
+		return nil, fmt.Errorf("failed to write model field: %w", err)
+	}
+	if err := writer.WriteField("stream", "true"); err != nil {
+		return nil, fmt.Errorf("failed to write stream field: %w", err)
+	}
+	if params.Language != nil {
+		if err := writer.WriteField("language", *params.Language); err != nil {
+			return nil, fmt.Errorf("failed to write language field: %w", err)
+		}
+	}
+	if params.Temperature != nil {
+		if err := writer.WriteField("temperature", fmt.Sprintf("%f", *params.Temperature)); err != nil {
+			return nil, fmt.Errorf("failed to write temperature field: %w", err)
+		}
+	}
+	if params.Diarize != nil {
+		if err := writer.WriteField("diarize", fmt.Sprintf("%t", *params.Diarize)); err != nil {
+			return nil, fmt.Errorf("failed to write diarize field: %w", err)
+		}
+	}
+	for _, bias := range params.ContextBias {
+		if err := writer.WriteField("context_bias[]", bias); err != nil {
+			return nil, fmt.Errorf("failed to write context_bias field: %w", err)
+		}
+	}
+	for _, gran := range params.TimestampGranularities {
+		if err := writer.WriteField("timestamp_granularities[]", string(gran)); err != nil {
+			return nil, fmt.Errorf("failed to write timestamp_granularities field: %w", err)
+		}
+	}
+	if err := writer.Close(); err != nil {
+		return nil, fmt.Errorf("failed to close multipart writer: %w", err)
+	}
+
+	req, err := http.NewRequest(http.MethodPost, c.endpoint+"/v1/audio/transcriptions", body)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create request: %w", err)
+	}
+	req.Header.Set("Authorization", "Bearer "+c.apiKey)
+	req.Header.Set("Content-Type", writer.FormDataContentType())
+	req.Header.Set("Accept", "text/event-stream")
+	req.Header.Set("User-Agent", UserAgent)
+
+	client := &http.Client{Timeout: c.timeout}
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, NewMistralConnectionError(err.Error())
+	}
+	if resp.StatusCode >= 400 {
+		defer resp.Body.Close()
+		respBody, _ := io.ReadAll(resp.Body)
+		return nil, NewMistralAPIError(string(respBody), resp.StatusCode, resp.Header)
+	}
+
+	out := make(chan TranscriptionStreamEvent)
+	go func() {
+		defer close(out)
+		defer resp.Body.Close()
+
+		reader := bufio.NewReader(resp.Body)
+		for {
+			line, readErr := reader.ReadBytes('\n')
+			if readErr == io.EOF {
+				break
+			}
+			if readErr != nil {
+				out <- TranscriptionStreamEvent{Error: fmt.Errorf("error reading stream response: %w", readErr)}
+				return
+			}
+
+			if bytes.Equal(line, []byte("\n")) {
+				continue
+			}
+			if !bytes.HasPrefix(line, []byte("data: ")) {
+				continue
+			}
+
+			jsonLine := bytes.TrimSpace(bytes.TrimPrefix(line, []byte("data: ")))
+			if bytes.Equal(jsonLine, []byte("[DONE]")) {
+				break
+			}
+
+			var payload map[string]any
+			if err := json.Unmarshal(jsonLine, &payload); err != nil {
+				out <- TranscriptionStreamEvent{Error: fmt.Errorf("error decoding stream event: %w", err)}
+				continue
+			}
+
+			event := TranscriptionStreamEvent{}
+			if eventType, ok := payload["type"].(string); ok {
+				event.Type = eventType
+			}
+
+			var data TranscriptionResponse
+			if err := mapToStruct(payload, &data); err == nil {
+				event.Data = &data
+			}
+
+			out <- event
+		}
+	}()
+
+	return out, nil
+}
+
+func buildTranscriptionRequestMap(params *TranscriptionRequest) map[string]interface{} {
+	reqMap := map[string]interface{}{
+		"model": params.Model,
+	}
+	if params.FileURL != nil {
+		reqMap["file_url"] = *params.FileURL
+	}
+	if params.FileID != nil {
+		reqMap["file_id"] = *params.FileID
+	}
+	if params.Language != nil {
+		reqMap["language"] = *params.Language
+	}
+	if params.Temperature != nil {
+		reqMap["temperature"] = *params.Temperature
+	}
+	if params.Diarize != nil {
+		reqMap["diarize"] = *params.Diarize
+	}
+	if len(params.ContextBias) > 0 {
+		reqMap["context_bias"] = params.ContextBias
+	}
+	if len(params.TimestampGranularities) > 0 {
+		reqMap["timestamp_granularities"] = params.TimestampGranularities
+	}
+	return reqMap
+}
+
 // TranscribeFromFileID transcribes an audio file that was previously uploaded
 func (c *MistralClient) TranscribeFromFileID(model string, fileID string, params *TranscriptionRequest) (*TranscriptionResponse, error) {
 	if params == nil {
@@ -227,21 +392,7 @@ func (c *MistralClient) TranscribeFromFileID(model string, fileID string, params
 	params.Model = model
 	params.FileID = &fileID
 
-	reqMap := map[string]interface{}{
-		"model":   model,
-		"file_id": fileID,
-	}
-
-	// Add optional parameters
-	if params.Language != nil {
-		reqMap["language"] = params.Language
-	}
-	if params.Temperature != nil {
-		reqMap["temperature"] = params.Temperature
-	}
-	if len(params.TimestampGranularities) > 0 {
-		reqMap["timestamp_granularities"] = params.TimestampGranularities
-	}
+	reqMap := buildTranscriptionRequestMap(params)
 
 	response, err := c.request(http.MethodPost, reqMap, "v1/audio/transcriptions", false, nil)
 	if err != nil {

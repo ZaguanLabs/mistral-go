@@ -255,6 +255,91 @@ func TestCreateBatchJobRequestWithMultipleFiles(t *testing.T) {
 	}
 }
 
+func TestCreateBatchJobRequestWithRequests(t *testing.T) {
+	req := &CreateBatchJobRequest{
+		Requests: []BatchRequest{
+			{
+				CustomID: "request-1",
+				Body: map[string]interface{}{
+					"model": "mistral-small-latest",
+					"messages": []map[string]string{
+						{"role": "user", "content": "Hello!"},
+					},
+				},
+			},
+			{
+				CustomID: "request-2",
+				Body: map[string]interface{}{
+					"model": "mistral-small-latest",
+					"messages": []map[string]string{
+						{"role": "user", "content": "How are you?"},
+					},
+				},
+			},
+		},
+		Endpoint: BatchEndpointChat,
+	}
+
+	if len(req.Requests) != 2 {
+		t.Error("Should support multiple requests")
+	}
+	if req.Requests[0].CustomID != "request-1" {
+		t.Error("First request CustomID not set correctly")
+	}
+	if req.Requests[1].CustomID != "request-2" {
+		t.Error("Second request CustomID not set correctly")
+	}
+}
+
+func TestCreateBatchJobRequestNilRequestError(t *testing.T) {
+	client := NewMistralClientDefault("")
+
+	_, err := client.CreateBatchJob(nil)
+	if err == nil {
+		t.Fatal("expected error for nil request")
+	}
+	if err.Error() != "request cannot be nil" {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestCreateBatchJobRequestValidationStrict(t *testing.T) {
+	client := NewMistralClientDefault("")
+
+	req := &CreateBatchJobRequest{
+		InputFiles: []string{"file-123"},
+		Requests: []BatchRequest{
+			{
+				CustomID: "request-1",
+				Body:     map[string]interface{}{"model": "mistral-small-latest"},
+			},
+		},
+		Endpoint: BatchEndpointChat,
+	}
+
+	_, err := client.CreateBatchJob(req)
+	if err == nil {
+		t.Fatal("expected error when both InputFiles and Requests are provided")
+	}
+	if err.Error() != "only one of input_files or requests should be provided, not both" {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestCreateBatchJobRequestNoFieldsError(t *testing.T) {
+	client := NewMistralClientDefault("")
+
+	req := &CreateBatchJobRequest{Endpoint: BatchEndpointChat}
+
+	_, err := client.CreateBatchJob(req)
+	if err == nil {
+		t.Fatal("expected error when neither InputFiles nor Requests are provided")
+	}
+	if err.Error() != "either input_files or requests must be provided" {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
 func TestListBatchJobsParamsWithMetadata(t *testing.T) {
 	params := &ListBatchJobsParams{
 		Metadata: map[string]any{

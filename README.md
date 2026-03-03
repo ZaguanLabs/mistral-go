@@ -1,6 +1,6 @@
 # Mistral Go SDK
 
-**Version 2.1.0** - Python SDK v1.10.0 Compatibility 🚀
+**Version 2.2.0** - Python SDK v1.12.4 Compatibility 🚀
 
 [![Zero Dependencies](https://img.shields.io/badge/dependencies-0-brightgreen.svg)](https://github.com/ZaguanLabs/mistral-go)
 [![Go Version](https://img.shields.io/badge/go-%3E%3D1.20-blue.svg)](https://golang.org/)
@@ -27,9 +27,9 @@ A Go SDK for the Mistral AI API., designed to provide developers with powerful t
 - **OCR API**: Document processing and text extraction from images
 - **Audio/Transcriptions API**: Speech-to-text transcription with timestamp support
 
-## Version 2.1.0 - Python SDK v1.10.0 Compatibility
+## Version 2.2.0 - Python SDK v1.12.4 Compatibility
 
-🚀 **Full compatibility with Mistral Python SDK v1.10.0** - Implements all new features and breaking changes to maintain 100% feature parity.
+🚀 **Full compatibility with Mistral Python SDK v1.12.4** - Implements all new features and breaking changes to maintain 100% feature parity.
 
 Includes new features (table extraction in OCR, metadata parameters, delete operations) and breaking changes (Library, Document, and Files API updates).
 

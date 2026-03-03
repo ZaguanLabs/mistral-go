@@ -102,8 +102,8 @@ func TestGetLibrary(t *testing.T) {
 
 func TestUpdateLibrary(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != http.MethodPatch {
-			t.Errorf("Expected PATCH, got %s", r.Method)
+		if r.Method != http.MethodPut {
+			t.Errorf("Expected PUT, got %s", r.Method)
 		}
 
 		response := Library{

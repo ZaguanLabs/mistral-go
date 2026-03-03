@@ -10,8 +10,26 @@ type ClassificationInput interface{}
 
 // ClassificationRequest represents a request for content moderation
 type ClassificationRequest struct {
-	Model  string                `json:"model"`
-	Inputs []ClassificationInput `json:"inputs"`
+	Model    string                `json:"model"`
+	Inputs   []ClassificationInput `json:"inputs"`
+	Metadata map[string]any        `json:"metadata,omitempty"`
+}
+
+// ChatModerationRequest represents chat moderation input.
+type ChatModerationRequest struct {
+	Inputs []ChatMessage `json:"inputs"`
+	Model  string        `json:"model"`
+}
+
+// ChatClassificationInput represents a chat classification sample.
+type ChatClassificationInput struct {
+	Messages []ChatMessage `json:"messages"`
+}
+
+// ChatClassificationRequest represents chat classification input.
+type ChatClassificationRequest struct {
+	Model  string                    `json:"model"`
+	Inputs []ChatClassificationInput `json:"inputs"`
 }
 
 // ModerationCategory represents a moderation category result
@@ -62,6 +80,91 @@ func (c *MistralClient) Moderate(model string, inputs []ClassificationInput) (*M
 	}
 
 	return &moderationResponse, nil
+}
+
+// ModerateChat performs chat moderation.
+func (c *MistralClient) ModerateChat(model string, inputs []ChatMessage) (*ModerationResponse, error) {
+	reqMap := map[string]interface{}{
+		"model":  model,
+		"inputs": inputs,
+	}
+
+	response, err := c.request(http.MethodPost, reqMap, "v1/chat/moderations", false, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	respData, ok := response.(map[string]interface{})
+	if !ok {
+		return nil, fmt.Errorf("invalid response type: %T", response)
+	}
+
+	var moderationResponse ModerationResponse
+	err = mapToStruct(respData, &moderationResponse)
+	if err != nil {
+		return nil, err
+	}
+
+	return &moderationResponse, nil
+}
+
+// ClassificationResponse represents the response from classification endpoints.
+type ClassificationResponse struct {
+	ID      string             `json:"id"`
+	Model   string             `json:"model"`
+	Results []ModerationResult `json:"results"`
+}
+
+// Classify performs text classification.
+func (c *MistralClient) Classify(model string, inputs []ClassificationInput) (*ClassificationResponse, error) {
+	reqMap := map[string]interface{}{
+		"model":  model,
+		"inputs": inputs,
+	}
+
+	response, err := c.request(http.MethodPost, reqMap, "v1/classifications", false, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	respData, ok := response.(map[string]interface{})
+	if !ok {
+		return nil, fmt.Errorf("invalid response type: %T", response)
+	}
+
+	var classificationResponse ClassificationResponse
+	err = mapToStruct(respData, &classificationResponse)
+	if err != nil {
+		return nil, err
+	}
+
+	return &classificationResponse, nil
+}
+
+// ClassifyChat performs chat classification.
+func (c *MistralClient) ClassifyChat(model string, inputs []ChatClassificationInput) (*ClassificationResponse, error) {
+	reqMap := map[string]interface{}{
+		"model":  model,
+		"inputs": inputs,
+	}
+
+	response, err := c.request(http.MethodPost, reqMap, "v1/chat/classifications", false, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	respData, ok := response.(map[string]interface{})
+	if !ok {
+		return nil, fmt.Errorf("invalid response type: %T", response)
+	}
+
+	var classificationResponse ClassificationResponse
+	err = mapToStruct(respData, &classificationResponse)
+	if err != nil {
+		return nil, err
+	}
+
+	return &classificationResponse, nil
 }
 
 // ModerateText is a convenience function for moderating simple text inputs

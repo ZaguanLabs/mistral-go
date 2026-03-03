@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 )
 
@@ -84,6 +85,35 @@ func TestListConversations(t *testing.T) {
 	}
 }
 
+func TestListConversationsWithParams(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			t.Errorf("Expected GET, got %s", r.Method)
+		}
+		if r.URL.Path != "/v1/conversations" {
+			t.Errorf("Expected /v1/conversations, got %s", r.URL.Path)
+		}
+		if r.URL.Query().Get("page") != "2" {
+			t.Errorf("Expected page=2, got %s", r.URL.Query().Get("page"))
+		}
+		if r.URL.Query().Get("page_size") != "25" {
+			t.Errorf("Expected page_size=25, got %s", r.URL.Query().Get("page_size"))
+		}
+
+		response := ConversationListResponse{Object: "list", Data: []ConversationResponse{}, Total: 0}
+		json.NewEncoder(w).Encode(response)
+	}))
+	defer server.Close()
+
+	client := NewMistralClient("test-key", server.URL, 1, DefaultTimeout)
+	page := 2
+	pageSize := 25
+	_, err := client.ListConversationsWithParams(&ListConversationsParams{Page: &page, PageSize: &pageSize})
+	if err != nil {
+		t.Fatalf("ListConversationsWithParams failed: %v", err)
+	}
+}
+
 func TestGetConversation(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		response := ConversationResponse{
@@ -155,6 +185,34 @@ func TestGetConversationHistory(t *testing.T) {
 
 	if len(resp.Entries) != 2 {
 		t.Errorf("Expected 2 entries, got %d", len(resp.Entries))
+	}
+}
+
+func TestGetConversationMessages(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if !strings.HasSuffix(r.URL.Path, "/messages") {
+			t.Errorf("Expected path ending with /messages, got %s", r.URL.Path)
+		}
+
+		response := ConversationMessagesResponse{
+			ConversationID: "conv-123",
+			Messages: []ChatMessage{
+				{Role: RoleUser, Content: "Hello"},
+				{Role: RoleAssistant, Content: "Hi"},
+			},
+		}
+		json.NewEncoder(w).Encode(response)
+	}))
+	defer server.Close()
+
+	client := NewMistralClient("test-key", server.URL, 1, DefaultTimeout)
+	resp, err := client.GetConversationMessages("conv-123")
+	if err != nil {
+		t.Fatalf("GetConversationMessages failed: %v", err)
+	}
+
+	if len(resp.Messages) != 2 {
+		t.Errorf("Expected 2 messages, got %d", len(resp.Messages))
 	}
 }
 

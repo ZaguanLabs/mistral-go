@@ -27,7 +27,22 @@ const (
 	BatchEndpointChat       BatchEndpoint = "/v1/chat/completions"
 	BatchEndpointEmbeddings BatchEndpoint = "/v1/embeddings"
 	BatchEndpointFIM        BatchEndpoint = "/v1/fim/completions"
+	BatchEndpointModeration BatchEndpoint = "/v1/moderations"
 )
+
+// OrderBy represents sorting order for list endpoints.
+type OrderBy string
+
+const (
+	OrderByCreatedAsc  OrderBy = "created"
+	OrderByCreatedDesc OrderBy = "-created"
+)
+
+// BatchRequest represents an inline request to be executed in a batch job.
+type BatchRequest struct {
+	CustomID string         `json:"custom_id,omitempty"`
+	Body     map[string]any `json:"body"`
+}
 
 // BatchJobMetadata represents metadata for a batch job
 type BatchJobMetadata struct {
@@ -63,8 +78,10 @@ type BatchJobsOut struct {
 // CreateBatchJobRequest represents the request to create a batch job
 type CreateBatchJobRequest struct {
 	InputFiles   []string       `json:"input_files"`
+	Requests     []BatchRequest `json:"requests,omitempty"`
 	Endpoint     BatchEndpoint  `json:"endpoint"`
 	Model        *string        `json:"model,omitempty"`
+	AgentID      *string        `json:"agent_id,omitempty"`
 	Metadata     map[string]any `json:"metadata,omitempty"`
 	TimeoutHours *int           `json:"timeout_hours,omitempty"`
 }
@@ -74,21 +91,45 @@ type ListBatchJobsParams struct {
 	Page         *int             `json:"page,omitempty"`
 	PageSize     *int             `json:"page_size,omitempty"`
 	Model        *string          `json:"model,omitempty"`
+	AgentID      *string          `json:"agent_id,omitempty"`
 	Metadata     map[string]any   `json:"metadata,omitempty"`
 	CreatedAfter *time.Time       `json:"created_after,omitempty"`
 	CreatedByMe  *bool            `json:"created_by_me,omitempty"`
 	Status       []BatchJobStatus `json:"status,omitempty"`
+	OrderBy      *OrderBy         `json:"order_by,omitempty"`
 }
 
 // CreateBatchJob creates a new batch job
 func (c *MistralClient) CreateBatchJob(req *CreateBatchJobRequest) (*BatchJobOut, error) {
-	response, err := c.request(http.MethodPost, map[string]interface{}{
-		"input_files":   req.InputFiles,
+	if req == nil {
+		return nil, fmt.Errorf("request cannot be nil")
+	}
+
+	hasInputFiles := len(req.InputFiles) > 0
+	hasRequests := len(req.Requests) > 0
+
+	if hasInputFiles && hasRequests {
+		return nil, fmt.Errorf("only one of input_files or requests should be provided, not both")
+	}
+	if !hasInputFiles && !hasRequests {
+		return nil, fmt.Errorf("either input_files or requests must be provided")
+	}
+
+	payload := map[string]interface{}{
 		"endpoint":      req.Endpoint,
 		"model":         req.Model,
+		"agent_id":      req.AgentID,
 		"metadata":      req.Metadata,
 		"timeout_hours": req.TimeoutHours,
-	}, "v1/batch/jobs", false, nil)
+	}
+	if hasInputFiles {
+		payload["input_files"] = req.InputFiles
+	}
+	if hasRequests {
+		payload["requests"] = req.Requests
+	}
+
+	response, err := c.request(http.MethodPost, payload, "v1/batch/jobs", false, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -124,6 +165,9 @@ func (c *MistralClient) ListBatchJobs(params *ListBatchJobsParams) (*BatchJobsOu
 	if params.Model != nil {
 		queryParams.Add("model", *params.Model)
 	}
+	if params.AgentID != nil {
+		queryParams.Add("agent_id", *params.AgentID)
+	}
 	if params.CreatedAfter != nil {
 		queryParams.Add("created_after", params.CreatedAfter.Format(time.RFC3339))
 	}
@@ -132,6 +176,9 @@ func (c *MistralClient) ListBatchJobs(params *ListBatchJobsParams) (*BatchJobsOu
 	}
 	for _, status := range params.Status {
 		queryParams.Add("status", string(status))
+	}
+	if params.OrderBy != nil {
+		queryParams.Add("order_by", string(*params.OrderBy))
 	}
 
 	path := "v1/batch/jobs"
@@ -158,9 +205,16 @@ func (c *MistralClient) ListBatchJobs(params *ListBatchJobsParams) (*BatchJobsOu
 	return &batchJobsOut, nil
 }
 
-// GetBatchJob gets details of a specific batch job
-func (c *MistralClient) GetBatchJob(jobID string) (*BatchJobOut, error) {
-	response, err := c.request(http.MethodGet, nil, fmt.Sprintf("v1/batch/jobs/%s", jobID), false, nil)
+// GetBatchJob gets details of a specific batch job.
+//
+// Pass inline=true to request inline results in the response.
+func (c *MistralClient) GetBatchJob(jobID string, inline ...bool) (*BatchJobOut, error) {
+	path := fmt.Sprintf("v1/batch/jobs/%s", jobID)
+	if len(inline) > 0 {
+		path = fmt.Sprintf("%s?inline=%t", path, inline[0])
+	}
+
+	response, err := c.request(http.MethodGet, nil, path, false, nil)
 	if err != nil {
 		return nil, err
 	}

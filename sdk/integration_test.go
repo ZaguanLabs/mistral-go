@@ -344,6 +344,61 @@ func TestCreateBatchJobWithMock(t *testing.T) {
 	}
 }
 
+func TestGetBatchJobWithInlineQueryWithMock(t *testing.T) {
+	mock := NewMockHTTPServer(t, func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/v1/batch/jobs/batch-123" {
+			t.Errorf("Expected path /v1/batch/jobs/batch-123, got %s", r.URL.Path)
+		}
+		if r.URL.Query().Get("inline") != "true" {
+			t.Errorf("Expected inline=true query param, got %s", r.URL.Query().Get("inline"))
+		}
+		MockBatchJobResponse().Write(w)
+	})
+	defer mock.Close()
+
+	client := mock.GetClient()
+	response, err := client.GetBatchJob("batch-123", true)
+
+	if err != nil {
+		t.Fatalf("GetBatchJob with inline failed: %v", err)
+	}
+
+	if response.ID != "batch-123" {
+		t.Errorf("Expected batch ID 'batch-123', got '%s'", response.ID)
+	}
+}
+
+func TestListFilesWithQueryParamsWithMock(t *testing.T) {
+	mock := NewMockHTTPServer(t, func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/v1/files" {
+			t.Errorf("Expected path /v1/files, got %s", r.URL.Path)
+		}
+		if r.URL.Query().Get("include_total") != "true" {
+			t.Errorf("Expected include_total=true, got %s", r.URL.Query().Get("include_total"))
+		}
+		if r.URL.Query().Get("mimetypes") != "application/pdf" {
+			t.Errorf("Expected mimetypes=application/pdf, got %s", r.URL.Query().Get("mimetypes"))
+		}
+		MockListFilesResponse().Write(w)
+	})
+	defer mock.Close()
+
+	client := mock.GetClient()
+	includeTotal := true
+	response, err := client.ListFiles(&ListFilesParams{
+		IncludeTotal: &includeTotal,
+		Mimetypes:    []string{"application/pdf"},
+	})
+
+	if err != nil {
+		t.Fatalf("ListFiles with query params failed: %v", err)
+	}
+
+	if response == nil {
+		t.Fatal("Response should not be nil")
+	}
+}
+
 func TestListBatchJobsWithMock(t *testing.T) {
 	mock := NewMockHTTPServer(t, func(w http.ResponseWriter, r *http.Request) {
 		MockListBatchJobsResponse().Write(w)
@@ -455,7 +510,7 @@ func TestUserAgentHeaderWithMock(t *testing.T) {
 			t.Error("User-Agent header must be set to avoid Cloudflare 400 errors")
 		}
 
-		expectedUserAgent := "mistral-go/2.1.0"
+		expectedUserAgent := "mistral-go/2.2.0"
 		if userAgent != expectedUserAgent {
 			t.Errorf("Expected User-Agent '%s', got '%s'", expectedUserAgent, userAgent)
 		}

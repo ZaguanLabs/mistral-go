@@ -36,6 +36,7 @@ type LibraryListResponse struct {
 type CreateLibraryRequest struct {
 	Name        string  `json:"name"`
 	Description *string `json:"description,omitempty"`
+	ChunkSize   *int    `json:"chunk_size,omitempty"`
 }
 
 // UpdateLibraryRequest represents a request to update a library
@@ -84,6 +85,9 @@ func (c *MistralClient) CreateLibrary(req *CreateLibraryRequest) (*Library, erro
 
 	if req.Description != nil {
 		reqMap["description"] = *req.Description
+	}
+	if req.ChunkSize != nil {
+		reqMap["chunk_size"] = *req.ChunkSize
 	}
 
 	response, err := c.request(http.MethodPost, reqMap, "v1/libraries", false, nil)
@@ -141,7 +145,7 @@ func (c *MistralClient) UpdateLibrary(libraryID string, req *UpdateLibraryReques
 		reqMap["description"] = *req.Description
 	}
 
-	response, err := c.request(http.MethodPatch, reqMap, fmt.Sprintf("v1/libraries/%s", libraryID), false, nil)
+	response, err := c.request(http.MethodPut, reqMap, fmt.Sprintf("v1/libraries/%s", libraryID), false, nil)
 	if err != nil {
 		return nil, err
 	}
