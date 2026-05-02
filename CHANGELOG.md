@@ -5,6 +5,47 @@ All notable changes to the Mistral Go SDK will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.4.4] - 2026-05-02
+
+### Added - Python SDK v2.4.4 Parity Updates
+
+- Audio/Speech and Voices API:
+  - `Speech()` and `SpeechStream()`
+  - Voice list/create/get/update/delete operations
+  - Voice sample audio download
+- Connectors API:
+  - Connector create/list/get/update/delete operations
+  - Connector authentication URL and authentication method helpers
+  - Connector tool listing and tool call support
+  - Organization, workspace, and user credentials management
+- RAG API:
+  - Ingestion pipeline configuration list/register/update-run-info operations
+- Workflows API:
+  - Workflow list, registration list/get, update, archive, unarchive
+  - Workflow execution and registration execution
+  - `ExecuteWorkflowAndWait()` and `WaitForWorkflowCompletion()`
+  - Workflow deployments, metrics, runs, events, and schedules
+- Workflow executions API:
+  - Get/history, signal, query, update, reset
+  - Cancel/terminate and batch cancel/terminate
+  - Trace OTEL, trace summary, trace events, and execution stream support
+- Observability API:
+  - Campaigns, datasets, dataset records, imports/exports/tasks
+  - Chat completion fields and chat completion events
+  - Judges and live judging helpers
+
+### Changed
+
+- Version and User-Agent updated to `2.4.4`.
+- README release banner and compatibility notes updated for Python SDK v2.4.4.
+- Added broad flexible `APIResponse` support for generated endpoints with large/fast-moving response schemas.
+
+### Tests
+
+- Added mock-server parity coverage for new endpoint groups.
+- Verified compile-only SDK test target.
+- Full live/API-dependent suite still requires valid API credentials and deterministic model responses.
+
 ## [2.2.0] - 2026-03-03
 
 ### Added - Python SDK v1.12.4 Parity Updates

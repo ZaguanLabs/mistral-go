@@ -510,7 +510,7 @@ func TestUserAgentHeaderWithMock(t *testing.T) {
 			t.Error("User-Agent header must be set to avoid Cloudflare 400 errors")
 		}
 
-		expectedUserAgent := "mistral-go/2.2.0"
+		expectedUserAgent := "mistral-go/2.4.4"
 		if userAgent != expectedUserAgent {
 			t.Errorf("Expected User-Agent '%s', got '%s'", expectedUserAgent, userAgent)
 		}
