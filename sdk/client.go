@@ -130,6 +130,9 @@ func (c *MistralClient) request(method string, jsonData map[string]interface{}, 
 	if err != nil {
 		return nil, err
 	}
+	if len(bytes.TrimSpace(body)) == 0 {
+		return map[string]interface{}{}, nil
+	}
 
 	var result interface{}
 	err = json.Unmarshal(body, &result)

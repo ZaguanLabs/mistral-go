@@ -23,27 +23,39 @@ type ModelPermission struct {
 
 // ModelCapabilities represents the capabilities of a model
 type ModelCapabilities struct {
-	CompletionChat  bool `json:"completion_chat,omitempty"`
-	FunctionCalling bool `json:"function_calling,omitempty"`
-	CompletionFIM   bool `json:"completion_fim,omitempty"`
-	FineTuning      bool `json:"fine_tuning,omitempty"`
-	Vision          bool `json:"vision,omitempty"`
-	OCR             bool `json:"ocr,omitempty"`
-	Classification  bool `json:"classification,omitempty"` // Added in v1.10.0
-	Moderation      bool `json:"moderation,omitempty"`     // Added in v1.10.0
-	Audio           bool `json:"audio,omitempty"`          // Added in v1.10.0
+	CompletionChat             bool `json:"completion_chat,omitempty"`
+	FunctionCalling            bool `json:"function_calling,omitempty"`
+	Reasoning                  bool `json:"reasoning,omitempty"`
+	CompletionFIM              bool `json:"completion_fim,omitempty"`
+	FineTuning                 bool `json:"fine_tuning,omitempty"`
+	Vision                     bool `json:"vision,omitempty"`
+	OCR                        bool `json:"ocr,omitempty"`
+	Classification             bool `json:"classification,omitempty"`
+	Moderation                 bool `json:"moderation,omitempty"`
+	Audio                      bool `json:"audio,omitempty"`
+	AudioTranscription         bool `json:"audio_transcription,omitempty"`
+	AudioTranscriptionRealtime bool `json:"audio_transcription_realtime,omitempty"`
+	AudioSpeech                bool `json:"audio_speech,omitempty"`
 }
 
 // ModelCard represents a model card.
 type ModelCard struct {
-	ID           string             `json:"id"`
-	Object       string             `json:"object"`
-	Created      int                `json:"created"`
-	OwnedBy      string             `json:"owned_by"`
-	Root         string             `json:"root,omitempty"`
-	Parent       string             `json:"parent,omitempty"`
-	Permission   []ModelPermission  `json:"permission"`
-	Capabilities *ModelCapabilities `json:"capabilities,omitempty"` // Added in v1.10.0
+	ID                          string             `json:"id"`
+	Object                      string             `json:"object"`
+	Created                     int                `json:"created"`
+	OwnedBy                     string             `json:"owned_by"`
+	Name                        *string            `json:"name,omitempty"`
+	Description                 *string            `json:"description,omitempty"`
+	MaxContextLength            *int               `json:"max_context_length,omitempty"`
+	Aliases                     []string           `json:"aliases,omitempty"`
+	Deprecation                 *string            `json:"deprecation,omitempty"`
+	DeprecationReplacementModel *string            `json:"deprecation_replacement_model,omitempty"`
+	DefaultModelTemperature     *float64           `json:"default_model_temperature,omitempty"`
+	Type                        string             `json:"type,omitempty"`
+	Root                        string             `json:"root,omitempty"`
+	Parent                      string             `json:"parent,omitempty"`
+	Permission                  []ModelPermission  `json:"permission,omitempty"`
+	Capabilities                *ModelCapabilities `json:"capabilities,omitempty"`
 }
 
 // ModelList represents a list of models.

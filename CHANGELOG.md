@@ -5,6 +5,42 @@ All notable changes to the Mistral Go SDK will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.4.9] - 2026-06-04
+
+### Added - Python SDK v2.4.9 Parity Updates
+
+- Batch API:
+  - `DeleteBatchJob()` for `DELETE /v1/batch/jobs/{job_id}`.
+- Chat API:
+  - String-or-list `stop` values.
+  - Full `response_format` objects for JSON schema mode.
+  - Built-in tool payloads, specific tool choices, `reasoning_effort`, `guardrails`, and `prompt_cache_key`.
+- Connectors API:
+  - Organization, workspace, and user activate/deactivate operations.
+  - OAuth2 server metadata fields and connector `protocol` request fields.
+- RAG API:
+  - Search index list and register operations.
+- Workflows API:
+  - Bulk archive/unarchive operations.
+  - Schedule list filters, get schedule, and update schedule operations.
+- Models API:
+  - Updated model card and capability fields from Python SDK v2.4.9.
+- Audio realtime API:
+  - `RealtimeTranscriptionConnect()` for WebSocket session management.
+  - `RealtimeTranscribeStream()` convenience helper for streaming audio from an `io.Reader`.
+  - Session update, audio append, flush, end, close, and event-reading helpers.
+
+### Changed
+
+- Version and User-Agent updated to `2.4.9`.
+- README compatibility notes updated for Python SDK v2.4.9.
+- Added `nhooyr.io/websocket` as a pure-Go dependency to support official realtime API parity.
+
+### Tests
+
+- Added mock-server parity coverage for the new 2.4.9 endpoints and chat request fields.
+- Verified compile-only test sweep with `go test ./... -run '^$'`.
+
 ## [2.4.4] - 2026-05-02
 
 ### Added - Python SDK v2.4.4 Parity Updates

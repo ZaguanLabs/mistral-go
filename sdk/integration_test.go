@@ -1,6 +1,7 @@
 package sdk
 
 import (
+	"encoding/json"
 	"net/http"
 	"strings"
 	"testing"
@@ -82,6 +83,67 @@ func TestChatWithMock(t *testing.T) {
 
 	if response.Choices[0].Message.Role != RoleAssistant {
 		t.Errorf("Expected assistant role, got %s", response.Choices[0].Message.Role)
+	}
+}
+
+func TestChatNewRequestFieldsWithMock(t *testing.T) {
+	mock := NewMockHTTPServer(t, func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/v1/chat/completions" {
+			t.Errorf("Expected path /v1/chat/completions, got %s", r.URL.Path)
+		}
+
+		var body map[string]any
+		if err := json.Unmarshal([]byte(ReadRequestBody(r)), &body); err != nil {
+			t.Fatalf("failed to decode request body: %v", err)
+		}
+		if body["stop"] != "END" {
+			t.Fatalf("expected string stop value, got %#v", body["stop"])
+		}
+		if body["reasoning_effort"] != string(ReasoningEffortLow) {
+			t.Fatalf("expected reasoning_effort, got %#v", body["reasoning_effort"])
+		}
+		if body["prompt_cache_key"] != "cache-key" {
+			t.Fatalf("expected prompt_cache_key, got %#v", body["prompt_cache_key"])
+		}
+		if _, ok := body["guardrails"].([]any); !ok {
+			t.Fatalf("expected guardrails array, got %#v", body["guardrails"])
+		}
+		if _, ok := body["tools"].([]any); !ok {
+			t.Fatalf("expected tools array, got %#v", body["tools"])
+		}
+
+		MockChatResponse().Write(w)
+	})
+	defer mock.Close()
+
+	reasoning := ReasoningEffortLow
+	cacheKey := "cache-key"
+	params := &ChatRequestParams{
+		Stop:            "END",
+		ReasoningEffort: &reasoning,
+		PromptCacheKey:  &cacheKey,
+		Guardrails:      []GuardrailConfig{{GuardrailID: "guardrail"}},
+		Tools:           []any{BuiltInTool{Type: ToolTypeWebSearch}},
+		ToolChoice:      ToolChoiceAuto,
+		ResponseFormat:  map[string]any{"type": "json_schema", "json_schema": map[string]any{"name": "result"}},
+	}
+
+	if _, err := mock.GetClient().Chat("mistral-small-latest", []ChatMessage{{Role: RoleUser, Content: "Hello"}}, params); err != nil {
+		t.Fatalf("Chat failed: %v", err)
+	}
+}
+
+func TestNoContentResponseWithMock(t *testing.T) {
+	mock := NewMockHTTPServer(t, func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/v1/workflows/schedules/sched" {
+			t.Errorf("Expected path /v1/workflows/schedules/sched, got %s", r.URL.Path)
+		}
+		w.WriteHeader(http.StatusNoContent)
+	})
+	defer mock.Close()
+
+	if _, err := mock.GetClient().UnscheduleWorkflow("sched"); err != nil {
+		t.Fatalf("UnscheduleWorkflow failed on 204 response: %v", err)
 	}
 }
 
@@ -510,7 +572,7 @@ func TestUserAgentHeaderWithMock(t *testing.T) {
 			t.Error("User-Agent header must be set to avoid Cloudflare 400 errors")
 		}
 
-		expectedUserAgent := "mistral-go/2.4.4"
+		expectedUserAgent := UserAgent
 		if userAgent != expectedUserAgent {
 			t.Errorf("Expected User-Agent '%s', got '%s'", expectedUserAgent, userAgent)
 		}

@@ -1,14 +1,14 @@
 # Mistral Go SDK
 
-**Version 2.4.4** - Python SDK v2.4.4 Compatibility 🚀
+**Version 2.4.9** - Python SDK v2.4.9 Compatibility 🚀
 
-[![Zero Dependencies](https://img.shields.io/badge/dependencies-0-brightgreen.svg)](https://github.com/ZaguanLabs/mistral-go)
+[![Minimal Dependencies](https://img.shields.io/badge/dependencies-minimal-brightgreen.svg)](https://github.com/ZaguanLabs/mistral-go)
 [![Go Version](https://img.shields.io/badge/go-%3E%3D1.20-blue.svg)](https://golang.org/)
-[![Standard Library Only](https://img.shields.io/badge/stdlib-only-success.svg)](https://pkg.go.dev/std)
+[![Pure Go](https://img.shields.io/badge/pure-go-success.svg)](https://pkg.go.dev/std)
 
-A Go SDK for the Mistral AI API, designed to provide developers with powerful tools to integrate advanced AI capabilities into their applications. This SDK has been significantly enhanced to match the official Mistral Python SDK v2.4.4.
+A Go SDK for the Mistral AI API, designed to provide developers with powerful tools to integrate advanced AI capabilities into their applications. This SDK has been significantly enhanced to match the official Mistral Python SDK v2.4.9.
 
-**✨ Zero Dependencies** - Built entirely with Go's standard library for maximum compatibility, security, and performance.
+**✨ Minimal Dependencies** - REST functionality uses the Go standard library; realtime audio adds one pure-Go WebSocket dependency for official SDK parity.
 
 ## Features
 
@@ -26,19 +26,20 @@ A Go SDK for the Mistral AI API, designed to provide developers with powerful to
 - **Classifiers API**: Content moderation and classification for safety and compliance
 - **OCR API**: Document processing and text extraction from images
 - **Audio/Transcriptions API**: Speech-to-text transcription with timestamp support
+- **Audio/Realtime API**: WebSocket realtime transcription with session updates and streaming events
 - **Audio/Speech & Voices API**: Text-to-speech generation and custom voice management
 - **Workflows API**: Workflow execution, runs, events, schedules, metrics, deployments, and execution control
 - **Connectors API**: Connector management, tool calls, authentication methods, and credentials
 - **Observability API**: Campaigns, datasets, records, judges, fields, and chat completion events
-- **RAG API**: Ingestion pipeline configuration management
+- **RAG API**: Ingestion pipeline configuration and search index management
 
-## Version 2.4.4 - Python SDK v2.4.4 Compatibility
+## Version 2.4.9 - Python SDK v2.4.9 Compatibility
 
-🚀 **Full compatibility with Mistral Python SDK v2.4.4** - Implements the latest resource groups and generated endpoint surface to maintain 100% feature parity.
+🚀 **Full compatibility with Mistral Python SDK v2.4.9** - Implements the latest resource groups and generated endpoint surface to maintain 100% feature parity.
 
-Includes workflow orchestration, observability resources, connectors, RAG ingestion pipeline configuration, speech generation, and voice management APIs.
+Includes workflow orchestration, observability resources, connectors, RAG ingestion pipeline and search index APIs, speech generation, voice management, and realtime audio transcription APIs.
 
-**✅ Zero external dependencies maintained** - All new functionality uses the Go standard library only.
+**✅ Minimal dependency footprint** - Realtime audio uses `nhooyr.io/websocket`; the rest of the SDK remains standard-library based.
 
 ## Version 2.0.1 - Critical Bug Fix
 

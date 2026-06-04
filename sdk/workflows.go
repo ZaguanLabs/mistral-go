@@ -68,6 +68,14 @@ type ListWorkflowEventsParams struct {
 	NextPageToken *string `json:"next_page_token,omitempty"`
 }
 
+type ListWorkflowSchedulesParams struct {
+	WorkflowName  *string `json:"workflow_name,omitempty"`
+	UserID        *string `json:"user_id,omitempty"`
+	Status        *string `json:"status,omitempty"`
+	PageSize      *int    `json:"page_size,omitempty"`
+	NextPageToken *string `json:"next_page_token,omitempty"`
+}
+
 type ScheduleWorkflowRequest struct {
 	Schedule               any     `json:"schedule,omitempty"`
 	WorkflowRegistrationID *string `json:"workflow_registration_id,omitempty"`
@@ -76,6 +84,10 @@ type ScheduleWorkflowRequest struct {
 	WorkflowTaskQueue      *string `json:"workflow_task_queue,omitempty"`
 	ScheduleID             *string `json:"schedule_id,omitempty"`
 	DeploymentName         *string `json:"deployment_name,omitempty"`
+}
+
+type UpdateScheduleRequest struct {
+	Schedule any `json:"schedule"`
 }
 
 type ScheduleNoteRequest struct {
@@ -230,6 +242,16 @@ func (c *MistralClient) UnarchiveWorkflow(workflowIdentifier string) (APIRespons
 	return c.requestMap(http.MethodPut, nil, fmt.Sprintf("v1/workflows/%s/unarchive", workflowIdentifier))
 }
 
+func (c *MistralClient) BulkArchiveWorkflows(workflowIDs []string) (APIResponse, error) {
+	body := map[string]interface{}{"workflow_ids": workflowIDs}
+	return c.requestMap(http.MethodPut, body, "v1/workflows/archive")
+}
+
+func (c *MistralClient) BulkUnarchiveWorkflows(workflowIDs []string) (APIResponse, error) {
+	body := map[string]interface{}{"workflow_ids": workflowIDs}
+	return c.requestMap(http.MethodPut, body, "v1/workflows/unarchive")
+}
+
 func (c *MistralClient) ListWorkflowDeployments() (APIResponse, error) {
 	return c.requestMap(http.MethodGet, nil, "v1/workflows/deployments")
 }
@@ -302,8 +324,19 @@ func (c *MistralClient) GetWorkflowEvents(params *ListWorkflowEventsParams) (API
 	return c.requestMap(http.MethodGet, nil, appendQuery("v1/workflows/events/list", query))
 }
 
-func (c *MistralClient) GetWorkflowSchedules() (APIResponse, error) {
-	return c.requestMap(http.MethodGet, nil, "v1/workflows/schedules")
+func (c *MistralClient) GetWorkflowSchedules(params ...*ListWorkflowSchedulesParams) (APIResponse, error) {
+	requestParams := &ListWorkflowSchedulesParams{}
+	if len(params) > 0 && params[0] != nil {
+		requestParams = params[0]
+	}
+	query := queryWithOptionalValues(map[string]any{
+		"workflow_name":   requestParams.WorkflowName,
+		"user_id":         requestParams.UserID,
+		"status":          requestParams.Status,
+		"page_size":       requestParams.PageSize,
+		"next_page_token": requestParams.NextPageToken,
+	})
+	return c.requestMap(http.MethodGet, nil, appendQuery("v1/workflows/schedules", query))
 }
 
 func (c *MistralClient) ScheduleWorkflow(req *ScheduleWorkflowRequest) (APIResponse, error) {
@@ -324,6 +357,18 @@ func (c *MistralClient) ScheduleWorkflow(req *ScheduleWorkflowRequest) (APIRespo
 
 func (c *MistralClient) UnscheduleWorkflow(scheduleID string) (APIResponse, error) {
 	return c.requestMap(http.MethodDelete, nil, fmt.Sprintf("v1/workflows/schedules/%s", scheduleID))
+}
+
+func (c *MistralClient) GetWorkflowSchedule(scheduleID string) (APIResponse, error) {
+	return c.requestMap(http.MethodGet, nil, fmt.Sprintf("v1/workflows/schedules/%s", scheduleID))
+}
+
+func (c *MistralClient) UpdateWorkflowSchedule(scheduleID string, req *UpdateScheduleRequest) (APIResponse, error) {
+	if req == nil {
+		return nil, fmt.Errorf("request cannot be nil")
+	}
+	body := optionalRequestMap(map[string]any{"schedule": req.Schedule})
+	return c.requestMap(http.MethodPatch, body, fmt.Sprintf("v1/workflows/schedules/%s", scheduleID))
 }
 
 func (c *MistralClient) PauseSchedule(scheduleID string, req *ScheduleNoteRequest) (APIResponse, error) {

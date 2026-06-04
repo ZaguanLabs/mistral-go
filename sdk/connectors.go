@@ -6,15 +6,18 @@ import (
 )
 
 type ConnectorRequest struct {
-	Name         string         `json:"name,omitempty"`
-	Description  *string        `json:"description,omitempty"`
-	Server       any            `json:"server,omitempty"`
-	Title        *string        `json:"title,omitempty"`
-	IconURL      *string        `json:"icon_url,omitempty"`
-	Visibility   any            `json:"visibility,omitempty"`
-	Headers      map[string]any `json:"headers,omitempty"`
-	AuthData     map[string]any `json:"auth_data,omitempty"`
-	SystemPrompt *string        `json:"system_prompt,omitempty"`
+	Name                    string         `json:"name,omitempty"`
+	Description             *string        `json:"description,omitempty"`
+	Server                  any            `json:"server,omitempty"`
+	Protocol                *string        `json:"protocol,omitempty"`
+	Title                   *string        `json:"title,omitempty"`
+	IconURL                 *string        `json:"icon_url,omitempty"`
+	Visibility              any            `json:"visibility,omitempty"`
+	Headers                 map[string]any `json:"headers,omitempty"`
+	AuthData                map[string]any `json:"auth_data,omitempty"`
+	OAuth2ServerMetadata    map[string]any `json:"oauth2_server_metadata,omitempty"`
+	OAuth2ServerMetadataURL *string        `json:"oauth2_server_metadata_url,omitempty"`
+	SystemPrompt            *string        `json:"system_prompt,omitempty"`
 }
 
 type UpdateConnectorRequest struct {
@@ -25,6 +28,7 @@ type UpdateConnectorRequest struct {
 	SystemPrompt      *string        `json:"system_prompt,omitempty"`
 	ConnectionConfig  map[string]any `json:"connection_config,omitempty"`
 	ConnectionSecrets map[string]any `json:"connection_secrets,omitempty"`
+	Protocol          *string        `json:"protocol,omitempty"`
 	Server            any            `json:"server,omitempty"`
 	Headers           map[string]any `json:"headers,omitempty"`
 	AuthData          map[string]any `json:"auth_data,omitempty"`
@@ -55,20 +59,30 @@ type ListConnectorToolsParams struct {
 	CredentialsName *string `json:"credentials_name,omitempty"`
 }
 
+type ToolExecutionConfiguration struct {
+	RequiresConfirmation any      `json:"requires_confirmation,omitempty"`
+	SkipConfirmation     any      `json:"skip_confirmation,omitempty"`
+	Include              []string `json:"include,omitempty"`
+	Exclude              []string `json:"exclude,omitempty"`
+}
+
 func (c *MistralClient) CreateConnector(req *ConnectorRequest) (APIResponse, error) {
 	if req == nil {
 		return nil, fmt.Errorf("request cannot be nil")
 	}
 	body := optionalRequestMap(map[string]any{
-		"name":          req.Name,
-		"description":   req.Description,
-		"server":        req.Server,
-		"title":         req.Title,
-		"icon_url":      req.IconURL,
-		"visibility":    req.Visibility,
-		"headers":       req.Headers,
-		"auth_data":     req.AuthData,
-		"system_prompt": req.SystemPrompt,
+		"name":                       req.Name,
+		"description":                req.Description,
+		"server":                     req.Server,
+		"protocol":                   req.Protocol,
+		"title":                      req.Title,
+		"icon_url":                   req.IconURL,
+		"visibility":                 req.Visibility,
+		"headers":                    req.Headers,
+		"auth_data":                  req.AuthData,
+		"oauth2_server_metadata":     req.OAuth2ServerMetadata,
+		"oauth2_server_metadata_url": req.OAuth2ServerMetadataURL,
+		"system_prompt":              req.SystemPrompt,
 	})
 	return c.requestMap(http.MethodPost, body, "v1/connectors")
 }
@@ -112,6 +126,30 @@ func (c *MistralClient) ListConnectorTools(connectorIDOrName string, params *Lis
 
 func (c *MistralClient) GetConnectorAuthenticationMethods(connectorIDOrName string) (APIResponse, error) {
 	return c.requestMap(http.MethodGet, nil, fmt.Sprintf("v1/connectors/%s/authentication_methods", connectorIDOrName))
+}
+
+func (c *MistralClient) ActivateConnectorForOrganization(connectorID string, config *ToolExecutionConfiguration) (APIResponse, error) {
+	return c.activateConnector(connectorID, "organization", config)
+}
+
+func (c *MistralClient) DeactivateConnectorForOrganization(connectorID string) (APIResponse, error) {
+	return c.deactivateConnector(connectorID, "organization")
+}
+
+func (c *MistralClient) ActivateConnectorForWorkspace(connectorID string, config *ToolExecutionConfiguration) (APIResponse, error) {
+	return c.activateConnector(connectorID, "workspace", config)
+}
+
+func (c *MistralClient) DeactivateConnectorForWorkspace(connectorID string) (APIResponse, error) {
+	return c.deactivateConnector(connectorID, "workspace")
+}
+
+func (c *MistralClient) ActivateConnectorForUser(connectorID string, config *ToolExecutionConfiguration) (APIResponse, error) {
+	return c.activateConnector(connectorID, "user", config)
+}
+
+func (c *MistralClient) DeactivateConnectorForUser(connectorID string) (APIResponse, error) {
+	return c.deactivateConnector(connectorID, "user")
 }
 
 func (c *MistralClient) ListOrganizationConnectorCredentials(connectorIDOrName string, params *ListConnectorCredentialsParams) (APIResponse, error) {
@@ -167,6 +205,7 @@ func (c *MistralClient) UpdateConnector(connectorID string, req *UpdateConnector
 		"system_prompt":      req.SystemPrompt,
 		"connection_config":  req.ConnectionConfig,
 		"connection_secrets": req.ConnectionSecrets,
+		"protocol":           req.Protocol,
 		"server":             req.Server,
 		"headers":            req.Headers,
 		"auth_data":          req.AuthData,
@@ -176,6 +215,23 @@ func (c *MistralClient) UpdateConnector(connectorID string, req *UpdateConnector
 
 func (c *MistralClient) DeleteConnector(connectorID string) (APIResponse, error) {
 	return c.requestMap(http.MethodDelete, nil, fmt.Sprintf("v1/connectors/%s", connectorID))
+}
+
+func (c *MistralClient) activateConnector(connectorID, scope string, config *ToolExecutionConfiguration) (APIResponse, error) {
+	var body map[string]interface{}
+	if config != nil {
+		body = optionalRequestMap(map[string]any{
+			"requires_confirmation": config.RequiresConfirmation,
+			"skip_confirmation":     config.SkipConfirmation,
+			"include":               config.Include,
+			"exclude":               config.Exclude,
+		})
+	}
+	return c.requestMap(http.MethodPost, body, fmt.Sprintf("v1/connectors/%s/%s/activate", connectorID, scope))
+}
+
+func (c *MistralClient) deactivateConnector(connectorID, scope string) (APIResponse, error) {
+	return c.requestMap(http.MethodPost, nil, fmt.Sprintf("v1/connectors/%s/%s/deactivate", connectorID, scope))
 }
 
 func (c *MistralClient) listConnectorCredentials(connectorIDOrName, scope string, params *ListConnectorCredentialsParams) (APIResponse, error) {

@@ -25,6 +25,7 @@ go.work
 .vscode/
 .idea/
 docs/client-python-2.*
+docs/client-python/
 *.tar.gz
 
 # Example binaries

@@ -56,7 +56,13 @@ const (
 type ToolType string
 
 const (
-	ToolTypeFunction ToolType = "function"
+	ToolTypeFunction        ToolType = "function"
+	ToolTypeWebSearch       ToolType = "web_search"
+	ToolTypeWebSearchPrem   ToolType = "web_search_premium"
+	ToolTypeCodeInterpreter ToolType = "code_interpreter"
+	ToolTypeImageGeneration ToolType = "image_generation"
+	ToolTypeDocumentLibrary ToolType = "document_library"
+	ToolTypeCustomConnector ToolType = "connector"
 )
 
 const (
@@ -70,6 +76,12 @@ const (
 type Tool struct {
 	Type     ToolType `json:"type"`
 	Function Function `json:"function"`
+}
+
+// BuiltInTool represents non-function tools supported by newer Mistral models.
+type BuiltInTool struct {
+	Type ToolType `json:"type"`
+	Name string   `json:"name,omitempty"`
 }
 
 // Function definition of a function that the llm can call including its parameters
@@ -140,6 +152,21 @@ type MistralPromptMode string
 const (
 	PromptModeReasoning MistralPromptMode = "reasoning"
 )
+
+// ReasoningEffort controls the amount of reasoning the model should perform.
+type ReasoningEffort string
+
+const (
+	ReasoningEffortLow    ReasoningEffort = "low"
+	ReasoningEffortMedium ReasoningEffort = "medium"
+	ReasoningEffortHigh   ReasoningEffort = "high"
+)
+
+// GuardrailConfig configures server-side guardrails for a chat request.
+type GuardrailConfig struct {
+	GuardrailID string         `json:"guardrail_id,omitempty"`
+	Params      map[string]any `json:"params,omitempty"`
+}
 
 // EncodingFormat represents the encoding format for embeddings
 type EncodingFormat string

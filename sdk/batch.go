@@ -68,6 +68,13 @@ type BatchJobOut struct {
 	TimeoutHours *int              `json:"timeout_hours,omitempty"`
 }
 
+// DeleteBatchJobResponse represents the response from deleting a batch job.
+type DeleteBatchJobResponse struct {
+	ID      string `json:"id"`
+	Object  string `json:"object"`
+	Deleted bool   `json:"deleted"`
+}
+
 // BatchJobsOut represents a list of batch jobs
 type BatchJobsOut struct {
 	Data   []BatchJobOut `json:"data"`
@@ -252,4 +259,25 @@ func (c *MistralClient) CancelBatchJob(jobID string) (*BatchJobOut, error) {
 	}
 
 	return &batchJobOut, nil
+}
+
+// DeleteBatchJob requests deletion of a batch job.
+func (c *MistralClient) DeleteBatchJob(jobID string) (*DeleteBatchJobResponse, error) {
+	response, err := c.request(http.MethodDelete, nil, fmt.Sprintf("v1/batch/jobs/%s", jobID), false, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	respData, ok := response.(map[string]interface{})
+	if !ok {
+		return nil, fmt.Errorf("invalid response type: %T", response)
+	}
+
+	var deleteResponse DeleteBatchJobResponse
+	err = mapToStruct(respData, &deleteResponse)
+	if err != nil {
+		return nil, err
+	}
+
+	return &deleteResponse, nil
 }

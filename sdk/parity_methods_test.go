@@ -59,6 +59,30 @@ func TestNewParityEndpoints(t *testing.T) {
 			return err
 		}},
 		{"DeleteConnector", http.MethodDelete, "/v1/connectors/conn", func(c *MistralClient) error { _, err := c.DeleteConnector("conn"); return err }},
+		{"ActivateConnectorForOrganization", http.MethodPost, "/v1/connectors/conn/organization/activate", func(c *MistralClient) error {
+			_, err := c.ActivateConnectorForOrganization("conn", &ToolExecutionConfiguration{Include: []string{"tool"}})
+			return err
+		}},
+		{"DeactivateConnectorForOrganization", http.MethodPost, "/v1/connectors/conn/organization/deactivate", func(c *MistralClient) error {
+			_, err := c.DeactivateConnectorForOrganization("conn")
+			return err
+		}},
+		{"ActivateConnectorForWorkspace", http.MethodPost, "/v1/connectors/conn/workspace/activate", func(c *MistralClient) error {
+			_, err := c.ActivateConnectorForWorkspace("conn", nil)
+			return err
+		}},
+		{"DeactivateConnectorForWorkspace", http.MethodPost, "/v1/connectors/conn/workspace/deactivate", func(c *MistralClient) error {
+			_, err := c.DeactivateConnectorForWorkspace("conn")
+			return err
+		}},
+		{"ActivateConnectorForUser", http.MethodPost, "/v1/connectors/conn/user/activate", func(c *MistralClient) error {
+			_, err := c.ActivateConnectorForUser("conn", nil)
+			return err
+		}},
+		{"DeactivateConnectorForUser", http.MethodPost, "/v1/connectors/conn/user/deactivate", func(c *MistralClient) error {
+			_, err := c.DeactivateConnectorForUser("conn")
+			return err
+		}},
 		{"ListIngestionPipelineConfigurations", http.MethodGet, "/v1/rag/ingestion_pipeline_configurations", func(c *MistralClient) error { _, err := c.ListIngestionPipelineConfigurations(); return err }},
 		{"RegisterIngestionPipelineConfiguration", http.MethodPut, "/v1/rag/ingestion_pipeline_configurations", func(c *MistralClient) error {
 			_, err := c.RegisterIngestionPipelineConfiguration(&RegisterIngestionPipelineConfigurationRequest{Name: "pipe", PipelineComposition: map[string]any{}})
@@ -66,6 +90,11 @@ func TestNewParityEndpoints(t *testing.T) {
 		}},
 		{"UpdateIngestionPipelineRunInfo", http.MethodPut, "/v1/rag/ingestion_pipeline_configurations/id/run_info", func(c *MistralClient) error {
 			_, err := c.UpdateIngestionPipelineRunInfo("id", &UpdateIngestionPipelineRunInfoRequest{ChunksCount: &intVal})
+			return err
+		}},
+		{"RegisterSearchIndex", http.MethodPut, "/v1/rag/search_index", func(c *MistralClient) error {
+			status := SearchIndexStatusOffline
+			_, err := c.RegisterSearchIndex(&RegisterSearchIndexRequest{Name: "idx", Index: map[string]any{"type": "vespa"}, Status: &status})
 			return err
 		}},
 		{"GetWorkflows", http.MethodGet, "/v1/workflows", func(c *MistralClient) error {
@@ -89,6 +118,8 @@ func TestNewParityEndpoints(t *testing.T) {
 		{"GetWorkflowRegistration", http.MethodGet, "/v1/workflows/registrations/reg", func(c *MistralClient) error { _, err := c.GetWorkflowRegistration("reg", nil); return err }},
 		{"ArchiveWorkflow", http.MethodPut, "/v1/workflows/wf/archive", func(c *MistralClient) error { _, err := c.ArchiveWorkflow("wf"); return err }},
 		{"UnarchiveWorkflow", http.MethodPut, "/v1/workflows/wf/unarchive", func(c *MistralClient) error { _, err := c.UnarchiveWorkflow("wf"); return err }},
+		{"BulkArchiveWorkflows", http.MethodPut, "/v1/workflows/archive", func(c *MistralClient) error { _, err := c.BulkArchiveWorkflows([]string{"wf"}); return err }},
+		{"BulkUnarchiveWorkflows", http.MethodPut, "/v1/workflows/unarchive", func(c *MistralClient) error { _, err := c.BulkUnarchiveWorkflows([]string{"wf"}); return err }},
 		{"ListWorkflowDeployments", http.MethodGet, "/v1/workflows/deployments", func(c *MistralClient) error { _, err := c.ListWorkflowDeployments(); return err }},
 		{"GetWorkflowDeployment", http.MethodGet, "/v1/workflows/deployments/dep", func(c *MistralClient) error { _, err := c.GetWorkflowDeployment("dep"); return err }},
 		{"GetWorkflowMetrics", http.MethodGet, "/v1/workflows/wf/metrics", func(c *MistralClient) error { _, err := c.GetWorkflowMetrics("wf"); return err }},
@@ -103,8 +134,17 @@ func TestNewParityEndpoints(t *testing.T) {
 			return err
 		}},
 		{"GetWorkflowSchedules", http.MethodGet, "/v1/workflows/schedules", func(c *MistralClient) error { _, err := c.GetWorkflowSchedules(); return err }},
+		{"GetWorkflowSchedulesWithParams", http.MethodGet, "/v1/workflows/schedules", func(c *MistralClient) error {
+			_, err := c.GetWorkflowSchedules(&ListWorkflowSchedulesParams{WorkflowName: &str, PageSize: &intVal})
+			return err
+		}},
 		{"ScheduleWorkflow", http.MethodPost, "/v1/workflows/schedules", func(c *MistralClient) error {
 			_, err := c.ScheduleWorkflow(&ScheduleWorkflowRequest{ScheduleID: &str})
+			return err
+		}},
+		{"GetWorkflowSchedule", http.MethodGet, "/v1/workflows/schedules/sched", func(c *MistralClient) error { _, err := c.GetWorkflowSchedule("sched"); return err }},
+		{"UpdateWorkflowSchedule", http.MethodPatch, "/v1/workflows/schedules/sched", func(c *MistralClient) error {
+			_, err := c.UpdateWorkflowSchedule("sched", &UpdateScheduleRequest{Schedule: map[string]any{"input": map[string]any{}}})
 			return err
 		}},
 		{"UnscheduleWorkflow", http.MethodDelete, "/v1/workflows/schedules/sched", func(c *MistralClient) error { _, err := c.UnscheduleWorkflow("sched"); return err }},
@@ -194,6 +234,10 @@ func TestNewParityEndpoints(t *testing.T) {
 			_, err := c.UpdateDatasetRecordPayload("rec", map[string]any{})
 			return err
 		}},
+		{"DeleteBatchJob", http.MethodDelete, "/v1/batch/jobs/job", func(c *MistralClient) error {
+			_, err := c.DeleteBatchJob("job")
+			return err
+		}},
 	}
 
 	for _, tc := range tests {
@@ -255,5 +299,26 @@ func TestNewParityBinaryAndStreamEndpoints(t *testing.T) {
 		for range events {
 			break
 		}
+	}
+}
+
+func TestListSearchIndexesEndpoint(t *testing.T) {
+	mock := NewMockHTTPServer(t, func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			t.Errorf("expected method %s, got %s", http.MethodGet, r.Method)
+		}
+		if r.URL.Path != "/v1/rag/search_index" {
+			t.Errorf("expected path /v1/rag/search_index, got %s", r.URL.Path)
+		}
+		MockJSONResponse(http.StatusOK, `[{"id":"idx","name":"Index","creator_id":"user","document_count":1,"status":"online","created_at":"2026-01-01T00:00:00Z","modified_at":"2026-01-01T00:00:00Z","index":{"type":"vespa"}}]`).Write(w)
+	})
+	defer mock.Close()
+
+	indexes, err := mock.GetClient().ListSearchIndexes()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(indexes) != 1 || indexes[0].ID != "idx" {
+		t.Fatalf("unexpected indexes: %+v", indexes)
 	}
 }

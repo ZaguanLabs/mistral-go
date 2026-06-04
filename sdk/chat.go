@@ -21,15 +21,15 @@ type ChatRequestParams struct {
 	MinTokens *int `json:"min_tokens,omitempty"` // Minimum tokens to generate (for FIM)
 
 	// Stop sequences
-	Stop []string `json:"stop,omitempty"` // Stop generation if these tokens are detected
+	Stop any `json:"stop,omitempty"` // Stop generation if this token, or one of these tokens, is detected
 
 	// Response format
-	ResponseFormat ResponseFormat `json:"response_format,omitempty"` // Format for the response (text or json_object)
+	ResponseFormat any `json:"response_format,omitempty"` // ResponseFormat string or a full response_format object
 
 	// Tools and function calling
-	Tools             []Tool `json:"tools,omitempty"`               // Available tools for the model
-	ToolChoice        string `json:"tool_choice,omitempty"`         // How to select tools (auto, any, none, or specific tool)
-	ParallelToolCalls *bool  `json:"parallel_tool_calls,omitempty"` // Whether to enable parallel tool calls
+	Tools             any   `json:"tools,omitempty"`               // Available tools for the model
+	ToolChoice        any   `json:"tool_choice,omitempty"`         // How to select tools (auto, any, none, or specific tool)
+	ParallelToolCalls *bool `json:"parallel_tool_calls,omitempty"` // Whether to enable parallel tool calls
 
 	// Penalties for repetition
 	PresencePenalty  *float64 `json:"presence_penalty,omitempty"`  // Penalize repetition of words/phrases
@@ -43,6 +43,11 @@ type ChatRequestParams struct {
 	PromptMode *MistralPromptMode `json:"prompt_mode,omitempty"` // Prompt mode (e.g., "reasoning")
 	SafePrompt *bool              `json:"safe_prompt,omitempty"` // Inject safety prompt
 	Metadata   map[string]any     `json:"metadata,omitempty"`    // Custom metadata (added in v1.10.0)
+
+	// 2.4.9 chat request additions
+	ReasoningEffort *ReasoningEffort  `json:"reasoning_effort,omitempty"`
+	Guardrails      []GuardrailConfig `json:"guardrails,omitempty"`
+	PromptCacheKey  *string           `json:"prompt_cache_key,omitempty"`
 }
 
 // NewChatRequestParams creates a new ChatRequestParams with sensible defaults
@@ -121,6 +126,9 @@ func (c *MistralClient) Chat(model string, messages []ChatMessage, params *ChatR
 	if params.Stop != nil {
 		requestData["stop"] = params.Stop
 	}
+	if params.Metadata != nil {
+		requestData["metadata"] = params.Metadata
+	}
 	if params.SafePrompt != nil {
 		requestData["safe_prompt"] = *params.SafePrompt
 	}
@@ -145,11 +153,20 @@ func (c *MistralClient) Chat(model string, messages []ChatMessage, params *ChatR
 	if params.Tools != nil {
 		requestData["tools"] = params.Tools
 	}
-	if params.ToolChoice != "" {
+	if params.ToolChoice != nil {
 		requestData["tool_choice"] = params.ToolChoice
 	}
-	if params.ResponseFormat != "" {
-		requestData["response_format"] = map[string]any{"type": params.ResponseFormat}
+	if params.ResponseFormat != nil {
+		requestData["response_format"] = responseFormatPayload(params.ResponseFormat)
+	}
+	if params.ReasoningEffort != nil {
+		requestData["reasoning_effort"] = *params.ReasoningEffort
+	}
+	if params.Guardrails != nil {
+		requestData["guardrails"] = params.Guardrails
+	}
+	if params.PromptCacheKey != nil {
+		requestData["prompt_cache_key"] = *params.PromptCacheKey
 	}
 
 	response, err := c.request(http.MethodPost, requestData, "v1/chat/completions", false, nil)
@@ -204,6 +221,9 @@ func (c *MistralClient) ChatStream(model string, messages []ChatMessage, params 
 	if params.Stop != nil {
 		requestData["stop"] = params.Stop
 	}
+	if params.Metadata != nil {
+		requestData["metadata"] = params.Metadata
+	}
 	if params.SafePrompt != nil {
 		requestData["safe_prompt"] = *params.SafePrompt
 	}
@@ -228,11 +248,20 @@ func (c *MistralClient) ChatStream(model string, messages []ChatMessage, params 
 	if params.Tools != nil {
 		requestData["tools"] = params.Tools
 	}
-	if params.ToolChoice != "" {
+	if params.ToolChoice != nil {
 		requestData["tool_choice"] = params.ToolChoice
 	}
-	if params.ResponseFormat != "" {
-		requestData["response_format"] = map[string]any{"type": params.ResponseFormat}
+	if params.ResponseFormat != nil {
+		requestData["response_format"] = responseFormatPayload(params.ResponseFormat)
+	}
+	if params.ReasoningEffort != nil {
+		requestData["reasoning_effort"] = *params.ReasoningEffort
+	}
+	if params.Guardrails != nil {
+		requestData["guardrails"] = params.Guardrails
+	}
+	if params.PromptCacheKey != nil {
+		requestData["prompt_cache_key"] = *params.PromptCacheKey
 	}
 
 	response, err := c.request(http.MethodPost, requestData, "v1/chat/completions", true, nil)
@@ -305,4 +334,15 @@ func mapToStruct(m map[string]interface{}, s interface{}) error {
 		return err
 	}
 	return json.Unmarshal(jsonData, s)
+}
+
+func responseFormatPayload(format any) any {
+	switch typed := format.(type) {
+	case ResponseFormat:
+		return map[string]any{"type": typed}
+	case string:
+		return map[string]any{"type": typed}
+	default:
+		return format
+	}
 }
