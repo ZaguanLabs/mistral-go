@@ -60,6 +60,8 @@ Mistral Go SDK v2.4.12 updates the SDK for compatibility with the official Mistr
 - Query serialization now supports typed order/status/sort enums and RFC3339Nano timestamps
 - `GetConnectorAuthURL()` accepts optional `github_installation_link`
 - Library and access deletion helpers now tolerate empty `204 No Content` responses
+- README compatibility notes updated to Python SDK v2.4.12
+- CHANGELOG includes a v2.4.12 release entry
 
 ## Validation
 

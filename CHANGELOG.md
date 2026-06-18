@@ -5,6 +5,42 @@ All notable changes to the Mistral Go SDK will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.4.12] - 2026-06-18
+
+### Added - Python SDK v2.4.12 Parity Updates
+
+- Observability API:
+  - `SearchLogs()`, `ListLogFields()`, and `FetchLogFieldOptions()`.
+  - `SearchSpans()`, `SearchSpanEvaluations()`, and `SearchLatestSpanEvaluations()`.
+  - Span field and span evaluation field list/options helpers.
+  - `SearchTraces()`, `ListTraceFields()`, `GetTraceByID()`, `GetTraceSpans()`, `FetchTraceFieldOptions()`, and `GetSpanByID()`.
+- RAG API:
+  - Search index summary, unregister, metrics update, detail, summary-field, schema detail, schema summary, and schema file operations.
+  - `RegisterSearchIndex()` migrated to the Python SDK v2.4.12 `v1/rag/indexes` route.
+- Workflows API:
+  - `GetWorkflowExecutionLogs()` for paginated workflow execution logs.
+  - `StreamWorkflowExecutionLogs()` for SSE log streaming.
+  - `TriggerSchedule()` for immediate schedule execution.
+  - Workflow list filters for status, deployment name, deployment status, tags, sort field, and order.
+  - Workflow run filters for deployment name, sort field, order, start time, and end time.
+- Connectors API:
+  - Optional `github_installation_link` query parameter for `GetConnectorAuthURL()`.
+
+### Changed
+
+- Version and User-Agent updated to `2.4.12`.
+- README compatibility notes updated for Python SDK v2.4.12.
+- Query serialization expanded for RFC3339Nano timestamps and typed order/status/sort enums.
+- `ListSearchIndexes()` now uses `v1/rag/indexes/summary`.
+- Library and access delete helpers now tolerate empty `204 No Content` responses.
+
+### Tests
+
+- Added mock-server parity coverage for the new 2.4.12 endpoints.
+- Added stream coverage for workflow execution logs.
+- Added binary response coverage for search index schema files.
+- Verified focused parity tests and compile-only SDK validation.
+
 ## [2.4.9] - 2026-06-04
 
 ### Added - Python SDK v2.4.9 Parity Updates

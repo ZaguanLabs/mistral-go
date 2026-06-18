@@ -1,12 +1,12 @@
 # Mistral Go SDK
 
-**Version 2.4.9** - Python SDK v2.4.9 Compatibility 🚀
+**Version 2.4.12** - Python SDK v2.4.12 Compatibility 🚀
 
 [![Minimal Dependencies](https://img.shields.io/badge/dependencies-minimal-brightgreen.svg)](https://github.com/ZaguanLabs/mistral-go)
 [![Go Version](https://img.shields.io/badge/go-%3E%3D1.20-blue.svg)](https://golang.org/)
 [![Pure Go](https://img.shields.io/badge/pure-go-success.svg)](https://pkg.go.dev/std)
 
-A Go SDK for the Mistral AI API, designed to provide developers with powerful tools to integrate advanced AI capabilities into their applications. This SDK has been significantly enhanced to match the official Mistral Python SDK v2.4.9.
+A Go SDK for the Mistral AI API, designed to provide developers with powerful tools to integrate advanced AI capabilities into their applications. This SDK has been significantly enhanced to match the official Mistral Python SDK v2.4.12.
 
 **✨ Minimal Dependencies** - REST functionality uses the Go standard library; realtime audio adds one pure-Go WebSocket dependency for official SDK parity.
 
@@ -28,10 +28,18 @@ A Go SDK for the Mistral AI API, designed to provide developers with powerful to
 - **Audio/Transcriptions API**: Speech-to-text transcription with timestamp support
 - **Audio/Realtime API**: WebSocket realtime transcription with session updates and streaming events
 - **Audio/Speech & Voices API**: Text-to-speech generation and custom voice management
-- **Workflows API**: Workflow execution, runs, events, schedules, metrics, deployments, and execution control
+- **Workflows API**: Workflow execution, runs, events, schedules, metrics, deployments, execution logs, and execution control
 - **Connectors API**: Connector management, tool calls, authentication methods, and credentials
-- **Observability API**: Campaigns, datasets, records, judges, fields, and chat completion events
-- **RAG API**: Ingestion pipeline configuration and search index management
+- **Observability API**: Campaigns, datasets, records, judges, chat completion events, logs, spans, span evaluations, and traces
+- **RAG API**: Ingestion pipeline configuration and search index summaries, details, metrics, schema summaries, and schema files
+
+## Version 2.4.12 - Python SDK v2.4.12 Compatibility
+
+🚀 **Full compatibility with Mistral Python SDK v2.4.12** - Ports the latest generated endpoint surface from the official Python SDK while preserving the Go SDK's pragmatic map-oriented parity layer for fast-moving APIs.
+
+Includes observability logs, spans, span evaluations, and traces; updated RAG search index APIs on `v1/rag/indexes`; workflow execution log search and SSE streaming; schedule triggers; expanded workflow filters; and connector auth URL support for GitHub installation links.
+
+**✅ Minimal dependency footprint** - No new third-party Go dependencies were added in v2.4.12.
 
 ## Version 2.4.9 - Python SDK v2.4.9 Compatibility
 

@@ -42,6 +42,9 @@
 
 ### Documentation
 
+- [x] README version banner updated to v2.4.12 / Python SDK v2.4.12
+- [x] README feature list and compatibility section updated for observability, RAG indexes, workflow logs, and connector auth URL parity
+- [x] CHANGELOG includes v2.4.12 release entry
 - [x] Release notes prepared for v2.4.12
 - [x] Release checklist prepared for v2.4.12
 - [x] Current release checklist pointer updated to v2.4.12
