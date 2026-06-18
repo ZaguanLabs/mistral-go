@@ -222,3 +222,37 @@ const (
 	RequestSourcePlayground     RequestSource = "playground"
 	RequestSourceAgentBuilderV1 RequestSource = "agent_builder_v1"
 )
+
+type Order string
+
+const (
+	OrderAsc  Order = "asc"
+	OrderDesc Order = "desc"
+)
+
+type WorkflowExecutionStatus string
+
+const (
+	WorkflowExecutionStatusRunning            WorkflowExecutionStatus = "RUNNING"
+	WorkflowExecutionStatusCompleted          WorkflowExecutionStatus = "COMPLETED"
+	WorkflowExecutionStatusFailed             WorkflowExecutionStatus = "FAILED"
+	WorkflowExecutionStatusCanceled           WorkflowExecutionStatus = "CANCELED"
+	WorkflowExecutionStatusTerminated         WorkflowExecutionStatus = "TERMINATED"
+	WorkflowExecutionStatusContinuedAsNew     WorkflowExecutionStatus = "CONTINUED_AS_NEW"
+	WorkflowExecutionStatusTimedOut           WorkflowExecutionStatus = "TIMED_OUT"
+	WorkflowExecutionStatusRetryingAfterError WorkflowExecutionStatus = "RETRYING_AFTER_ERROR"
+)
+
+type DeploymentStatus string
+
+const (
+	DeploymentStatusActive   DeploymentStatus = "active"
+	DeploymentStatusInactive DeploymentStatus = "inactive"
+)
+
+type WorkflowRunSortBy string
+
+const (
+	WorkflowRunSortByStartTime WorkflowRunSortBy = "start_time"
+	WorkflowRunSortByEndTime   WorkflowRunSortBy = "end_time"
+)

@@ -92,13 +92,33 @@ func TestNewParityEndpoints(t *testing.T) {
 			_, err := c.UpdateIngestionPipelineRunInfo("id", &UpdateIngestionPipelineRunInfoRequest{ChunksCount: &intVal})
 			return err
 		}},
-		{"RegisterSearchIndex", http.MethodPut, "/v1/rag/search_index", func(c *MistralClient) error {
+		{"RegisterSearchIndex", http.MethodPut, "/v1/rag/indexes", func(c *MistralClient) error {
 			status := SearchIndexStatusOffline
 			_, err := c.RegisterSearchIndex(&RegisterSearchIndexRequest{Name: "idx", Index: map[string]any{"type": "vespa"}, Status: &status})
 			return err
 		}},
+		{"UnregisterSearchIndex", http.MethodDelete, "/v1/rag/indexes/index/idx", func(c *MistralClient) error { _, err := c.UnregisterSearchIndex("idx"); return err }},
+		{"UpdateSearchIndexMetrics", http.MethodPut, "/v1/rag/indexes/index/idx/metrics", func(c *MistralClient) error {
+			_, err := c.UpdateSearchIndexMetrics("idx", &UpdateSearchIndexMetricsRequest{Status: SearchIndexStatusOffline})
+			return err
+		}},
+		{"GetSearchIndexDetail", http.MethodGet, "/v1/rag/indexes/index/idx/detail", func(c *MistralClient) error { _, err := c.GetSearchIndexDetail("idx"); return err }},
+		{"SetSearchIndexSummary", http.MethodPut, "/v1/rag/indexes/index/idx/summary_field", func(c *MistralClient) error {
+			_, err := c.SetSearchIndexSummary("idx", &SearchIndexSummaryRequest{Summary: "summary"})
+			return err
+		}},
+		{"GetSearchIndexSchemaDetail", http.MethodGet, "/v1/rag/indexes/index/idx/schemas/schema/schema/detail", func(c *MistralClient) error {
+			_, err := c.GetSearchIndexSchemaDetail("idx", "schema")
+			return err
+		}},
+		{"SetSearchIndexSchemaSummary", http.MethodPut, "/v1/rag/indexes/index/idx/schemas/schema/schema/summary_field", func(c *MistralClient) error {
+			_, err := c.SetSearchIndexSchemaSummary("idx", "schema", &SearchIndexSummaryRequest{Summary: "summary"})
+			return err
+		}},
 		{"GetWorkflows", http.MethodGet, "/v1/workflows", func(c *MistralClient) error {
-			_, err := c.GetWorkflows(&ListWorkflowsParams{Limit: &intVal})
+			status := DeploymentStatusActive
+			order := OrderAsc
+			_, err := c.GetWorkflows(&ListWorkflowsParams{Limit: &intVal, DeploymentStatus: &status, Order: &order})
 			return err
 		}},
 		{"GetWorkflowRegistrations", http.MethodGet, "/v1/workflows/registrations", func(c *MistralClient) error {
@@ -124,7 +144,9 @@ func TestNewParityEndpoints(t *testing.T) {
 		{"GetWorkflowDeployment", http.MethodGet, "/v1/workflows/deployments/dep", func(c *MistralClient) error { _, err := c.GetWorkflowDeployment("dep"); return err }},
 		{"GetWorkflowMetrics", http.MethodGet, "/v1/workflows/wf/metrics", func(c *MistralClient) error { _, err := c.GetWorkflowMetrics("wf"); return err }},
 		{"ListWorkflowRuns", http.MethodGet, "/v1/workflows/runs", func(c *MistralClient) error {
-			_, err := c.ListWorkflowRuns(&ListWorkflowRunsParams{PageSize: &intVal})
+			sortBy := WorkflowRunSortByStartTime
+			order := OrderDesc
+			_, err := c.ListWorkflowRuns(&ListWorkflowRunsParams{PageSize: &intVal, Status: []WorkflowExecutionStatus{WorkflowExecutionStatusRunning}, SortBy: &sortBy, Order: &order})
 			return err
 		}},
 		{"GetWorkflowRun", http.MethodGet, "/v1/workflows/runs/run", func(c *MistralClient) error { _, err := c.GetWorkflowRun("run"); return err }},
@@ -153,6 +175,7 @@ func TestNewParityEndpoints(t *testing.T) {
 			return err
 		}},
 		{"ResumeSchedule", http.MethodPost, "/v1/workflows/schedules/sched/resume", func(c *MistralClient) error { _, err := c.ResumeSchedule("sched", nil); return err }},
+		{"TriggerSchedule", http.MethodPost, "/v1/workflows/schedules/sched/trigger", func(c *MistralClient) error { _, err := c.TriggerSchedule("sched", nil); return err }},
 		{"GetWorkflowExecution", http.MethodGet, "/v1/workflows/executions/exec", func(c *MistralClient) error { _, err := c.GetWorkflowExecution("exec"); return err }},
 		{"GetWorkflowExecutionHistory", http.MethodGet, "/v1/workflows/executions/exec/history", func(c *MistralClient) error { _, err := c.GetWorkflowExecutionHistory("exec", nil); return err }},
 		{"SignalWorkflowExecution", http.MethodPost, "/v1/workflows/executions/exec/signals", func(c *MistralClient) error {
@@ -182,6 +205,11 @@ func TestNewParityEndpoints(t *testing.T) {
 		{"GetWorkflowExecutionTraceSummary", http.MethodGet, "/v1/workflows/executions/exec/trace/summary", func(c *MistralClient) error { _, err := c.GetWorkflowExecutionTraceSummary("exec"); return err }},
 		{"GetWorkflowExecutionTraceEvents", http.MethodGet, "/v1/workflows/executions/exec/trace/events", func(c *MistralClient) error {
 			_, err := c.GetWorkflowExecutionTraceEvents("exec", &WorkflowTraceEventsParams{MergeSameIDEvents: &boolVal})
+			return err
+		}},
+		{"GetWorkflowExecutionLogs", http.MethodGet, "/v1/workflows/executions/exec/logs", func(c *MistralClient) error {
+			order := OrderAsc
+			_, err := c.GetWorkflowExecutionLogs("exec", &WorkflowExecutionLogsParams{Order: &order, Limit: &intVal})
 			return err
 		}},
 		{"CreateCampaign", http.MethodPost, "/v1/observability/campaigns", func(c *MistralClient) error {
@@ -234,6 +262,41 @@ func TestNewParityEndpoints(t *testing.T) {
 			_, err := c.UpdateDatasetRecordPayload("rec", map[string]any{})
 			return err
 		}},
+		{"SearchLogs", http.MethodPost, "/v1/observability/logs/search", func(c *MistralClient) error {
+			order := OrderDesc
+			_, err := c.SearchLogs(&ObservabilitySearchParams{SearchExpression: &str, Order: &order})
+			return err
+		}},
+		{"ListLogFields", http.MethodGet, "/v1/observability/logs/fields", func(c *MistralClient) error { _, err := c.ListLogFields(); return err }},
+		{"FetchLogFieldOptions", http.MethodGet, "/v1/observability/logs/fields/field/options", func(c *MistralClient) error { _, err := c.FetchLogFieldOptions("field", nil); return err }},
+		{"SearchSpans", http.MethodPost, "/v1/observability/spans/search", func(c *MistralClient) error {
+			_, err := c.SearchSpans(&ObservabilitySearchParams{SearchExpression: &str})
+			return err
+		}},
+		{"SearchSpanEvaluations", http.MethodPost, "/v1/observability/spans/evaluations/search", func(c *MistralClient) error {
+			_, err := c.SearchSpanEvaluations(nil)
+			return err
+		}},
+		{"SearchLatestSpanEvaluations", http.MethodPost, "/v1/observability/spans/evaluations/search/latest", func(c *MistralClient) error {
+			_, err := c.SearchLatestSpanEvaluations(nil)
+			return err
+		}},
+		{"ListSpanFields", http.MethodGet, "/v1/observability/spans/fields", func(c *MistralClient) error { _, err := c.ListSpanFields(); return err }},
+		{"ListSpanEvaluationFields", http.MethodGet, "/v1/observability/spans/evaluations/fields", func(c *MistralClient) error {
+			_, err := c.ListSpanEvaluationFields()
+			return err
+		}},
+		{"FetchSpanFieldOptions", http.MethodGet, "/v1/observability/spans/fields/field/options", func(c *MistralClient) error { _, err := c.FetchSpanFieldOptions("field", nil); return err }},
+		{"FetchSpanEvaluationFieldOptions", http.MethodGet, "/v1/observability/spans/evaluations/fields/field/options", func(c *MistralClient) error {
+			_, err := c.FetchSpanEvaluationFieldOptions("field", nil)
+			return err
+		}},
+		{"SearchTraces", http.MethodPost, "/v1/observability/traces/search", func(c *MistralClient) error { _, err := c.SearchTraces(nil); return err }},
+		{"ListTraceFields", http.MethodGet, "/v1/observability/traces/fields", func(c *MistralClient) error { _, err := c.ListTraceFields(); return err }},
+		{"GetTraceByID", http.MethodGet, "/v1/observability/traces/trace", func(c *MistralClient) error { _, err := c.GetTraceByID("trace"); return err }},
+		{"GetTraceSpans", http.MethodGet, "/v1/observability/traces/trace/spans", func(c *MistralClient) error { _, err := c.GetTraceSpans("trace", nil); return err }},
+		{"FetchTraceFieldOptions", http.MethodGet, "/v1/observability/traces/fields/field/options", func(c *MistralClient) error { _, err := c.FetchTraceFieldOptions("field", nil); return err }},
+		{"GetSpanByID", http.MethodGet, "/v1/observability/traces/trace/spans/span", func(c *MistralClient) error { _, err := c.GetSpanByID("trace", "span"); return err }},
 		{"DeleteBatchJob", http.MethodDelete, "/v1/batch/jobs/job", func(c *MistralClient) error {
 			_, err := c.DeleteBatchJob("job")
 			return err
@@ -265,10 +328,13 @@ func TestNewParityBinaryAndStreamEndpoints(t *testing.T) {
 		case "/v1/audio/voices/voice/sample":
 			w.Header().Set("Content-Type", "audio/wav")
 			_, _ = w.Write([]byte("wav"))
-		case "/v1/audio/speech", "/v1/workflows/events/stream", "/v1/workflows/executions/exec/stream":
+		case "/v1/audio/speech", "/v1/workflows/events/stream", "/v1/workflows/executions/exec/stream", "/v1/workflows/executions/exec/logs/stream":
 			w.Header().Set("Content-Type", "text/event-stream")
 			_, _ = io.WriteString(w, "data: {\"type\":\"ok\"}\n\n")
 			_, _ = io.WriteString(w, "data: [DONE]\n\n")
+		case "/v1/rag/indexes/index/idx/schemas/schema/schema/file":
+			w.Header().Set("Content-Type", "text/plain")
+			_, _ = io.WriteString(w, "schema-content")
 		default:
 			t.Fatalf("unexpected path %s", r.URL.Path)
 		}
@@ -300,6 +366,16 @@ func TestNewParityBinaryAndStreamEndpoints(t *testing.T) {
 			break
 		}
 	}
+	if events, err := client.StreamWorkflowExecutionLogs("exec", nil); err != nil {
+		t.Fatalf("unexpected workflow execution logs stream error: %v", err)
+	} else {
+		for range events {
+			break
+		}
+	}
+	if data, err := client.GetSearchIndexSchemaFile("idx", "schema"); err != nil || string(data) != "schema-content" {
+		t.Fatalf("unexpected schema file result: %q %v", string(data), err)
+	}
 }
 
 func TestListSearchIndexesEndpoint(t *testing.T) {
@@ -307,8 +383,8 @@ func TestListSearchIndexesEndpoint(t *testing.T) {
 		if r.Method != http.MethodGet {
 			t.Errorf("expected method %s, got %s", http.MethodGet, r.Method)
 		}
-		if r.URL.Path != "/v1/rag/search_index" {
-			t.Errorf("expected path /v1/rag/search_index, got %s", r.URL.Path)
+		if r.URL.Path != "/v1/rag/indexes/summary" {
+			t.Errorf("expected path /v1/rag/indexes/summary, got %s", r.URL.Path)
 		}
 		MockJSONResponse(http.StatusOK, `[{"id":"idx","name":"Index","creator_id":"user","document_count":1,"status":"online","created_at":"2026-01-01T00:00:00Z","modified_at":"2026-01-01T00:00:00Z","index":{"type":"vespa"}}]`).Write(w)
 	})

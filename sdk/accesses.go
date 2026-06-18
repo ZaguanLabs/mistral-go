@@ -165,6 +165,9 @@ func (c *MistralClient) DeleteLibraryShare(libraryID, shareWithUUID string, shar
 	if !ok {
 		return nil, fmt.Errorf("invalid response type: %T", response)
 	}
+	if len(respData) == 0 {
+		return nil, nil
+	}
 
 	var deleteResponse DeleteAccessResponse
 	err = mapToStruct(respData, &deleteResponse)

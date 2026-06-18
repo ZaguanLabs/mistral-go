@@ -8,12 +8,18 @@ import (
 )
 
 type ListWorkflowsParams struct {
-	ActiveOnly               *bool   `json:"active_only,omitempty"`
-	IncludeShared            *bool   `json:"include_shared,omitempty"`
-	AvailableInChatAssistant *bool   `json:"available_in_chat_assistant,omitempty"`
-	Archived                 *bool   `json:"archived,omitempty"`
-	Cursor                   *string `json:"cursor,omitempty"`
-	Limit                    *int    `json:"limit,omitempty"`
+	Status                   any               `json:"status,omitempty"`
+	ActiveOnly               *bool             `json:"active_only,omitempty"`
+	IncludeShared            *bool             `json:"include_shared,omitempty"`
+	AvailableInChatAssistant *bool             `json:"available_in_chat_assistant,omitempty"`
+	DeploymentName           []string          `json:"deployment_name,omitempty"`
+	DeploymentStatus         *DeploymentStatus `json:"deployment_status,omitempty"`
+	Archived                 *bool             `json:"archived,omitempty"`
+	Tags                     []string          `json:"tags,omitempty"`
+	SortBy                   *string           `json:"sort_by,omitempty"`
+	Order                    *Order            `json:"order,omitempty"`
+	Cursor                   *string           `json:"cursor,omitempty"`
+	Limit                    *int              `json:"limit,omitempty"`
 }
 
 type ListWorkflowRegistrationsParams struct {
@@ -52,12 +58,19 @@ type GetWorkflowRegistrationParams struct {
 }
 
 type ListWorkflowRunsParams struct {
-	WorkflowIdentifier *string `json:"workflow_identifier,omitempty"`
-	Search             *string `json:"search,omitempty"`
-	Status             *string `json:"status,omitempty"`
-	UserID             *string `json:"user_id,omitempty"`
-	PageSize           *int    `json:"page_size,omitempty"`
-	NextPageToken      *string `json:"next_page_token,omitempty"`
+	WorkflowIdentifier *string            `json:"workflow_identifier,omitempty"`
+	Search             *string            `json:"search,omitempty"`
+	Status             any                `json:"status,omitempty"`
+	DeploymentName     *string            `json:"deployment_name,omitempty"`
+	SortBy             *WorkflowRunSortBy `json:"sort_by,omitempty"`
+	Order              *Order             `json:"order,omitempty"`
+	StartTimeAfter     *time.Time         `json:"start_time_after,omitempty"`
+	StartTimeBefore    *time.Time         `json:"start_time_before,omitempty"`
+	EndTimeAfter       *time.Time         `json:"end_time_after,omitempty"`
+	EndTimeBefore      *time.Time         `json:"end_time_before,omitempty"`
+	UserID             *string            `json:"user_id,omitempty"`
+	PageSize           *int               `json:"page_size,omitempty"`
+	NextPageToken      *string            `json:"next_page_token,omitempty"`
 }
 
 type ListWorkflowEventsParams struct {
@@ -94,6 +107,10 @@ type ScheduleNoteRequest struct {
 	Note *string `json:"note,omitempty"`
 }
 
+type TriggerScheduleRequest struct {
+	Overlap *string `json:"overlap,omitempty"`
+}
+
 type ExecuteWorkflowAndWaitParams struct {
 	WorkflowIdentifier      string
 	Input                   any
@@ -112,10 +129,16 @@ func (c *MistralClient) GetWorkflows(params *ListWorkflowsParams) (APIResponse, 
 		params = &ListWorkflowsParams{}
 	}
 	query := queryWithOptionalValues(map[string]any{
+		"status":                      params.Status,
 		"active_only":                 params.ActiveOnly,
 		"include_shared":              params.IncludeShared,
 		"available_in_chat_assistant": params.AvailableInChatAssistant,
+		"deployment_name":             params.DeploymentName,
+		"deployment_status":           params.DeploymentStatus,
 		"archived":                    params.Archived,
+		"tags":                        params.Tags,
+		"sort_by":                     params.SortBy,
+		"order":                       params.Order,
 		"cursor":                      params.Cursor,
 		"limit":                       params.Limit,
 	})
@@ -272,6 +295,13 @@ func (c *MistralClient) ListWorkflowRuns(params *ListWorkflowRunsParams) (APIRes
 		"workflow_identifier": params.WorkflowIdentifier,
 		"search":              params.Search,
 		"status":              params.Status,
+		"deployment_name":     params.DeploymentName,
+		"sort_by":             params.SortBy,
+		"order":               params.Order,
+		"start_time_after":    params.StartTimeAfter,
+		"start_time_before":   params.StartTimeBefore,
+		"end_time_after":      params.EndTimeAfter,
+		"end_time_before":     params.EndTimeBefore,
 		"user_id":             params.UserID,
 		"page_size":           params.PageSize,
 		"next_page_token":     params.NextPageToken,
@@ -385,6 +415,14 @@ func (c *MistralClient) ResumeSchedule(scheduleID string, req *ScheduleNoteReque
 		body = optionalRequestMap(map[string]any{"note": req.Note})
 	}
 	return c.requestMap(http.MethodPost, body, fmt.Sprintf("v1/workflows/schedules/%s/resume", scheduleID))
+}
+
+func (c *MistralClient) TriggerSchedule(scheduleID string, req *TriggerScheduleRequest) (APIResponse, error) {
+	body := map[string]interface{}{}
+	if req != nil {
+		body = optionalRequestMap(map[string]any{"overlap": req.Overlap})
+	}
+	return c.requestMap(http.MethodPost, body, fmt.Sprintf("v1/workflows/schedules/%s/trigger", scheduleID))
 }
 
 func (c *MistralClient) executeWorkflowPath(path string, req *ExecuteWorkflowRequest) (APIResponse, error) {

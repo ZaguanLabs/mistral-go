@@ -175,6 +175,9 @@ func (c *MistralClient) DeleteLibrary(libraryID string) (*DeleteLibraryResponse,
 	if !ok {
 		return nil, fmt.Errorf("invalid response type: %T", response)
 	}
+	if len(respData) == 0 {
+		return nil, nil
+	}
 
 	var deleteResponse DeleteLibraryResponse
 	err = mapToStruct(respData, &deleteResponse)

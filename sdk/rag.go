@@ -31,6 +31,17 @@ type RegisterSearchIndexRequest struct {
 	Status        *SearchIndexStatus `json:"status,omitempty"`
 }
 
+type SearchIndexSummaryRequest struct {
+	Summary string `json:"summary"`
+}
+
+type UpdateSearchIndexMetricsRequest struct {
+	Status        SearchIndexStatus `json:"status"`
+	DocumentCount *int              `json:"document_count,omitempty"`
+	SchemaMetrics any               `json:"schema_metrics,omitempty"`
+	ClearMetrics  *bool             `json:"clear_metrics,omitempty"`
+}
+
 type SearchIndexResponse struct {
 	ID            string            `json:"id"`
 	Name          string            `json:"name"`
@@ -69,7 +80,11 @@ func (c *MistralClient) UpdateIngestionPipelineRunInfo(id string, req *UpdateIng
 }
 
 func (c *MistralClient) ListSearchIndexes() ([]SearchIndexResponse, error) {
-	response, err := c.request(http.MethodGet, nil, "v1/rag/search_index", false, nil)
+	return c.GetSearchIndexSummaries()
+}
+
+func (c *MistralClient) GetSearchIndexSummaries() ([]SearchIndexResponse, error) {
+	response, err := c.request(http.MethodGet, nil, "v1/rag/indexes/summary", false, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -89,12 +104,11 @@ func (c *MistralClient) RegisterSearchIndex(req *RegisterSearchIndexRequest) (*S
 		return nil, fmt.Errorf("request cannot be nil")
 	}
 	body := optionalRequestMap(map[string]any{
-		"name":           req.Name,
-		"index":          req.Index,
-		"document_count": req.DocumentCount,
-		"status":         req.Status,
+		"name":   req.Name,
+		"index":  req.Index,
+		"status": req.Status,
 	})
-	response, err := c.request(http.MethodPut, body, "v1/rag/search_index", false, nil)
+	response, err := c.request(http.MethodPut, body, "v1/rag/indexes", false, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -107,4 +121,47 @@ func (c *MistralClient) RegisterSearchIndex(req *RegisterSearchIndexRequest) (*S
 		return nil, err
 	}
 	return &index, nil
+}
+
+func (c *MistralClient) UnregisterSearchIndex(indexID string) (APIResponse, error) {
+	return c.requestMap(http.MethodDelete, nil, fmt.Sprintf("v1/rag/indexes/index/%s", indexID))
+}
+
+func (c *MistralClient) UpdateSearchIndexMetrics(indexID string, req *UpdateSearchIndexMetricsRequest) (APIResponse, error) {
+	if req == nil {
+		return nil, fmt.Errorf("request cannot be nil")
+	}
+	body := optionalRequestMap(map[string]any{
+		"status":         req.Status,
+		"document_count": req.DocumentCount,
+		"schema_metrics": req.SchemaMetrics,
+		"clear_metrics":  req.ClearMetrics,
+	})
+	return c.requestMap(http.MethodPut, body, fmt.Sprintf("v1/rag/indexes/index/%s/metrics", indexID))
+}
+
+func (c *MistralClient) GetSearchIndexDetail(indexID string) (APIResponse, error) {
+	return c.requestMap(http.MethodGet, nil, fmt.Sprintf("v1/rag/indexes/index/%s/detail", indexID))
+}
+
+func (c *MistralClient) SetSearchIndexSummary(indexID string, req *SearchIndexSummaryRequest) (APIResponse, error) {
+	if req == nil {
+		return nil, fmt.Errorf("request cannot be nil")
+	}
+	return c.requestMap(http.MethodPut, map[string]interface{}{"summary": req.Summary}, fmt.Sprintf("v1/rag/indexes/index/%s/summary_field", indexID))
+}
+
+func (c *MistralClient) GetSearchIndexSchemaDetail(indexID, schemaID string) (APIResponse, error) {
+	return c.requestMap(http.MethodGet, nil, fmt.Sprintf("v1/rag/indexes/index/%s/schemas/schema/%s/detail", indexID, schemaID))
+}
+
+func (c *MistralClient) SetSearchIndexSchemaSummary(indexID, schemaID string, req *SearchIndexSummaryRequest) (APIResponse, error) {
+	if req == nil {
+		return nil, fmt.Errorf("request cannot be nil")
+	}
+	return c.requestMap(http.MethodPut, map[string]interface{}{"summary": req.Summary}, fmt.Sprintf("v1/rag/indexes/index/%s/schemas/schema/%s/summary_field", indexID, schemaID))
+}
+
+func (c *MistralClient) GetSearchIndexSchemaFile(indexID, schemaID string) ([]byte, error) {
+	return c.requestBytes(http.MethodGet, fmt.Sprintf("v1/rag/indexes/index/%s/schemas/schema/%s/file", indexID, schemaID), "text/plain")
 }

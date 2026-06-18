@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
+	"time"
 )
 
 type APIResponse map[string]any
@@ -46,6 +47,10 @@ func optionalRequestMap(values map[string]any) map[string]interface{} {
 			if typed != nil {
 				req[key] = *typed
 			}
+		case *Order:
+			if typed != nil {
+				req[key] = *typed
+			}
 		default:
 			req[key] = value
 		}
@@ -76,9 +81,33 @@ func queryWithOptionalValues(values map[string]any) string {
 			if typed != nil {
 				query.Add(key, strconv.FormatBool(*typed))
 			}
+		case *Order:
+			if typed != nil {
+				query.Add(key, string(*typed))
+			}
+		case *DeploymentStatus:
+			if typed != nil {
+				query.Add(key, string(*typed))
+			}
+		case *WorkflowRunSortBy:
+			if typed != nil {
+				query.Add(key, string(*typed))
+			}
+		case *WorkflowExecutionStatus:
+			if typed != nil {
+				query.Add(key, string(*typed))
+			}
+		case *time.Time:
+			if typed != nil {
+				query.Add(key, typed.Format(time.RFC3339Nano))
+			}
 		case []string:
 			for _, item := range typed {
 				query.Add(key, item)
+			}
+		case []WorkflowExecutionStatus:
+			for _, item := range typed {
+				query.Add(key, string(item))
 			}
 		case string:
 			query.Add(key, typed)
@@ -88,6 +117,16 @@ func queryWithOptionalValues(values map[string]any) string {
 			query.Add(key, strconv.FormatInt(typed, 10))
 		case bool:
 			query.Add(key, strconv.FormatBool(typed))
+		case Order:
+			query.Add(key, string(typed))
+		case DeploymentStatus:
+			query.Add(key, string(typed))
+		case WorkflowRunSortBy:
+			query.Add(key, string(typed))
+		case WorkflowExecutionStatus:
+			query.Add(key, string(typed))
+		case time.Time:
+			query.Add(key, typed.Format(time.RFC3339Nano))
 		}
 	}
 	return query.Encode()

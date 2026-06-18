@@ -99,8 +99,16 @@ func (c *MistralClient) ListConnectors(params *ListConnectorsParams) (APIRespons
 	return c.requestMap(http.MethodGet, body, appendQuery("v1/connectors", query))
 }
 
-func (c *MistralClient) GetConnectorAuthURL(connectorIDOrName string, appReturnURL *string, credentialsName *string) (APIResponse, error) {
-	query := queryWithOptionalValues(map[string]any{"app_return_url": appReturnURL, "credentials_name": credentialsName})
+func (c *MistralClient) GetConnectorAuthURL(connectorIDOrName string, appReturnURL *string, credentialsName *string, githubInstallationLink ...*bool) (APIResponse, error) {
+	var githubLink *bool
+	if len(githubInstallationLink) > 0 {
+		githubLink = githubInstallationLink[0]
+	}
+	query := queryWithOptionalValues(map[string]any{
+		"app_return_url":           appReturnURL,
+		"credentials_name":         credentialsName,
+		"github_installation_link": githubLink,
+	})
 	return c.requestMap(http.MethodGet, nil, appendQuery(fmt.Sprintf("v1/connectors/%s/auth_url", connectorIDOrName), query))
 }
 

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"time"
 )
 
 type WorkflowSignalRequest struct {
@@ -40,6 +41,23 @@ type WorkflowTraceEventsParams struct {
 type WorkflowExecutionStreamParams struct {
 	EventSource *string `json:"event_source,omitempty"`
 	LastEventID *string `json:"last_event_id,omitempty"`
+}
+
+type WorkflowExecutionLogsParams struct {
+	RunID      *string    `json:"run_id,omitempty"`
+	ActivityID *string    `json:"activity_id,omitempty"`
+	After      *time.Time `json:"after,omitempty"`
+	Before     *time.Time `json:"before,omitempty"`
+	Order      *Order     `json:"order,omitempty"`
+	Cursor     *string    `json:"cursor,omitempty"`
+	Limit      *int       `json:"limit,omitempty"`
+}
+
+type WorkflowExecutionLogsStreamParams struct {
+	RunID       *string    `json:"run_id,omitempty"`
+	ActivityID  *string    `json:"activity_id,omitempty"`
+	After       *time.Time `json:"after,omitempty"`
+	LastEventID *string    `json:"last_event_id,omitempty"`
 }
 
 func (c *MistralClient) GetWorkflowExecution(executionID string) (APIResponse, error) {
@@ -129,6 +147,43 @@ func (c *MistralClient) StreamWorkflowExecution(executionID string, params *Work
 	}
 	query := queryWithOptionalValues(map[string]any{"event_source": params.EventSource, "last_event_id": params.LastEventID})
 	response, err := c.request(http.MethodGet, nil, appendQuery(fmt.Sprintf("v1/workflows/executions/%s/stream", executionID), query), true, nil)
+	if err != nil {
+		return nil, err
+	}
+	body, ok := response.(io.ReadCloser)
+	if !ok {
+		return nil, fmt.Errorf("invalid response type: %T", response)
+	}
+	return parseGenericStream(body), nil
+}
+
+func (c *MistralClient) GetWorkflowExecutionLogs(executionID string, params *WorkflowExecutionLogsParams) (APIResponse, error) {
+	if params == nil {
+		params = &WorkflowExecutionLogsParams{}
+	}
+	query := queryWithOptionalValues(map[string]any{
+		"run_id":      params.RunID,
+		"activity_id": params.ActivityID,
+		"after":       params.After,
+		"before":      params.Before,
+		"order":       params.Order,
+		"cursor":      params.Cursor,
+		"limit":       params.Limit,
+	})
+	return c.requestMap(http.MethodGet, nil, appendQuery(fmt.Sprintf("v1/workflows/executions/%s/logs", executionID), query))
+}
+
+func (c *MistralClient) StreamWorkflowExecutionLogs(executionID string, params *WorkflowExecutionLogsStreamParams) (<-chan StreamEvent, error) {
+	if params == nil {
+		params = &WorkflowExecutionLogsStreamParams{}
+	}
+	query := queryWithOptionalValues(map[string]any{
+		"run_id":        params.RunID,
+		"activity_id":   params.ActivityID,
+		"after":         params.After,
+		"last_event_id": params.LastEventID,
+	})
+	response, err := c.request(http.MethodGet, nil, appendQuery(fmt.Sprintf("v1/workflows/executions/%s/logs/stream", executionID), query), true, nil)
 	if err != nil {
 		return nil, err
 	}
