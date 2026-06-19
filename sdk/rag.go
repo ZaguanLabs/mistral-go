@@ -163,5 +163,14 @@ func (c *MistralClient) SetSearchIndexSchemaSummary(indexID, schemaID string, re
 }
 
 func (c *MistralClient) GetSearchIndexSchemaFile(indexID, schemaID string) ([]byte, error) {
-	return c.requestBytes(http.MethodGet, fmt.Sprintf("v1/rag/indexes/index/%s/schemas/schema/%s/file", indexID, schemaID), "text/plain")
+	response, err := c.requestMap(http.MethodGet, nil, fmt.Sprintf("v1/rag/indexes/index/%s/schemas/schema/%s/file", indexID, schemaID))
+	if err != nil {
+		return nil, err
+	}
+	content, _ := response["content"].(string)
+	return []byte(content), nil
+}
+
+func (c *MistralClient) GetSearchIndexSchemaFileResponse(indexID, schemaID string) (APIResponse, error) {
+	return c.requestMap(http.MethodGet, nil, fmt.Sprintf("v1/rag/indexes/index/%s/schemas/schema/%s/file", indexID, schemaID))
 }

@@ -59,6 +59,7 @@ type GetWorkflowRegistrationParams struct {
 
 type ListWorkflowRunsParams struct {
 	WorkflowIdentifier *string            `json:"workflow_identifier,omitempty"`
+	RootExecutionID    *string            `json:"root_execution_id,omitempty"`
 	Search             *string            `json:"search,omitempty"`
 	Status             any                `json:"status,omitempty"`
 	DeploymentName     *string            `json:"deployment_name,omitempty"`
@@ -69,6 +70,7 @@ type ListWorkflowRunsParams struct {
 	EndTimeAfter       *time.Time         `json:"end_time_after,omitempty"`
 	EndTimeBefore      *time.Time         `json:"end_time_before,omitempty"`
 	UserID             *string            `json:"user_id,omitempty"`
+	IncludeInternal    *bool              `json:"include_internal,omitempty"`
 	PageSize           *int               `json:"page_size,omitempty"`
 	NextPageToken      *string            `json:"next_page_token,omitempty"`
 }
@@ -109,6 +111,23 @@ type ScheduleNoteRequest struct {
 
 type TriggerScheduleRequest struct {
 	Overlap *string `json:"overlap,omitempty"`
+}
+
+type DeploymentLogsParams struct {
+	WorkerName   *string    `json:"worker_name,omitempty"`
+	WorkflowName *string    `json:"workflow_name,omitempty"`
+	After        *time.Time `json:"after,omitempty"`
+	Before       *time.Time `json:"before,omitempty"`
+	Order        *Order     `json:"order,omitempty"`
+	Cursor       *string    `json:"cursor,omitempty"`
+	Limit        *int       `json:"limit,omitempty"`
+}
+
+type DeploymentLogsStreamParams struct {
+	WorkerName   *string    `json:"worker_name,omitempty"`
+	WorkflowName *string    `json:"workflow_name,omitempty"`
+	After        *time.Time `json:"after,omitempty"`
+	LastEventID  *string    `json:"last_event_id,omitempty"`
 }
 
 type ExecuteWorkflowAndWaitParams struct {
@@ -283,6 +302,51 @@ func (c *MistralClient) GetWorkflowDeployment(name string) (APIResponse, error) 
 	return c.requestMap(http.MethodGet, nil, fmt.Sprintf("v1/workflows/deployments/%s", name))
 }
 
+func (c *MistralClient) GetWorkflowDeploymentLogs(name string, params *DeploymentLogsParams) (APIResponse, error) {
+	if params == nil {
+		params = &DeploymentLogsParams{}
+	}
+	query := queryWithOptionalValues(map[string]any{
+		"worker_name":   params.WorkerName,
+		"workflow_name": params.WorkflowName,
+		"after":         params.After,
+		"before":        params.Before,
+		"order":         params.Order,
+		"cursor":        params.Cursor,
+		"limit":         params.Limit,
+	})
+	return c.requestMap(http.MethodGet, nil, appendQuery(fmt.Sprintf("v1/workflows/deployments/%s/logs", name), query))
+}
+
+func (c *MistralClient) GetDeploymentLogs(name string, params *DeploymentLogsParams) (APIResponse, error) {
+	return c.GetWorkflowDeploymentLogs(name, params)
+}
+
+func (c *MistralClient) StreamWorkflowDeploymentLogs(name string, params *DeploymentLogsStreamParams) (<-chan StreamEvent, error) {
+	if params == nil {
+		params = &DeploymentLogsStreamParams{}
+	}
+	query := queryWithOptionalValues(map[string]any{
+		"worker_name":   params.WorkerName,
+		"workflow_name": params.WorkflowName,
+		"after":         params.After,
+		"last_event_id": params.LastEventID,
+	})
+	response, err := c.request(http.MethodGet, nil, appendQuery(fmt.Sprintf("v1/workflows/deployments/%s/logs/stream", name), query), true, nil)
+	if err != nil {
+		return nil, err
+	}
+	body, ok := response.(io.ReadCloser)
+	if !ok {
+		return nil, fmt.Errorf("invalid response type: %T", response)
+	}
+	return parseGenericStream(body), nil
+}
+
+func (c *MistralClient) StreamDeploymentLogs(name string, params *DeploymentLogsStreamParams) (<-chan StreamEvent, error) {
+	return c.StreamWorkflowDeploymentLogs(name, params)
+}
+
 func (c *MistralClient) GetWorkflowMetrics(workflowName string) (APIResponse, error) {
 	return c.requestMap(http.MethodGet, nil, fmt.Sprintf("v1/workflows/%s/metrics", workflowName))
 }
@@ -293,6 +357,7 @@ func (c *MistralClient) ListWorkflowRuns(params *ListWorkflowRunsParams) (APIRes
 	}
 	query := queryWithOptionalValues(map[string]any{
 		"workflow_identifier": params.WorkflowIdentifier,
+		"root_execution_id":   params.RootExecutionID,
 		"search":              params.Search,
 		"status":              params.Status,
 		"deployment_name":     params.DeploymentName,
@@ -303,6 +368,7 @@ func (c *MistralClient) ListWorkflowRuns(params *ListWorkflowRunsParams) (APIRes
 		"end_time_after":      params.EndTimeAfter,
 		"end_time_before":     params.EndTimeBefore,
 		"user_id":             params.UserID,
+		"include_internal":    params.IncludeInternal,
 		"page_size":           params.PageSize,
 		"next_page_token":     params.NextPageToken,
 	})

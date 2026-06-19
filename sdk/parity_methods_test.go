@@ -142,11 +142,16 @@ func TestNewParityEndpoints(t *testing.T) {
 		{"BulkUnarchiveWorkflows", http.MethodPut, "/v1/workflows/unarchive", func(c *MistralClient) error { _, err := c.BulkUnarchiveWorkflows([]string{"wf"}); return err }},
 		{"ListWorkflowDeployments", http.MethodGet, "/v1/workflows/deployments", func(c *MistralClient) error { _, err := c.ListWorkflowDeployments(); return err }},
 		{"GetWorkflowDeployment", http.MethodGet, "/v1/workflows/deployments/dep", func(c *MistralClient) error { _, err := c.GetWorkflowDeployment("dep"); return err }},
+		{"GetDeploymentLogs", http.MethodGet, "/v1/workflows/deployments/dep/logs", func(c *MistralClient) error {
+			order := OrderAsc
+			_, err := c.GetDeploymentLogs("dep", &DeploymentLogsParams{Order: &order, Limit: &intVal})
+			return err
+		}},
 		{"GetWorkflowMetrics", http.MethodGet, "/v1/workflows/wf/metrics", func(c *MistralClient) error { _, err := c.GetWorkflowMetrics("wf"); return err }},
 		{"ListWorkflowRuns", http.MethodGet, "/v1/workflows/runs", func(c *MistralClient) error {
 			sortBy := WorkflowRunSortByStartTime
 			order := OrderDesc
-			_, err := c.ListWorkflowRuns(&ListWorkflowRunsParams{PageSize: &intVal, Status: []WorkflowExecutionStatus{WorkflowExecutionStatusRunning}, SortBy: &sortBy, Order: &order})
+			_, err := c.ListWorkflowRuns(&ListWorkflowRunsParams{RootExecutionID: &str, PageSize: &intVal, Status: []WorkflowExecutionStatus{WorkflowExecutionStatusRunning}, SortBy: &sortBy, Order: &order, IncludeInternal: &boolVal})
 			return err
 		}},
 		{"GetWorkflowRun", http.MethodGet, "/v1/workflows/runs/run", func(c *MistralClient) error { _, err := c.GetWorkflowRun("run"); return err }},
@@ -328,13 +333,12 @@ func TestNewParityBinaryAndStreamEndpoints(t *testing.T) {
 		case "/v1/audio/voices/voice/sample":
 			w.Header().Set("Content-Type", "audio/wav")
 			_, _ = w.Write([]byte("wav"))
-		case "/v1/audio/speech", "/v1/workflows/events/stream", "/v1/workflows/executions/exec/stream", "/v1/workflows/executions/exec/logs/stream":
+		case "/v1/audio/speech", "/v1/workflows/events/stream", "/v1/workflows/executions/exec/stream", "/v1/workflows/executions/exec/logs/stream", "/v1/workflows/deployments/dep/logs/stream":
 			w.Header().Set("Content-Type", "text/event-stream")
 			_, _ = io.WriteString(w, "data: {\"type\":\"ok\"}\n\n")
 			_, _ = io.WriteString(w, "data: [DONE]\n\n")
 		case "/v1/rag/indexes/index/idx/schemas/schema/schema/file":
-			w.Header().Set("Content-Type", "text/plain")
-			_, _ = io.WriteString(w, "schema-content")
+			MockJSONResponse(http.StatusOK, `{"content":"schema-content"}`).Write(w)
 		default:
 			t.Fatalf("unexpected path %s", r.URL.Path)
 		}
@@ -368,6 +372,13 @@ func TestNewParityBinaryAndStreamEndpoints(t *testing.T) {
 	}
 	if events, err := client.StreamWorkflowExecutionLogs("exec", nil); err != nil {
 		t.Fatalf("unexpected workflow execution logs stream error: %v", err)
+	} else {
+		for range events {
+			break
+		}
+	}
+	if events, err := client.StreamDeploymentLogs("dep", nil); err != nil {
+		t.Fatalf("unexpected deployment logs stream error: %v", err)
 	} else {
 		for range events {
 			break

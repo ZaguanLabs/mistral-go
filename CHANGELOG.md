@@ -5,6 +5,32 @@ All notable changes to the Mistral Go SDK will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.4.13] - 2026-06-19
+
+### Added - Python SDK v2.4.13 Parity Updates
+
+- Deployments API:
+  - `GetDeploymentLogs()` and `GetWorkflowDeploymentLogs()` for paginated deployment logs.
+  - `StreamDeploymentLogs()` and `StreamWorkflowDeploymentLogs()` for deployment log SSE streaming.
+- Workflows API:
+  - `root_execution_id` filter for `ListWorkflowRuns()` to fetch an execution tree.
+  - `include_internal` filter for `ListWorkflowRuns()` to include technical/internal workflow runs.
+- RAG API:
+  - `GetSearchIndexSchemaFileResponse()` for the Python SDK v2.4.13 JSON schema-file response.
+
+### Changed
+
+- Version and User-Agent updated to `2.4.13`.
+- README compatibility notes updated for Python SDK v2.4.13.
+- Search index schema file retrieval now consumes the v2.4.13 JSON `content` response while preserving the existing byte-returning helper.
+- Release checklist and release notes updated for v2.4.13.
+
+### Tests
+
+- Added mock-server parity coverage for deployment log search and stream endpoints.
+- Added mock-server coverage for the new workflow run filters.
+- Updated search index schema file test coverage for the JSON response shape.
+
 ## [2.4.12] - 2026-06-18
 
 ### Added - Python SDK v2.4.12 Parity Updates

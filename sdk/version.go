@@ -3,7 +3,7 @@ package sdk
 // Version information for the Mistral Go SDK
 const (
 	// Version is the current version of the SDK
-	Version = "2.4.12"
+	Version = "2.4.13"
 
 	// SDKName is the name of the SDK
 	SDKName = "mistral-go"
