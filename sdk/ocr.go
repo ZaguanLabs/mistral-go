@@ -14,15 +14,21 @@ type OCRDocument struct {
 
 // OCRRequest represents a request for OCR processing
 type OCRRequest struct {
-	Model                    *string         `json:"model,omitempty"`
-	ID                       *string         `json:"id,omitempty"`
-	Document                 OCRDocument     `json:"document"`
-	Pages                    []int           `json:"pages,omitempty"`
-	IncludeImageBase64       *bool           `json:"include_image_base64,omitempty"`
-	ImageLimit               *int            `json:"image_limit,omitempty"`
-	ImageMinSize             *int            `json:"image_min_size,omitempty"`
-	BboxAnnotationFormat     *ResponseFormat `json:"bbox_annotation_format,omitempty"`
-	DocumentAnnotationFormat *ResponseFormat `json:"document_annotation_format,omitempty"`
+	Model                       *string                         `json:"model,omitempty"`
+	ID                          *string                         `json:"id,omitempty"`
+	Document                    OCRDocument                     `json:"document"`
+	Pages                       any                             `json:"pages,omitempty"`
+	IncludeImageBase64          *bool                           `json:"include_image_base64,omitempty"`
+	ImageLimit                  *int                            `json:"image_limit,omitempty"`
+	ImageMinSize                *int                            `json:"image_min_size,omitempty"`
+	BboxAnnotationFormat        *ResponseFormat                 `json:"bbox_annotation_format,omitempty"`
+	DocumentAnnotationFormat    *ResponseFormat                 `json:"document_annotation_format,omitempty"`
+	DocumentAnnotationPrompt    *string                         `json:"document_annotation_prompt,omitempty"`
+	TableFormat                 *OCRTableFormat                 `json:"table_format,omitempty"`
+	ExtractHeader               *bool                           `json:"extract_header,omitempty"`
+	ExtractFooter               *bool                           `json:"extract_footer,omitempty"`
+	IncludeBlocks               *bool                           `json:"include_blocks,omitempty"`
+	ConfidenceScoresGranularity *OCRConfidenceScoresGranularity `json:"confidence_scores_granularity,omitempty"`
 }
 
 // OCRPageDimensions represents the dimensions of a page
@@ -46,6 +52,34 @@ const (
 	OCRTableFormatHTML     OCRTableFormat = "html"
 )
 
+type OCRConfidenceScoresGranularity string
+
+const (
+	OCRConfidenceScoresWord  OCRConfidenceScoresGranularity = "word"
+	OCRConfidenceScoresPage  OCRConfidenceScoresGranularity = "page"
+	OCRConfidenceScoresBlock OCRConfidenceScoresGranularity = "block"
+)
+
+type OCRBlockConfidenceScores struct {
+	AverageContentConfidenceScore *float64 `json:"average_content_confidence_score,omitempty"`
+	MinimumContentConfidenceScore *float64 `json:"minimum_content_confidence_score,omitempty"`
+	BlockTypeConfidenceScore      *float64 `json:"block_type_confidence_score,omitempty"`
+}
+
+type OCRBlock struct {
+	TopLeftX         int                       `json:"top_left_x,omitempty"`
+	TopLeftY         int                       `json:"top_left_y,omitempty"`
+	BottomRightX     int                       `json:"bottom_right_x,omitempty"`
+	BottomRightY     int                       `json:"bottom_right_y,omitempty"`
+	Content          string                    `json:"content,omitempty"`
+	ConfidenceScores *OCRBlockConfidenceScores `json:"confidence_scores,omitempty"`
+	Type             string                    `json:"type"`
+	ImageID          *string                   `json:"image_id,omitempty"`
+	TableID          *string                   `json:"table_id,omitempty"`
+	Raw              any                       `json:"raw,omitempty"`
+	IsUnknown        *bool                     `json:"is_unknown,omitempty"`
+}
+
 // OCRTableObject represents an extracted table from the document
 type OCRTableObject struct {
 	ID      string         `json:"id"`      // Table ID for extracted table in a page
@@ -63,6 +97,7 @@ type OCRPageObject struct {
 	Hyperlinks []string           `json:"hyperlinks,omitempty"` // List of all hyperlinks in the page
 	Header     *string            `json:"header,omitempty"`     // Header of the page
 	Footer     *string            `json:"footer,omitempty"`     // Footer of the page
+	Blocks     []OCRBlock         `json:"blocks,omitempty"`
 }
 
 // OCRUsageInfo represents usage information for OCR
@@ -106,7 +141,7 @@ func (c *MistralClient) ProcessOCR(model string, document OCRDocument, params *O
 	if params.ID != nil {
 		reqMap["id"] = params.ID
 	}
-	if len(params.Pages) > 0 {
+	if params.Pages != nil {
 		reqMap["pages"] = params.Pages
 	}
 	if params.IncludeImageBase64 != nil {
@@ -127,6 +162,24 @@ func (c *MistralClient) ProcessOCR(model string, document OCRDocument, params *O
 		reqMap["document_annotation_format"] = map[string]interface{}{
 			"type": *params.DocumentAnnotationFormat,
 		}
+	}
+	if params.DocumentAnnotationPrompt != nil {
+		reqMap["document_annotation_prompt"] = params.DocumentAnnotationPrompt
+	}
+	if params.TableFormat != nil {
+		reqMap["table_format"] = params.TableFormat
+	}
+	if params.ExtractHeader != nil {
+		reqMap["extract_header"] = params.ExtractHeader
+	}
+	if params.ExtractFooter != nil {
+		reqMap["extract_footer"] = params.ExtractFooter
+	}
+	if params.IncludeBlocks != nil {
+		reqMap["include_blocks"] = params.IncludeBlocks
+	}
+	if params.ConfidenceScoresGranularity != nil {
+		reqMap["confidence_scores_granularity"] = params.ConfidenceScoresGranularity
 	}
 
 	response, err := c.request(http.MethodPost, reqMap, "v1/ocr", false, nil)

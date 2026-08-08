@@ -42,8 +42,17 @@ type ListConnectorsParams struct {
 
 type ConnectorCredentialsRequest struct {
 	Name        string         `json:"name,omitempty"`
+	Title       *string        `json:"title,omitempty"`
 	IsDefault   *bool          `json:"is_default,omitempty"`
 	Credentials map[string]any `json:"credentials,omitempty"`
+}
+
+type ConnectorAuthURLParams struct {
+	AppReturnURL           *string
+	MethodType             *string
+	CredentialsName        *string
+	CredentialsTitle       *string
+	GitHubInstallationLink *bool
 }
 
 type ListConnectorCredentialsParams struct {
@@ -112,6 +121,20 @@ func (c *MistralClient) GetConnectorAuthURL(connectorIDOrName string, appReturnU
 	return c.requestMap(http.MethodGet, nil, appendQuery(fmt.Sprintf("v1/connectors/%s/auth_url", connectorIDOrName), query))
 }
 
+func (c *MistralClient) GetConnectorAuthURLWithParams(connectorIDOrName string, params *ConnectorAuthURLParams) (APIResponse, error) {
+	if params == nil {
+		params = &ConnectorAuthURLParams{}
+	}
+	query := queryWithOptionalValues(map[string]any{
+		"app_return_url":           params.AppReturnURL,
+		"method_type":              params.MethodType,
+		"credentials_name":         params.CredentialsName,
+		"credentials_title":        params.CredentialsTitle,
+		"github_installation_link": params.GitHubInstallationLink,
+	})
+	return c.requestMap(http.MethodGet, nil, appendQuery(fmt.Sprintf("v1/connectors/%s/auth_url", connectorIDOrName), query))
+}
+
 func (c *MistralClient) CallConnectorTool(connectorIDOrName, toolName string, credentialsName *string, arguments map[string]any) (APIResponse, error) {
 	query := queryWithOptionalValues(map[string]any{"credentials_name": credentialsName})
 	body := optionalRequestMap(map[string]any{"arguments": arguments})
@@ -158,6 +181,26 @@ func (c *MistralClient) ActivateConnectorForUser(connectorID string, config *Too
 
 func (c *MistralClient) DeactivateConnectorForUser(connectorID string) (APIResponse, error) {
 	return c.deactivateConnector(connectorID, "user")
+}
+
+func (c *MistralClient) ActivateConnectorForConsumer(connectorID, consumerScope string, config *ToolExecutionConfiguration) (APIResponse, error) {
+	return c.activateConnector(connectorID, consumerScope, config)
+}
+
+func (c *MistralClient) DeactivateConnectorForConsumer(connectorID, consumerScope string) (APIResponse, error) {
+	return c.deactivateConnector(connectorID, consumerScope)
+}
+
+func (c *MistralClient) ShareConnector(connectorID string, requestBody map[string]any) (APIResponse, error) {
+	return c.requestMap(http.MethodPut, requestBody, fmt.Sprintf("v1/connectors/%s/share", connectorID))
+}
+
+func (c *MistralClient) UnshareConnector(connectorID string) (APIResponse, error) {
+	return c.requestMap(http.MethodDelete, nil, fmt.Sprintf("v1/connectors/%s/share", connectorID))
+}
+
+func (c *MistralClient) DeleteAllUserConnectorCredentials(connectorIDOrName string) (APIResponse, error) {
+	return c.requestMap(http.MethodDelete, nil, fmt.Sprintf("v1/connectors/%s/user/credentials", connectorIDOrName))
 }
 
 func (c *MistralClient) ListOrganizationConnectorCredentials(connectorIDOrName string, params *ListConnectorCredentialsParams) (APIResponse, error) {
@@ -254,7 +297,7 @@ func (c *MistralClient) createOrUpdateConnectorCredentials(connectorIDOrName, sc
 	if req == nil {
 		return nil, fmt.Errorf("request cannot be nil")
 	}
-	body := optionalRequestMap(map[string]any{"name": req.Name, "is_default": req.IsDefault, "credentials": req.Credentials})
+	body := optionalRequestMap(map[string]any{"name": req.Name, "title": req.Title, "is_default": req.IsDefault, "credentials": req.Credentials})
 	return c.requestMap(http.MethodPost, body, fmt.Sprintf("v1/connectors/%s/%s/credentials", connectorIDOrName, scope))
 }
 

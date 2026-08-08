@@ -36,6 +36,7 @@ type ModelCapabilities struct {
 	AudioTranscription         bool `json:"audio_transcription,omitempty"`
 	AudioTranscriptionRealtime bool `json:"audio_transcription_realtime,omitempty"`
 	AudioSpeech                bool `json:"audio_speech,omitempty"`
+	UnifiedResources           bool `json:"unified_resources,omitempty"`
 }
 
 // ModelCard represents a model card.
@@ -56,6 +57,7 @@ type ModelCard struct {
 	Parent                      string             `json:"parent,omitempty"`
 	Permission                  []ModelPermission  `json:"permission,omitempty"`
 	Capabilities                *ModelCapabilities `json:"capabilities,omitempty"`
+	Internal                    *bool              `json:"internal,omitempty"`
 }
 
 // ModelList represents a list of models.

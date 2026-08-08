@@ -20,6 +20,7 @@ type ListWorkflowsParams struct {
 	Order                    *Order            `json:"order,omitempty"`
 	Cursor                   *string           `json:"cursor,omitempty"`
 	Limit                    *int              `json:"limit,omitempty"`
+	Search                   *string           `json:"search,omitempty"`
 }
 
 type ListWorkflowRegistrationsParams struct {
@@ -41,6 +42,7 @@ type ExecuteWorkflowRequest struct {
 	WaitForResult           *bool          `json:"wait_for_result,omitempty"`
 	TimeoutSeconds          *int           `json:"timeout_seconds,omitempty"`
 	CustomTracingAttributes map[string]any `json:"custom_tracing_attributes,omitempty"`
+	ForceNewTrace           *bool          `json:"force_new_trace,omitempty"`
 	Extensions              map[string]any `json:"extensions,omitempty"`
 	TaskQueue               *string        `json:"task_queue,omitempty"`
 	DeploymentName          *string        `json:"deployment_name,omitempty"`
@@ -70,9 +72,11 @@ type ListWorkflowRunsParams struct {
 	EndTimeAfter       *time.Time         `json:"end_time_after,omitempty"`
 	EndTimeBefore      *time.Time         `json:"end_time_before,omitempty"`
 	UserID             *string            `json:"user_id,omitempty"`
+	WorkflowTags       []string           `json:"workflow_tags,omitempty"`
 	IncludeInternal    *bool              `json:"include_internal,omitempty"`
 	PageSize           *int               `json:"page_size,omitempty"`
 	NextPageToken      *string            `json:"next_page_token,omitempty"`
+	SearchKey          *string            `json:"search_key,omitempty"`
 }
 
 type ListWorkflowEventsParams struct {
@@ -87,6 +91,7 @@ type ListWorkflowSchedulesParams struct {
 	WorkflowName  *string `json:"workflow_name,omitempty"`
 	UserID        *string `json:"user_id,omitempty"`
 	Status        *string `json:"status,omitempty"`
+	Search        *string `json:"search,omitempty"`
 	PageSize      *int    `json:"page_size,omitempty"`
 	NextPageToken *string `json:"next_page_token,omitempty"`
 }
@@ -130,12 +135,58 @@ type DeploymentLogsStreamParams struct {
 	LastEventID  *string    `json:"last_event_id,omitempty"`
 }
 
+type ListWorkflowDeploymentsParams struct {
+	ActiveOnly   *bool
+	IsHardened   *bool
+	WorkflowName *string
+	Search       *string
+	OrderBy      *string
+	Order        *Order
+	Limit        *int
+	Cursor       *string
+	WorkspaceID  *string
+}
+
+type DeploymentWorkerSpec struct {
+	GitHubURL  string  `json:"github_url,omitempty"`
+	Revision   *string `json:"revision,omitempty"`
+	Entrypoint *string `json:"entrypoint,omitempty"`
+	WorkingDir *string `json:"working_dir,omitempty"`
+}
+
+type DeploymentResourceConfig struct {
+	Replicas      *int    `json:"replicas,omitempty"`
+	CPURequest    *string `json:"cpu_request,omitempty"`
+	CPULimit      *string `json:"cpu_limit,omitempty"`
+	MemoryRequest *string `json:"memory_request,omitempty"`
+	MemoryLimit   *string `json:"memory_limit,omitempty"`
+}
+
+type CreateWorkflowDeploymentRequest struct {
+	Name      string                    `json:"name"`
+	Spec      DeploymentWorkerSpec      `json:"spec"`
+	Resources *DeploymentResourceConfig `json:"resources,omitempty"`
+	Hardened  *bool                     `json:"hardened,omitempty"`
+}
+
+type UpdateWorkflowDeploymentRequest struct {
+	Spec      *DeploymentWorkerSpec     `json:"spec,omitempty"`
+	Resources *DeploymentResourceConfig `json:"resources,omitempty"`
+}
+
+type ListDeploymentWorkersParams struct {
+	WorkerStatus *string
+	Limit        *int
+	Cursor       *string
+}
+
 type ExecuteWorkflowAndWaitParams struct {
 	WorkflowIdentifier      string
 	Input                   any
 	ExecutionID             *string
 	DeploymentName          *string
 	CustomTracingAttributes map[string]any
+	ForceNewTrace           *bool
 	TaskQueue               *string
 	PollingInterval         time.Duration
 	MaxAttempts             *int
@@ -160,6 +211,7 @@ func (c *MistralClient) GetWorkflows(params *ListWorkflowsParams) (APIResponse, 
 		"order":                       params.Order,
 		"cursor":                      params.Cursor,
 		"limit":                       params.Limit,
+		"search":                      params.Search,
 	})
 	return c.requestMap(http.MethodGet, nil, appendQuery("v1/workflows", query))
 }
@@ -200,6 +252,7 @@ func (c *MistralClient) ExecuteWorkflowAndWait(params *ExecuteWorkflowAndWaitPar
 		Input:                   params.Input,
 		TimeoutSeconds:          params.TimeoutSeconds,
 		CustomTracingAttributes: params.CustomTracingAttributes,
+		ForceNewTrace:           params.ForceNewTrace,
 		TaskQueue:               params.TaskQueue,
 		DeploymentName:          params.DeploymentName,
 	}
@@ -295,7 +348,58 @@ func (c *MistralClient) BulkUnarchiveWorkflows(workflowIDs []string) (APIRespons
 }
 
 func (c *MistralClient) ListWorkflowDeployments() (APIResponse, error) {
-	return c.requestMap(http.MethodGet, nil, "v1/workflows/deployments")
+	return c.ListWorkflowDeploymentsWithParams(nil)
+}
+
+func (c *MistralClient) ListWorkflowDeploymentsWithParams(params *ListWorkflowDeploymentsParams) (APIResponse, error) {
+	if params == nil {
+		params = &ListWorkflowDeploymentsParams{}
+	}
+	query := queryWithOptionalValues(map[string]any{
+		"active_only": params.ActiveOnly, "is_hardened": params.IsHardened,
+		"workflow_name": params.WorkflowName, "search": params.Search,
+		"order_by": params.OrderBy, "order": params.Order, "limit": params.Limit,
+		"cursor": params.Cursor, "workspace_id": params.WorkspaceID,
+	})
+	return c.requestMap(http.MethodGet, nil, appendQuery("v1/workflows/deployments", query))
+}
+
+func (c *MistralClient) CreateWorkflowDeployment(req *CreateWorkflowDeploymentRequest) (APIResponse, error) {
+	if req == nil {
+		return nil, fmt.Errorf("request cannot be nil")
+	}
+	return c.requestMap(http.MethodPost, optionalRequestMap(map[string]any{"name": req.Name, "spec": req.Spec, "resources": req.Resources, "hardened": req.Hardened}), "v1/workflows/deployments")
+}
+
+func (c *MistralClient) UpdateWorkflowDeployment(name string, req *UpdateWorkflowDeploymentRequest) (APIResponse, error) {
+	if req == nil {
+		return nil, fmt.Errorf("request cannot be nil")
+	}
+	return c.requestMap(http.MethodPatch, optionalRequestMap(map[string]any{"spec": req.Spec, "resources": req.Resources}), fmt.Sprintf("v1/workflows/deployments/%s", name))
+}
+
+func (c *MistralClient) DeleteWorkflowDeployment(name string) (APIResponse, error) {
+	return c.requestMap(http.MethodDelete, nil, fmt.Sprintf("v1/workflows/deployments/%s", name))
+}
+
+func (c *MistralClient) StopWorkflowDeployment(name string) (APIResponse, error) {
+	return c.requestMap(http.MethodPost, nil, fmt.Sprintf("v1/workflows/deployments/%s/stop", name))
+}
+
+func (c *MistralClient) StartWorkflowDeployment(name string) (APIResponse, error) {
+	return c.requestMap(http.MethodPost, nil, fmt.Sprintf("v1/workflows/deployments/%s/start", name))
+}
+
+func (c *MistralClient) RestartWorkflowDeployment(name string) (APIResponse, error) {
+	return c.requestMap(http.MethodPost, nil, fmt.Sprintf("v1/workflows/deployments/%s/restart", name))
+}
+
+func (c *MistralClient) ListWorkflowDeploymentWorkers(name string, params *ListDeploymentWorkersParams) (APIResponse, error) {
+	if params == nil {
+		params = &ListDeploymentWorkersParams{}
+	}
+	query := queryWithOptionalValues(map[string]any{"worker_status": params.WorkerStatus, "limit": params.Limit, "cursor": params.Cursor})
+	return c.requestMap(http.MethodGet, nil, appendQuery(fmt.Sprintf("v1/workflows/deployments/%s/workers", name), query))
 }
 
 func (c *MistralClient) GetWorkflowDeployment(name string) (APIResponse, error) {
@@ -368,9 +472,11 @@ func (c *MistralClient) ListWorkflowRuns(params *ListWorkflowRunsParams) (APIRes
 		"end_time_after":      params.EndTimeAfter,
 		"end_time_before":     params.EndTimeBefore,
 		"user_id":             params.UserID,
+		"workflow_tags":       params.WorkflowTags,
 		"include_internal":    params.IncludeInternal,
 		"page_size":           params.PageSize,
 		"next_page_token":     params.NextPageToken,
+		"search_key":          params.SearchKey,
 	})
 	return c.requestMap(http.MethodGet, nil, appendQuery("v1/workflows/runs", query))
 }
@@ -429,6 +535,7 @@ func (c *MistralClient) GetWorkflowSchedules(params ...*ListWorkflowSchedulesPar
 		"workflow_name":   requestParams.WorkflowName,
 		"user_id":         requestParams.UserID,
 		"status":          requestParams.Status,
+		"search":          requestParams.Search,
 		"page_size":       requestParams.PageSize,
 		"next_page_token": requestParams.NextPageToken,
 	})
@@ -501,6 +608,7 @@ func (c *MistralClient) executeWorkflowPath(path string, req *ExecuteWorkflowReq
 		"wait_for_result":           req.WaitForResult,
 		"timeout_seconds":           req.TimeoutSeconds,
 		"custom_tracing_attributes": req.CustomTracingAttributes,
+		"force_new_trace":           req.ForceNewTrace,
 		"extensions":                req.Extensions,
 		"task_queue":                req.TaskQueue,
 		"deployment_name":           req.DeploymentName,

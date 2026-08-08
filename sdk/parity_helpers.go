@@ -2,13 +2,13 @@ package sdk
 
 import (
 	"bufio"
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
 	"net/url"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -183,32 +183,79 @@ func parseGenericStream(body io.ReadCloser) <-chan StreamEvent {
 		defer close(out)
 		defer body.Close()
 		reader := bufio.NewReader(body)
-		for {
-			line, readErr := reader.ReadBytes('\n')
-			if readErr == io.EOF {
-				break
+		var eventName string
+		var dataLines []string
+		emit := func() bool {
+			data := strings.TrimSpace(strings.Join(dataLines, "\n"))
+			defer func() { eventName = ""; dataLines = nil }()
+			if eventName == "error" {
+				payload := map[string]any{}
+				_ = json.Unmarshal([]byte(data), &payload)
+				message, _ := payload["error"].(string)
+				if message == "" {
+					message = data
+				}
+				reason, _ := payload["reason"].(string)
+				if reason == "" {
+					reason = "stream_error"
+				}
+				out <- StreamEvent{Error: &StreamDisconnectedError{Reason: reason, ErrorMessage: message}}
+				return true
 			}
-			if readErr != nil {
-				out <- StreamEvent{Error: fmt.Errorf("error reading stream response: %w", readErr)}
-				return
+			if data == "" {
+				return false
 			}
-			if bytes.Equal(line, []byte("\n")) || !bytes.HasPrefix(line, []byte("data: ")) {
-				continue
-			}
-			jsonLine := bytes.TrimSpace(bytes.TrimPrefix(line, []byte("data: ")))
-			if bytes.Equal(jsonLine, []byte("[DONE]")) {
-				break
+			if data == "[DONE]" {
+				return true
 			}
 			var payload map[string]any
-			if err := json.Unmarshal(jsonLine, &payload); err != nil {
+			if err := json.Unmarshal([]byte(data), &payload); err != nil {
 				out <- StreamEvent{Error: fmt.Errorf("error decoding stream event: %w", err)}
-				continue
+				return false
 			}
 			event := StreamEvent{Data: payload}
 			if eventType, ok := payload["type"].(string); ok {
 				event.Type = eventType
 			}
 			out <- event
+			return false
+		}
+		for {
+			line, readErr := reader.ReadString('\n')
+			if readErr != nil {
+				if readErr == io.EOF {
+					if strings.TrimSpace(line) != "" {
+						if strings.HasPrefix(line, "data:") {
+							dataLines = append(dataLines, strings.TrimSpace(strings.TrimPrefix(line, "data:")))
+						}
+					}
+					emit()
+					return
+				}
+				out <- StreamEvent{Error: fmt.Errorf("error reading stream response: %w", readErr)}
+				return
+			}
+			line = strings.TrimSuffix(strings.TrimSuffix(line, "\n"), "\r")
+			if line == "" {
+				if emit() {
+					return
+				}
+				continue
+			}
+			if strings.HasPrefix(line, ":") {
+				continue
+			}
+			field, value, found := strings.Cut(line, ":")
+			if !found {
+				continue
+			}
+			value = strings.TrimPrefix(value, " ")
+			switch field {
+			case "event":
+				eventName = value
+			case "data":
+				dataLines = append(dataLines, value)
+			}
 		}
 	}()
 	return out

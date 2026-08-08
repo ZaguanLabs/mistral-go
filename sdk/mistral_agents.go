@@ -1,6 +1,7 @@
 package sdk
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -49,9 +50,10 @@ type UpdateMistralAgentRequest struct {
 
 // MistralAgentListResponse represents a list of agents
 type MistralAgentListResponse struct {
-	Object string         `json:"object"`
-	Data   []MistralAgent `json:"data"`
-	Total  int            `json:"total"`
+	Object        string         `json:"object"`
+	Data          []MistralAgent `json:"data"`
+	Total         int            `json:"total"`
+	NextPageToken *string        `json:"next_page_token,omitempty"`
 }
 
 // ListMistralAgentsParams represents list filters for beta agents.
@@ -64,6 +66,57 @@ type ListMistralAgentsParams struct {
 	Search         *string         `json:"search,omitempty"`
 	ID             *string         `json:"id,omitempty"`
 	Metadata       map[string]any  `json:"metadata,omitempty"`
+	PageToken      *string         `json:"page_token,omitempty"`
+}
+
+func (c *MistralClient) ListMistralAgentPages(params *ListMistralAgentsParams) (*MistralAgentListResponse, error) {
+	if params == nil {
+		params = &ListMistralAgentsParams{}
+	}
+	query := url.Values{}
+	if params.PageSize != nil {
+		query.Add("page_size", fmt.Sprintf("%d", *params.PageSize))
+	}
+	if params.DeploymentChat != nil {
+		query.Add("deployment_chat", fmt.Sprintf("%t", *params.DeploymentChat))
+	}
+	for _, source := range params.Sources {
+		query.Add("sources", string(source))
+	}
+	if params.Name != nil {
+		query.Add("name", *params.Name)
+	}
+	if params.Search != nil {
+		query.Add("search", *params.Search)
+	}
+	if params.ID != nil {
+		query.Add("id", *params.ID)
+	}
+	if params.PageToken != nil {
+		query.Add("page_token", *params.PageToken)
+	}
+	if params.Metadata != nil {
+		if metadata, err := json.Marshal(params.Metadata); err == nil {
+			query.Add("metadata", string(metadata))
+		}
+	}
+	path := "v1/agents/pages"
+	if len(query) > 0 {
+		path += "?" + query.Encode()
+	}
+	response, err := c.request(http.MethodGet, nil, path, false, nil)
+	if err != nil {
+		return nil, err
+	}
+	respData, ok := response.(map[string]interface{})
+	if !ok {
+		return nil, fmt.Errorf("invalid response type: %T", response)
+	}
+	var listResponse MistralAgentListResponse
+	if err := mapToStruct(respData, &listResponse); err != nil {
+		return nil, err
+	}
+	return &listResponse, nil
 }
 
 // AgentAliasResponse represents an alias attached to an agent version.

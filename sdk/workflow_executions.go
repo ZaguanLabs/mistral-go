@@ -130,6 +130,10 @@ func (c *MistralClient) GetWorkflowExecutionTraceSummary(executionID string) (AP
 	return c.requestMap(http.MethodGet, nil, fmt.Sprintf("v1/workflows/executions/%s/trace/summary", executionID))
 }
 
+func (c *MistralClient) GetWorkflowExecutionTraceInfo(executionID string) (APIResponse, error) {
+	return c.requestMap(http.MethodGet, nil, fmt.Sprintf("v1/workflows/executions/%s/trace/info", executionID))
+}
+
 func (c *MistralClient) GetWorkflowExecutionTraceEvents(executionID string, params *WorkflowTraceEventsParams) (APIResponse, error) {
 	if params == nil {
 		params = &WorkflowTraceEventsParams{}

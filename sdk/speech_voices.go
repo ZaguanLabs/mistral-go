@@ -20,6 +20,7 @@ type SpeechRequest struct {
 	Model          *string            `json:"model,omitempty"`
 	Metadata       map[string]any     `json:"metadata,omitempty"`
 	Stream         *bool              `json:"stream,omitempty"`
+	PromptCacheKey *string            `json:"prompt_cache_key,omitempty"`
 	VoiceID        *string            `json:"voice_id,omitempty"`
 	RefAudio       *string            `json:"ref_audio,omitempty"`
 	ResponseFormat SpeechOutputFormat `json:"response_format,omitempty"`
@@ -96,13 +97,14 @@ func (c *MistralClient) Speech(req *SpeechRequest) (*SpeechResponse, error) {
 		return nil, fmt.Errorf("request cannot be nil")
 	}
 	body := optionalRequestMap(map[string]any{
-		"input":           req.Input,
-		"model":           req.Model,
-		"metadata":        req.Metadata,
-		"stream":          req.Stream,
-		"voice_id":        req.VoiceID,
-		"ref_audio":       req.RefAudio,
-		"response_format": req.ResponseFormat,
+		"input":            req.Input,
+		"model":            req.Model,
+		"metadata":         req.Metadata,
+		"stream":           req.Stream,
+		"prompt_cache_key": req.PromptCacheKey,
+		"voice_id":         req.VoiceID,
+		"ref_audio":        req.RefAudio,
+		"response_format":  req.ResponseFormat,
 	})
 	response, err := c.requestMap(http.MethodPost, body, "v1/audio/speech")
 	if err != nil {
@@ -122,13 +124,14 @@ func (c *MistralClient) SpeechStream(req *SpeechRequest) (<-chan StreamEvent, er
 	stream := true
 	req.Stream = &stream
 	body := optionalRequestMap(map[string]any{
-		"input":           req.Input,
-		"model":           req.Model,
-		"metadata":        req.Metadata,
-		"stream":          req.Stream,
-		"voice_id":        req.VoiceID,
-		"ref_audio":       req.RefAudio,
-		"response_format": req.ResponseFormat,
+		"input":            req.Input,
+		"model":            req.Model,
+		"metadata":         req.Metadata,
+		"stream":           req.Stream,
+		"prompt_cache_key": req.PromptCacheKey,
+		"voice_id":         req.VoiceID,
+		"ref_audio":        req.RefAudio,
+		"response_format":  req.ResponseFormat,
 	})
 	response, err := c.request(http.MethodPost, body, "v1/audio/speech", true, nil)
 	if err != nil {

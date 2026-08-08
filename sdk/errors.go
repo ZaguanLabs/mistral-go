@@ -23,8 +23,8 @@ type MistralAPIError struct {
 func NewMistralAPIError(message string, httpStatus int, headers map[string][]string) *MistralAPIError {
 	return &MistralAPIError{
 		MistralError: MistralError{Message: message},
-		HTTPStatus:       httpStatus,
-		Headers:          headers,
+		HTTPStatus:   httpStatus,
+		Headers:      headers,
 	}
 }
 
@@ -35,6 +35,18 @@ func (e *MistralAPIError) Error() string {
 // MistralConnectionError is returned when the SDK cannot reach the API server for any reason.
 type MistralConnectionError struct {
 	MistralError
+}
+
+type StreamDisconnectedError struct {
+	Reason       string
+	ErrorMessage string
+}
+
+func (e *StreamDisconnectedError) Error() string {
+	if e.Reason == "" {
+		return e.ErrorMessage
+	}
+	return fmt.Sprintf("stream disconnected (%s): %s", e.Reason, e.ErrorMessage)
 }
 
 func NewMistralConnectionError(message string) *MistralConnectionError {

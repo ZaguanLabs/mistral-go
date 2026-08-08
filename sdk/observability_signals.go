@@ -20,6 +20,17 @@ type ObservabilityFieldOptionsParams struct {
 	To   *time.Time `json:"to,omitempty"`
 }
 
+type ObservabilityAggregationParams struct {
+	Metric           any
+	From             *time.Time
+	To               *time.Time
+	Dimensions       []string
+	TimeDimension    any
+	SearchExpression *string
+	OrderBy          []map[string]any
+	Limit            *int
+}
+
 func (c *MistralClient) SearchLogs(params *ObservabilitySearchParams) (APIResponse, error) {
 	if params == nil {
 		params = &ObservabilitySearchParams{}
@@ -42,6 +53,10 @@ func (c *MistralClient) FetchLogFieldOptions(fieldName string, params *Observabi
 
 func (c *MistralClient) SearchSpans(params *ObservabilitySearchParams) (APIResponse, error) {
 	return c.searchObservabilitySignals("v1/observability/spans/search", params)
+}
+
+func (c *MistralClient) AggregateSpans(params *ObservabilityAggregationParams) (APIResponse, error) {
+	return c.aggregateObservabilitySignals("v1/observability/spans/aggregate", params)
 }
 
 func (c *MistralClient) SearchSpanEvaluations(params *ObservabilitySearchParams) (APIResponse, error) {
@@ -72,6 +87,10 @@ func (c *MistralClient) SearchTraces(params *ObservabilitySearchParams) (APIResp
 	return c.searchObservabilitySignals("v1/observability/traces/search", params)
 }
 
+func (c *MistralClient) AggregateTraces(params *ObservabilityAggregationParams) (APIResponse, error) {
+	return c.aggregateObservabilitySignals("v1/observability/traces/aggregate", params)
+}
+
 func (c *MistralClient) ListTraceFields() (APIResponse, error) {
 	return c.requestMap(http.MethodGet, nil, "v1/observability/traces/fields")
 }
@@ -93,7 +112,15 @@ func (c *MistralClient) FetchTraceFieldOptions(fieldName string, params *Observa
 }
 
 func (c *MistralClient) GetSpanByID(traceID, spanID string) (APIResponse, error) {
-	return c.requestMap(http.MethodGet, nil, fmt.Sprintf("v1/observability/traces/%s/spans/%s", traceID, spanID))
+	return c.GetSpanByIDWithParams(traceID, spanID, nil)
+}
+
+func (c *MistralClient) GetSpanByIDWithParams(traceID, spanID string, params *ObservabilityFieldOptionsParams) (APIResponse, error) {
+	if params == nil {
+		params = &ObservabilityFieldOptionsParams{}
+	}
+	query := queryWithOptionalValues(map[string]any{"from": params.From, "to": params.To})
+	return c.requestMap(http.MethodGet, nil, appendQuery(fmt.Sprintf("v1/observability/traces/%s/spans/%s", traceID, spanID), query))
 }
 
 func (c *MistralClient) searchObservabilitySignals(path string, params *ObservabilitySearchParams) (APIResponse, error) {
@@ -111,6 +138,19 @@ func (c *MistralClient) observabilityFieldOptions(path string, params *Observabi
 	}
 	query := queryWithOptionalValues(map[string]any{"from": params.From, "to": params.To})
 	return c.requestMap(http.MethodGet, nil, appendQuery(path, query))
+}
+
+func (c *MistralClient) aggregateObservabilitySignals(path string, params *ObservabilityAggregationParams) (APIResponse, error) {
+	if params == nil {
+		return nil, fmt.Errorf("params cannot be nil")
+	}
+	query := queryWithOptionalValues(map[string]any{"from": params.From, "to": params.To})
+	body := optionalRequestMap(map[string]any{
+		"metric": params.Metric, "dimensions": params.Dimensions,
+		"time_dimension": params.TimeDimension, "search_expression": params.SearchExpression,
+		"order_by": params.OrderBy, "limit": params.Limit,
+	})
+	return c.requestMap(http.MethodPost, body, appendQuery(path, query))
 }
 
 func observabilitySearchQuery(params *ObservabilitySearchParams) string {

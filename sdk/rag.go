@@ -53,6 +53,46 @@ type SearchIndexResponse struct {
 	Index         map[string]any    `json:"index"`
 }
 
+type RegisterRAGDeploymentRequest struct {
+	Name       string  `json:"name"`
+	Deployment any     `json:"deployment"`
+	Status     *string `json:"status,omitempty"`
+}
+
+type UpdateRAGDeploymentMetricsRequest struct {
+	Status        string           `json:"status"`
+	ClearMetrics  *bool            `json:"clear_metrics,omitempty"`
+	DocumentCount *int             `json:"document_count,omitempty"`
+	IndexMetrics  []map[string]any `json:"index_metrics,omitempty"`
+}
+
+func (c *MistralClient) GetRAGDeploymentSummaries() (APIResponse, error) {
+	return c.requestMap(http.MethodGet, nil, "v1/rag/deployments")
+}
+
+func (c *MistralClient) RegisterRAGDeployment(req *RegisterRAGDeploymentRequest) (APIResponse, error) {
+	if req == nil {
+		return nil, fmt.Errorf("request cannot be nil")
+	}
+	body := optionalRequestMap(map[string]any{"name": req.Name, "deployment": req.Deployment, "status": req.Status})
+	return c.requestMap(http.MethodPut, body, "v1/rag/deployments")
+}
+
+func (c *MistralClient) UnregisterRAGDeployment(deploymentID string) (APIResponse, error) {
+	return c.requestMap(http.MethodDelete, nil, fmt.Sprintf("v1/rag/deployments/%s", deploymentID))
+}
+
+func (c *MistralClient) UpdateRAGDeploymentMetrics(deploymentID string, req *UpdateRAGDeploymentMetricsRequest) (APIResponse, error) {
+	if req == nil {
+		return nil, fmt.Errorf("request cannot be nil")
+	}
+	body := optionalRequestMap(map[string]any{
+		"status": req.Status, "clear_metrics": req.ClearMetrics,
+		"document_count": req.DocumentCount, "index_metrics": req.IndexMetrics,
+	})
+	return c.requestMap(http.MethodPut, body, fmt.Sprintf("v1/rag/deployments/%s/metrics", deploymentID))
+}
+
 func (c *MistralClient) ListIngestionPipelineConfigurations() (APIResponse, error) {
 	return c.requestMap(http.MethodGet, nil, "v1/rag/ingestion_pipeline_configurations")
 }

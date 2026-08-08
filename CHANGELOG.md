@@ -5,6 +5,31 @@ All notable changes to the Mistral Go SDK will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.9.1] - 2026-08-08
+
+### Added - Python SDK v2.9.1 Parity Updates
+
+- v2 prompt and skill registry resources, including version and metadata operations.
+- User identity lookup and paginated beta-agent listing.
+- Workflow deployment create, update, delete, lifecycle, and worker-list operations.
+- Workflow execution trace information and observability span/trace aggregation.
+- Deployment-oriented RAG registration, removal, summary, and metrics operations.
+- Generic connector consumer activation, sharing, credential cleanup, and credential titles.
+- OCR block models and request controls, library page tokens, and speech prompt-cache keys.
+- Typed `StreamDisconnectedError` handling for SSE `error` events.
+
+### Changed
+
+- Version and User-Agent updated to `2.9.1`.
+- Workflow, schedule, run, model, and connector request/response fields aligned with Python SDK v2.9.1.
+- Generic SSE parsing now preserves multi-line event data and terminates on explicit stream errors.
+- README compatibility notes updated for Python SDK v2.9.1.
+
+### Tests
+
+- Added local mock-server coverage for the new v2.9.1 endpoint groups and request shapes.
+- Added parser coverage for typed SSE disconnect events.
+
 ## [2.4.13] - 2026-06-19
 
 ### Added - Python SDK v2.4.13 Parity Updates

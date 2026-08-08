@@ -28,8 +28,17 @@ type Library struct {
 
 // LibraryListResponse represents a list of libraries
 type LibraryListResponse struct {
-	Object string    `json:"object"`
-	Data   []Library `json:"data"`
+	Object        string    `json:"object"`
+	Data          []Library `json:"data"`
+	NextPageToken *string   `json:"next_page_token,omitempty"`
+}
+
+type ListLibrariesParams struct {
+	PageSize        *int
+	PageToken       *string
+	Page            *int
+	Search          *string
+	FilterOwnedByMe *bool
 }
 
 // CreateLibraryRequest represents a request to create a library
@@ -54,7 +63,21 @@ type DeleteLibraryResponse struct {
 
 // ListLibraries lists all libraries
 func (c *MistralClient) ListLibraries() (*LibraryListResponse, error) {
-	response, err := c.request(http.MethodGet, nil, "v1/libraries", false, nil)
+	return c.ListLibrariesWithParams(nil)
+}
+
+func (c *MistralClient) ListLibrariesWithParams(params *ListLibrariesParams) (*LibraryListResponse, error) {
+	if params == nil {
+		params = &ListLibrariesParams{}
+	}
+	query := queryWithOptionalValues(map[string]any{
+		"page_size":          params.PageSize,
+		"page_token":         params.PageToken,
+		"page":               params.Page,
+		"search":             params.Search,
+		"filter_owned_by_me": params.FilterOwnedByMe,
+	})
+	response, err := c.request(http.MethodGet, nil, appendQuery("v1/libraries", query), false, nil)
 	if err != nil {
 		return nil, err
 	}
