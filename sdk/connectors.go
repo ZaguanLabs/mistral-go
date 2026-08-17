@@ -6,32 +6,122 @@ import (
 )
 
 type ConnectorRequest struct {
-	Name                    string         `json:"name,omitempty"`
-	Description             *string        `json:"description,omitempty"`
-	Server                  any            `json:"server,omitempty"`
-	Protocol                *string        `json:"protocol,omitempty"`
-	Title                   *string        `json:"title,omitempty"`
-	IconURL                 *string        `json:"icon_url,omitempty"`
-	Visibility              any            `json:"visibility,omitempty"`
-	Headers                 map[string]any `json:"headers,omitempty"`
-	AuthData                map[string]any `json:"auth_data,omitempty"`
-	OAuth2ServerMetadata    map[string]any `json:"oauth2_server_metadata,omitempty"`
-	OAuth2ServerMetadataURL *string        `json:"oauth2_server_metadata_url,omitempty"`
-	SystemPrompt            *string        `json:"system_prompt,omitempty"`
+	Name                    string                       `json:"name,omitempty"`
+	Description             *string                      `json:"description,omitempty"`
+	Server                  any                          `json:"server,omitempty"`
+	Protocol                *string                      `json:"protocol,omitempty"`
+	Title                   *string                      `json:"title,omitempty"`
+	IconURL                 *string                      `json:"icon_url,omitempty"`
+	Visibility              any                          `json:"visibility,omitempty"`
+	Headers                 map[string]any               `json:"headers,omitempty"`
+	GlobalHeaders           map[string]GlobalHeaderValue `json:"global_headers,omitempty"`
+	AuthData                map[string]any               `json:"auth_data,omitempty"`
+	OAuth2ServerMetadata    map[string]any               `json:"oauth2_server_metadata,omitempty"`
+	OAuth2ServerMetadataURL *string                      `json:"oauth2_server_metadata_url,omitempty"`
+	SystemPrompt            *string                      `json:"system_prompt,omitempty"`
 }
 
 type UpdateConnectorRequest struct {
-	Title             *string        `json:"title,omitempty"`
-	Name              *string        `json:"name,omitempty"`
-	Description       *string        `json:"description,omitempty"`
-	IconURL           *string        `json:"icon_url,omitempty"`
-	SystemPrompt      *string        `json:"system_prompt,omitempty"`
-	ConnectionConfig  map[string]any `json:"connection_config,omitempty"`
-	ConnectionSecrets map[string]any `json:"connection_secrets,omitempty"`
-	Protocol          *string        `json:"protocol,omitempty"`
-	Server            any            `json:"server,omitempty"`
-	Headers           map[string]any `json:"headers,omitempty"`
-	AuthData          map[string]any `json:"auth_data,omitempty"`
+	Title             *string                                     `json:"title,omitempty"`
+	Name              *string                                     `json:"name,omitempty"`
+	Description       *string                                     `json:"description,omitempty"`
+	IconURL           *string                                     `json:"icon_url,omitempty"`
+	SystemPrompt      *string                                     `json:"system_prompt,omitempty"`
+	ConnectionConfig  map[string]any                              `json:"connection_config,omitempty"`
+	ConnectionSecrets map[string]any                              `json:"connection_secrets,omitempty"`
+	Protocol          *string                                     `json:"protocol,omitempty"`
+	Server            any                                         `json:"server,omitempty"`
+	Headers           map[string]any                              `json:"headers,omitempty"`
+	AuthData          map[string]any                              `json:"auth_data,omitempty"`
+	AuthMethods       []AuthenticationMethodCreateOrUpdateRequest `json:"auth_methods,omitempty"`
+}
+
+type ConnectorAuthenticationMethodType string
+
+const (
+	ConnectorAuthenticationOAuth2    ConnectorAuthenticationMethodType = "oauth2"
+	ConnectorAuthenticationBearer    ConnectorAuthenticationMethodType = "bearer"
+	ConnectorAuthenticationNone      ConnectorAuthenticationMethodType = "none"
+	ConnectorAuthenticationGitHubApp ConnectorAuthenticationMethodType = "github_app"
+	ConnectorAuthenticationSlackApp  ConnectorAuthenticationMethodType = "slack_app"
+	ConnectorAuthenticationWebhook   ConnectorAuthenticationMethodType = "webhook"
+)
+
+type AuthDirection string
+
+const (
+	AuthDirectionInbound  AuthDirection = "inbound"
+	AuthDirectionOutbound AuthDirection = "outbound"
+)
+
+type OAuthMetadataSource string
+
+const (
+	OAuthMetadataSourceAutodiscovery OAuthMetadataSource = "autodiscovery"
+	OAuthMetadataSourceProvided      OAuthMetadataSource = "provided"
+)
+
+type GlobalHeaderValue struct {
+	Value    string `json:"value"`
+	IsSecret *bool  `json:"is_secret,omitempty"`
+}
+
+type ConnectorAuthenticationHeader struct {
+	Name       string `json:"name"`
+	IsRequired *bool  `json:"is_required,omitempty"`
+	IsSecret   *bool  `json:"is_secret,omitempty"`
+}
+
+type OAuth2MetadataSecrets struct {
+	ClientID              *string `json:"client_id,omitempty"`
+	ClientSecret          *string `json:"client_secret,omitempty"`
+	ClientIDIssuedAt      *int    `json:"client_id_issued_at,omitempty"`
+	ClientSecretExpiresAt *int    `json:"client_secret_expires_at,omitempty"`
+}
+
+type ExtendedOAuthServerMetadata struct {
+	Issuer                                             string               `json:"issuer"`
+	AuthorizationEndpoint                              string               `json:"authorization_endpoint"`
+	TokenEndpoint                                      string               `json:"token_endpoint"`
+	RegistrationEndpoint                               *string              `json:"registration_endpoint,omitempty"`
+	ScopesSupported                                    []string             `json:"scopes_supported,omitempty"`
+	ResponseTypesSupported                             []string             `json:"response_types_supported,omitempty"`
+	ResponseModesSupported                             []string             `json:"response_modes_supported,omitempty"`
+	GrantTypesSupported                                []string             `json:"grant_types_supported,omitempty"`
+	TokenEndpointAuthMethodsSupported                  []string             `json:"token_endpoint_auth_methods_supported,omitempty"`
+	TokenEndpointAuthSigningAlgValuesSupported         []string             `json:"token_endpoint_auth_signing_alg_values_supported,omitempty"`
+	ServiceDocumentation                               *string              `json:"service_documentation,omitempty"`
+	UILocalesSupported                                 []string             `json:"ui_locales_supported,omitempty"`
+	OPPolicyURI                                        *string              `json:"op_policy_uri,omitempty"`
+	OPTOSURI                                           *string              `json:"op_tos_uri,omitempty"`
+	RevocationEndpoint                                 *string              `json:"revocation_endpoint,omitempty"`
+	RevocationEndpointAuthMethodsSupported             []string             `json:"revocation_endpoint_auth_methods_supported,omitempty"`
+	RevocationEndpointAuthSigningAlgValuesSupported    []string             `json:"revocation_endpoint_auth_signing_alg_values_supported,omitempty"`
+	IntrospectionEndpoint                              *string              `json:"introspection_endpoint,omitempty"`
+	IntrospectionEndpointAuthMethodsSupported          []string             `json:"introspection_endpoint_auth_methods_supported,omitempty"`
+	IntrospectionEndpointAuthSigningAlgValuesSupported []string             `json:"introspection_endpoint_auth_signing_alg_values_supported,omitempty"`
+	CodeChallengeMethodsSupported                      []string             `json:"code_challenge_methods_supported,omitempty"`
+	ClientIDMetadataDocumentSupported                  *bool                `json:"client_id_metadata_document_supported,omitempty"`
+	XSource                                            *OAuthMetadataSource `json:"x_source,omitempty"`
+	XResourceURL                                       *string              `json:"x_resource_url,omitempty"`
+	XScope                                             *string              `json:"x_scope,omitempty"`
+}
+
+type AuthenticationMethodCreateOrUpdateRequest struct {
+	MethodType            ConnectorAuthenticationMethodType `json:"method_type"`
+	AuthDirection         *AuthDirection                    `json:"auth_direction,omitempty"`
+	Headers               []ConnectorAuthenticationHeader   `json:"headers,omitempty"`
+	GlobalHeaders         map[string]GlobalHeaderValue      `json:"global_headers,omitempty"`
+	OAuth2MetadataSecrets *OAuth2MetadataSecrets            `json:"oauth2_metadata_secrets,omitempty"`
+	OAuth2ServerMetadata  *ExtendedOAuthServerMetadata      `json:"oauth2_server_metadata,omitempty"`
+}
+
+type PublicAuthenticationMethod struct {
+	MethodType            ConnectorAuthenticationMethodType `json:"method_type"`
+	HasDefaultCredentials bool                              `json:"has_default_credentials"`
+	Headers               []ConnectorAuthenticationHeader   `json:"headers,omitempty"`
+	GlobalHeaders         map[string]GlobalHeaderValue      `json:"global_headers,omitempty"`
+	OAuth2ServerMetadata  *ExtendedOAuthServerMetadata      `json:"oauth2_server_metadata,omitempty"`
 }
 
 type ListConnectorsParams struct {
@@ -88,6 +178,7 @@ func (c *MistralClient) CreateConnector(req *ConnectorRequest) (APIResponse, err
 		"icon_url":                   req.IconURL,
 		"visibility":                 req.Visibility,
 		"headers":                    req.Headers,
+		"global_headers":             req.GlobalHeaders,
 		"auth_data":                  req.AuthData,
 		"oauth2_server_metadata":     req.OAuth2ServerMetadata,
 		"oauth2_server_metadata_url": req.OAuth2ServerMetadataURL,
@@ -260,6 +351,7 @@ func (c *MistralClient) UpdateConnector(connectorID string, req *UpdateConnector
 		"server":             req.Server,
 		"headers":            req.Headers,
 		"auth_data":          req.AuthData,
+		"auth_methods":       req.AuthMethods,
 	})
 	return c.requestMap(http.MethodPatch, body, fmt.Sprintf("v1/connectors/%s", connectorID))
 }

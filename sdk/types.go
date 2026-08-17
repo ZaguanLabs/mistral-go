@@ -162,6 +162,14 @@ const (
 	ReasoningEffortHigh   ReasoningEffort = "high"
 )
 
+// RequestedServiceTier selects standard-only or automatic priority capacity.
+type RequestedServiceTier string
+
+const (
+	RequestedServiceTierAuto         RequestedServiceTier = "auto"
+	RequestedServiceTierStandardOnly RequestedServiceTier = "standard_only"
+)
+
 // GuardrailConfig configures server-side guardrails for a chat request.
 type GuardrailConfig struct {
 	GuardrailID string         `json:"guardrail_id,omitempty"`

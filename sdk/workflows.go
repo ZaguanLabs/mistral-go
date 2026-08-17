@@ -154,6 +154,30 @@ type DeploymentWorkerSpec struct {
 	WorkingDir *string `json:"working_dir,omitempty"`
 }
 
+type GitCommitAuthor struct {
+	Name     *string `json:"name,omitempty"`
+	Username *string `json:"username,omitempty"`
+	HTMLURL  *string `json:"html_url,omitempty"`
+}
+
+type GitCommitMetadata struct {
+	SHA     string           `json:"sha"`
+	Message *string          `json:"message,omitempty"`
+	Author  *GitCommitAuthor `json:"author,omitempty"`
+	HTMLURL *string          `json:"html_url,omitempty"`
+}
+
+type DeploymentWorkerSpecResponse struct {
+	GitHubURL   string             `json:"github_url"`
+	Type        *string            `json:"type,omitempty"`
+	Revision    *string            `json:"revision,omitempty"`
+	Entrypoint  *string            `json:"entrypoint,omitempty"`
+	WorkingDir  *string            `json:"working_dir,omitempty"`
+	RestartedAt *string            `json:"restarted_at,omitempty"`
+	CommitSHA   *string            `json:"commit_sha,omitempty"`
+	Commit      *GitCommitMetadata `json:"commit,omitempty"`
+}
+
 type DeploymentResourceConfig struct {
 	Replicas      *int    `json:"replicas,omitempty"`
 	CPURequest    *string `json:"cpu_request,omitempty"`
@@ -402,8 +426,13 @@ func (c *MistralClient) ListWorkflowDeploymentWorkers(name string, params *ListD
 	return c.requestMap(http.MethodGet, nil, appendQuery(fmt.Sprintf("v1/workflows/deployments/%s/workers", name), query))
 }
 
-func (c *MistralClient) GetWorkflowDeployment(name string) (APIResponse, error) {
-	return c.requestMap(http.MethodGet, nil, fmt.Sprintf("v1/workflows/deployments/%s", name))
+func (c *MistralClient) GetWorkflowDeployment(name string, workflowName ...*string) (APIResponse, error) {
+	var scopedWorkflow *string
+	if len(workflowName) > 0 {
+		scopedWorkflow = workflowName[0]
+	}
+	query := queryWithOptionalValues(map[string]any{"workflow_name": scopedWorkflow})
+	return c.requestMap(http.MethodGet, nil, appendQuery(fmt.Sprintf("v1/workflows/deployments/%s", name), query))
 }
 
 func (c *MistralClient) GetWorkflowDeploymentLogs(name string, params *DeploymentLogsParams) (APIResponse, error) {

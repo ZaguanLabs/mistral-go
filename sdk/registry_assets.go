@@ -211,6 +211,94 @@ func (c *MistralClient) GetUserIdentity() (APIResponse, error) {
 	return c.requestMap(http.MethodGet, nil, "v1/users/me")
 }
 
+type ListOrganizationsParams struct {
+	Offset *int
+	Limit  *int
+}
+
+type UserOrganization struct {
+	ID   string `json:"id"`
+	Name string `json:"name"`
+}
+
+type ListOrganizationsResponse struct {
+	Organizations []UserOrganization `json:"organizations"`
+}
+
+type ListWorkspacesParams struct {
+	OrganizationID *string
+	Offset         *int
+	Limit          *int
+}
+
+type UserWorkspace struct {
+	ID             string `json:"id"`
+	Name           string `json:"name"`
+	OrganizationID string `json:"organization_id"`
+}
+
+type ListWorkspacesResponse struct {
+	Workspaces []UserWorkspace `json:"workspaces"`
+}
+
+func (c *MistralClient) ListOrganizations(params *ListOrganizationsParams) (*ListOrganizationsResponse, error) {
+	if params == nil {
+		params = &ListOrganizationsParams{}
+	}
+	offset, limit := 0, 100
+	if params.Offset != nil {
+		offset = *params.Offset
+	}
+	if params.Limit != nil {
+		limit = *params.Limit
+	}
+	query := queryWithOptionalValues(map[string]any{"offset": offset, "limit": limit})
+	response, err := c.request(http.MethodGet, nil, appendQuery("v1/users/me/organizations", query), false, nil)
+	if err != nil {
+		return nil, err
+	}
+	data, ok := response.(map[string]interface{})
+	if !ok {
+		return nil, fmt.Errorf("invalid response type: %T", response)
+	}
+	var out ListOrganizationsResponse
+	if err := mapToStruct(data, &out); err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+func (c *MistralClient) ListWorkspaces(params *ListWorkspacesParams) (*ListWorkspacesResponse, error) {
+	if params == nil {
+		params = &ListWorkspacesParams{}
+	}
+	offset, limit := 0, 100
+	if params.Offset != nil {
+		offset = *params.Offset
+	}
+	if params.Limit != nil {
+		limit = *params.Limit
+	}
+	query := queryWithOptionalValues(map[string]any{
+		"organization_id": params.OrganizationID,
+		"offset":          offset,
+		"limit":           limit,
+	})
+	response, err := c.request(http.MethodGet, nil, appendQuery("v1/users/me/workspaces", query), false, nil)
+	if err != nil {
+		return nil, err
+	}
+	data, ok := response.(map[string]interface{})
+	if !ok {
+		return nil, fmt.Errorf("invalid response type: %T", response)
+	}
+	var out ListWorkspacesResponse
+	if err := mapToStruct(data, &out); err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
 func (c *MistralClient) listRegistryAssets(path string, params *RegistryListParams) (APIResponse, error) {
 	if params == nil {
 		params = &RegistryListParams{}

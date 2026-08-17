@@ -45,9 +45,10 @@ type ChatRequestParams struct {
 	Metadata   map[string]any     `json:"metadata,omitempty"`    // Custom metadata (added in v1.10.0)
 
 	// 2.4.9 chat request additions
-	ReasoningEffort *ReasoningEffort  `json:"reasoning_effort,omitempty"`
-	Guardrails      []GuardrailConfig `json:"guardrails,omitempty"`
-	PromptCacheKey  *string           `json:"prompt_cache_key,omitempty"`
+	ReasoningEffort *ReasoningEffort      `json:"reasoning_effort,omitempty"`
+	Guardrails      []GuardrailConfig     `json:"guardrails,omitempty"`
+	PromptCacheKey  *string               `json:"prompt_cache_key,omitempty"`
+	ServiceTier     *RequestedServiceTier `json:"service_tier,omitempty"`
 }
 
 // NewChatRequestParams creates a new ChatRequestParams with sensible defaults
@@ -92,9 +93,11 @@ type ChatCompletionStreamResponse struct {
 
 // UsageInfo represents the usage information of a response.
 type UsageInfo struct {
-	PromptTokens     int `json:"prompt_tokens"`
-	TotalTokens      int `json:"total_tokens"`
-	CompletionTokens int `json:"completion_tokens,omitempty"`
+	PromptTokens       int     `json:"prompt_tokens"`
+	TotalTokens        int     `json:"total_tokens"`
+	CompletionTokens   int     `json:"completion_tokens,omitempty"`
+	PromptAudioSeconds *int    `json:"prompt_audio_seconds,omitempty"`
+	ServiceTier        *string `json:"service_tier,omitempty"`
 }
 
 func (c *MistralClient) Chat(model string, messages []ChatMessage, params *ChatRequestParams) (*ChatCompletionResponse, error) {
@@ -167,6 +170,9 @@ func (c *MistralClient) Chat(model string, messages []ChatMessage, params *ChatR
 	}
 	if params.PromptCacheKey != nil {
 		requestData["prompt_cache_key"] = *params.PromptCacheKey
+	}
+	if params.ServiceTier != nil {
+		requestData["service_tier"] = *params.ServiceTier
 	}
 
 	response, err := c.request(http.MethodPost, requestData, "v1/chat/completions", false, nil)
@@ -262,6 +268,9 @@ func (c *MistralClient) ChatStream(model string, messages []ChatMessage, params 
 	}
 	if params.PromptCacheKey != nil {
 		requestData["prompt_cache_key"] = *params.PromptCacheKey
+	}
+	if params.ServiceTier != nil {
+		requestData["service_tier"] = *params.ServiceTier
 	}
 
 	response, err := c.request(http.MethodPost, requestData, "v1/chat/completions", true, nil)

@@ -8,9 +8,17 @@ import (
 )
 
 type RegisterIngestionPipelineConfigurationRequest struct {
-	Name                string `json:"name"`
-	PipelineComposition any    `json:"pipeline_composition"`
+	Name                string                            `json:"name"`
+	PipelineComposition any                               `json:"pipeline_composition"`
+	TargetIndexes       []IngestionPipelineTargetIndexRef `json:"target_indexes,omitempty"`
 }
+
+type IngestionPipelineTargetIndexRef struct {
+	Name string `json:"name"`
+	Type string `json:"type,omitempty"`
+}
+
+const IngestionPipelineTargetIndexTypeVespa = "vespa"
 
 type UpdateIngestionPipelineRunInfoRequest struct {
 	ExecutionTime *float64 `json:"execution_time,omitempty"`
@@ -101,9 +109,17 @@ func (c *MistralClient) RegisterIngestionPipelineConfiguration(req *RegisterInge
 	if req == nil {
 		return nil, fmt.Errorf("request cannot be nil")
 	}
+	targetIndexes := make([]IngestionPipelineTargetIndexRef, len(req.TargetIndexes))
+	copy(targetIndexes, req.TargetIndexes)
+	for i := range targetIndexes {
+		if targetIndexes[i].Type == "" {
+			targetIndexes[i].Type = IngestionPipelineTargetIndexTypeVespa
+		}
+	}
 	body := optionalRequestMap(map[string]any{
 		"name":                 req.Name,
 		"pipeline_composition": req.PipelineComposition,
+		"target_indexes":       targetIndexes,
 	})
 	return c.requestMap(http.MethodPut, body, "v1/rag/ingestion_pipeline_configurations")
 }

@@ -11,22 +11,26 @@ import (
 
 // AgentCompletionRequest represents a request for agent completion
 type AgentCompletionRequest struct {
-	AgentID           string              `json:"agent_id"`
-	Messages          []ChatMessage       `json:"messages"`
-	MaxTokens         *int                `json:"max_tokens,omitempty"`
-	Stream            *bool               `json:"stream,omitempty"`
-	Stop              interface{}         `json:"stop,omitempty"` // string or []string
-	RandomSeed        *int                `json:"random_seed,omitempty"`
-	Metadata          map[string]any      `json:"metadata,omitempty"`
-	ResponseFormat    *ResponseFormatSpec `json:"response_format,omitempty"`
-	Tools             []Tool              `json:"tools,omitempty"`
-	ToolChoice        interface{}         `json:"tool_choice,omitempty"` // string or ToolChoice object
-	PresencePenalty   *float64            `json:"presence_penalty,omitempty"`
-	FrequencyPenalty  *float64            `json:"frequency_penalty,omitempty"`
-	N                 *int                `json:"n,omitempty"`
-	Prediction        *Prediction         `json:"prediction,omitempty"`
-	ParallelToolCalls *bool               `json:"parallel_tool_calls,omitempty"`
-	PromptMode        *MistralPromptMode  `json:"prompt_mode,omitempty"`
+	AgentID           string                `json:"agent_id"`
+	Messages          []ChatMessage         `json:"messages"`
+	MaxTokens         *int                  `json:"max_tokens,omitempty"`
+	Stream            *bool                 `json:"stream,omitempty"`
+	Stop              interface{}           `json:"stop,omitempty"` // string or []string
+	RandomSeed        *int                  `json:"random_seed,omitempty"`
+	Metadata          map[string]any        `json:"metadata,omitempty"`
+	ResponseFormat    *ResponseFormatSpec   `json:"response_format,omitempty"`
+	Tools             []Tool                `json:"tools,omitempty"`
+	ToolChoice        interface{}           `json:"tool_choice,omitempty"` // string or ToolChoice object
+	PresencePenalty   *float64              `json:"presence_penalty,omitempty"`
+	FrequencyPenalty  *float64              `json:"frequency_penalty,omitempty"`
+	N                 *int                  `json:"n,omitempty"`
+	Prediction        *Prediction           `json:"prediction,omitempty"`
+	ParallelToolCalls *bool                 `json:"parallel_tool_calls,omitempty"`
+	PromptMode        *MistralPromptMode    `json:"prompt_mode,omitempty"`
+	ReasoningEffort   *ReasoningEffort      `json:"reasoning_effort,omitempty"`
+	Guardrails        []GuardrailConfig     `json:"guardrails,omitempty"`
+	PromptCacheKey    *string               `json:"prompt_cache_key,omitempty"`
+	ServiceTier       *RequestedServiceTier `json:"service_tier,omitempty"`
 }
 
 // ResponseFormatSpec specifies the response format
@@ -101,6 +105,18 @@ func (c *MistralClient) AgentComplete(agentID string, messages []ChatMessage, pa
 	}
 	if params.PromptMode != nil {
 		reqMap["prompt_mode"] = params.PromptMode
+	}
+	if params.ReasoningEffort != nil {
+		reqMap["reasoning_effort"] = params.ReasoningEffort
+	}
+	if params.Guardrails != nil {
+		reqMap["guardrails"] = params.Guardrails
+	}
+	if params.PromptCacheKey != nil {
+		reqMap["prompt_cache_key"] = params.PromptCacheKey
+	}
+	if params.ServiceTier != nil {
+		reqMap["service_tier"] = params.ServiceTier
 	}
 
 	response, err := c.request(http.MethodPost, reqMap, "v1/agents/completions", false, nil)
@@ -189,6 +205,18 @@ func (c *MistralClient) AgentCompleteStream(agentID string, messages []ChatMessa
 	}
 	if params.PromptMode != nil {
 		reqMap["prompt_mode"] = params.PromptMode
+	}
+	if params.ReasoningEffort != nil {
+		reqMap["reasoning_effort"] = params.ReasoningEffort
+	}
+	if params.Guardrails != nil {
+		reqMap["guardrails"] = params.Guardrails
+	}
+	if params.PromptCacheKey != nil {
+		reqMap["prompt_cache_key"] = params.PromptCacheKey
+	}
+	if params.ServiceTier != nil {
+		reqMap["service_tier"] = params.ServiceTier
 	}
 
 	// Create response channel

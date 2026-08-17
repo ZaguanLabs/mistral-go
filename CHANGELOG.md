@@ -5,6 +5,27 @@ All notable changes to the Mistral Go SDK will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.9.3] - 2026-08-17
+
+### Added - Python SDK v2.9.3 Parity Updates
+
+- Realtime client-session creation with typed short-lived credentials.
+- User organization and workspace listing with Python-compatible pagination defaults.
+- Connector global headers and typed authentication-method update models.
+- Ingestion pipeline target-index references and deployment Git commit metadata.
+- Workflow event linkage fields and execution-attempt attributes.
+
+### Changed
+
+- Added `service_tier` to chat and agent completion requests and usage responses.
+- Added deployment `workflow_name` scoping and expanded connector/workflow models.
+- Updated version and User-Agent to `2.9.3`.
+
+### Tests
+
+- Added local mock-server coverage for every v2.9.3 endpoint and request-shape addition.
+- Added response-model coverage for service-tier, audio usage, and workflow linkage fields.
+
 ## [2.9.1] - 2026-08-08
 
 ### Added - Python SDK v2.9.1 Parity Updates
