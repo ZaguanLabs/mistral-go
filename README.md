@@ -1,12 +1,12 @@
 # Mistral Go SDK
 
-**Version 2.9.3** - Python SDK v2.9.3 Compatibility 🚀
+**Version 2.9.4** - Python SDK v2.9.4 Compatibility 🚀
 
 [![Minimal Dependencies](https://img.shields.io/badge/dependencies-minimal-brightgreen.svg)](https://github.com/ZaguanLabs/mistral-go)
 [![Go Version](https://img.shields.io/badge/go-%3E%3D1.20-blue.svg)](https://golang.org/)
 [![Pure Go](https://img.shields.io/badge/pure-go-success.svg)](https://pkg.go.dev/std)
 
-A Go SDK for the Mistral AI API, designed to provide developers with powerful tools to integrate advanced AI capabilities into their applications. This SDK has been significantly enhanced to match the official Mistral Python SDK v2.9.3.
+A Go SDK for the Mistral AI API, designed to provide developers with powerful tools to integrate advanced AI capabilities into their applications. This SDK has been significantly enhanced to match the official Mistral Python SDK v2.9.4.
 
 **✨ Minimal Dependencies** - REST functionality uses the Go standard library; realtime audio adds one pure-Go WebSocket dependency for official SDK parity.
 
@@ -32,6 +32,12 @@ A Go SDK for the Mistral AI API, designed to provide developers with powerful to
 - **Connectors API**: Connector management, tool calls, authentication methods, and credentials
 - **Observability API**: Campaigns, datasets, records, judges, chat completion events, logs, spans, span evaluations, and traces
 - **RAG API**: Ingestion pipeline configuration and search index summaries, details, metrics, schema summaries, and schema files
+
+## Version 2.9.4 - Python SDK v2.9.4 Compatibility
+
+🚀 **Full compatibility with Mistral Python SDK v2.9.4** - Adds realtime session TTL, tokenizer settings-token usage, prompt ownership/version timestamps, Vespa embedding dimensions, Tempo floating-point attributes, and service-tier usage metadata.
+
+**✅ Minimal dependency footprint** - No new third-party Go dependencies were added in v2.9.4.
 
 ## Version 2.9.3 - Python SDK v2.9.3 Compatibility
 

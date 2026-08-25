@@ -2,10 +2,11 @@
 
 The current release checklist is:
 
-- [`RELEASE_CHECKLIST_v2.9.3.md`](RELEASE_CHECKLIST_v2.9.3.md)
+- [`RELEASE_CHECKLIST_v2.9.4.md`](RELEASE_CHECKLIST_v2.9.4.md)
 
 Historical checklists remain available for previous releases:
 
+- [`RELEASE_CHECKLIST_v2.9.3.md`](RELEASE_CHECKLIST_v2.9.3.md)
 - [`RELEASE_CHECKLIST_v2.9.1.md`](RELEASE_CHECKLIST_v2.9.1.md)
 - [`RELEASE_CHECKLIST_v2.4.13.md`](RELEASE_CHECKLIST_v2.4.13.md)
 - [`RELEASE_CHECKLIST_v2.4.12.md`](RELEASE_CHECKLIST_v2.4.12.md)

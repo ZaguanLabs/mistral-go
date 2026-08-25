@@ -5,6 +5,18 @@ All notable changes to the Mistral Go SDK will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.9.4] - 2026-08-25
+
+### Added - Python SDK v2.9.4 Parity Updates
+
+- Added realtime client-session TTL and tokenizer settings-token accounting.
+- Added prompt creator/version timestamps and Vespa embedding dimensions.
+- Added Tempo double-valued trace attributes and service-tier usage metadata parity.
+
+### Changed
+
+- Updated version and User-Agent to `2.9.4`.
+
 ## [2.9.3] - 2026-08-17
 
 ### Added - Python SDK v2.9.3 Parity Updates

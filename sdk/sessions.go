@@ -11,8 +11,9 @@ type ClientSessionPurpose string
 const ClientSessionPurposeRealtime ClientSessionPurpose = "realtime"
 
 type CreateRealtimeSessionRequest struct {
-	Model   string               `json:"model"`
-	Purpose ClientSessionPurpose `json:"purpose,omitempty"`
+	Model      string               `json:"model"`
+	Purpose    ClientSessionPurpose `json:"purpose,omitempty"`
+	TTLSeconds *int                 `json:"ttl_seconds,omitempty"`
 }
 
 type ClientSecret struct {
@@ -40,6 +41,9 @@ func (c *MistralClient) CreateRealtimeSession(req *CreateRealtimeSessionRequest)
 		purpose = ClientSessionPurposeRealtime
 	}
 	body := map[string]interface{}{"model": req.Model, "purpose": purpose}
+	if req.TTLSeconds != nil {
+		body["ttl_seconds"] = *req.TTLSeconds
+	}
 	response, err := c.request(http.MethodPost, body, "v1/client/sessions", false, nil)
 	if err != nil {
 		return nil, err

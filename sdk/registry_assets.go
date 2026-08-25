@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"time"
 )
 
 type RegistryListParams struct {
@@ -29,6 +30,17 @@ type PromptVariable struct {
 type PromptDefinition struct {
 	Content   string           `json:"content"`
 	Variables []PromptVariable `json:"variables,omitempty"`
+}
+
+// Prompt describes a prompt registry entry returned by the v2 API.
+type Prompt struct {
+	ID               string            `json:"id"`
+	Name             string            `json:"name"`
+	Definition       *PromptDefinition `json:"definition,omitempty"`
+	CreatedBy        *string           `json:"createdBy,omitempty"`
+	VersionCreatedAt *time.Time        `json:"versionCreatedAt,omitempty"`
+	Title            *string           `json:"title,omitempty"`
+	Description      *string           `json:"description,omitempty"`
 }
 
 type CreatePromptRequest struct {
