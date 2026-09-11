@@ -1,12 +1,12 @@
 # Mistral Go SDK
 
-**Version 2.9.4** - Python SDK v2.9.4 Compatibility 🚀
+**Version 2.10.0** - Python SDK v2.10.0 Compatibility 🚀
 
 [![Minimal Dependencies](https://img.shields.io/badge/dependencies-minimal-brightgreen.svg)](https://github.com/ZaguanLabs/mistral-go)
 [![Go Version](https://img.shields.io/badge/go-%3E%3D1.20-blue.svg)](https://golang.org/)
 [![Pure Go](https://img.shields.io/badge/pure-go-success.svg)](https://pkg.go.dev/std)
 
-A Go SDK for the Mistral AI API, designed to provide developers with powerful tools to integrate advanced AI capabilities into their applications. This SDK has been significantly enhanced to match the official Mistral Python SDK v2.9.4.
+A Go SDK for the Mistral AI API, designed to provide developers with powerful tools to integrate advanced AI capabilities into their applications. This SDK has been significantly enhanced to match the official Mistral Python SDK v2.10.0.
 
 **✨ Minimal Dependencies** - REST functionality uses the Go standard library; realtime audio adds one pure-Go WebSocket dependency for official SDK parity.
 
@@ -33,11 +33,11 @@ A Go SDK for the Mistral AI API, designed to provide developers with powerful to
 - **Observability API**: Campaigns, datasets, records, judges, chat completion events, logs, spans, span evaluations, and traces
 - **RAG API**: Ingestion pipeline configuration and search index summaries, details, metrics, schema summaries, and schema files
 
-## Version 2.9.4 - Python SDK v2.9.4 Compatibility
+## Version 2.10.0 - Python SDK v2.10.0 Compatibility
 
-🚀 **Full compatibility with Mistral Python SDK v2.9.4** - Adds realtime session TTL, tokenizer settings-token usage, prompt ownership/version timestamps, Vespa embedding dimensions, Tempo floating-point attributes, and service-tier usage metadata.
+Targets the official Mistral Python SDK v2.10.0. This release adds service accounts and roles, evaluation pipeline configurations, HTTP/MCP connector variants and credentials, workflow backend specifications and filters, registry sharing permissions, and typed batch lifecycle helpers. Retry configuration and cancellable SSE streams include the upstream runtime changes.
 
-**✅ Minimal dependency footprint** - No new third-party Go dependencies were added in v2.9.4.
+**✅ Minimal dependency footprint** - No new third-party Go dependencies were added in v2.10.0.
 
 ## Version 2.9.3 - Python SDK v2.9.3 Compatibility
 
@@ -711,3 +711,16 @@ This project builds upon their excellent foundation from the [original repositor
 ## Support
 
 If you encounter any issues or require assistance, please file an issue on the GitHub repository issue tracker.
+
+### v2.10.0 usage and migration
+
+- `CreateConnector` and `UpdateConnector` accept MCP/HTTP request structs or JSON objects. MCP is the default; use `CreateHTTPConnectorRequest` / `UpdateHTTPConnectorRequest` for HTTP connectors.
+- `TranscriptionSegment.Start` and `.End` are now `*float64`, so null timestamps remain distinct from zero. `ExtendedOAuthServerMetadata.AuthorizationEndpoint` is now `*string`.
+- `UpdateSkillMetadata(id, sharingScope, workspaceRelation)` adds an optional sharing relation. Prompt request types expose `WorkspaceRelation`.
+- `GetWorkflowExecution(id, true)` requests search keys. Deployment filters accept `CreatedBy` and `LocationTypes`.
+- `NewBatchClient[ResponseType](client, endpoint)` provides upload, create, get, refresh, cancel, wait, streaming, and `Run`. Inputs can be built with `NewBatchInput` or supplied as `BatchInputFile`.
+- Batch `Run` preserves caller-owned input files. It deletes its own input and result files after materializing results; failed downloads preserve result files. Whole-job retry is opt-in and resubmits all requests.
+- `WithRetryConfig` returns a configured client with retry status overrides, backoff, jitter, and `Retry-After` / `retry-after-ms` support. `WithContext(ctx)` makes requests and channel streams cancellable; cancel the context when abandoning a stream.
+- Removed Python campaign, chat-completion-event, field-discovery, dataset-import, and old credential methods remain deprecated compatibility methods in Go.
+
+Release verification uses local mock servers and the race detector. Live API integration tests require valid credentials and are separate from the local release checks.

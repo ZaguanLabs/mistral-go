@@ -1,9 +1,6 @@
 package sdk
 
 import (
-	"bufio"
-	"bytes"
-	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -220,57 +217,20 @@ func (c *MistralClient) AgentCompleteStream(agentID string, messages []ChatMessa
 	}
 
 	// Create response channel
-	responseChan := make(chan ChatCompletionStreamResponse)
+	var responseChan <-chan ChatCompletionStreamResponse
 
 	response, err := c.request(http.MethodPost, reqMap, "v1/agents/completions", true, nil)
 	if err != nil {
-		close(responseChan)
 		return nil, err
 	}
 
 	respBody, ok := response.(io.ReadCloser)
 	if !ok {
-		close(responseChan)
 		return nil, fmt.Errorf("invalid response type: %T", response)
 	}
 
 	// Start streaming in a goroutine (same pattern as ChatStream)
-	go func() {
-		defer close(responseChan)
-		defer respBody.Close()
-
-		reader := bufio.NewReader(respBody)
-
-		for {
-			line, err := reader.ReadBytes('\n')
-			if err == io.EOF {
-				break
-			} else if err != nil {
-				responseChan <- ChatCompletionStreamResponse{Error: fmt.Errorf("error reading stream response: %w", err)}
-				return
-			}
-
-			if bytes.Equal(line, []byte("\n")) {
-				continue
-			}
-
-			if bytes.HasPrefix(line, []byte("data: ")) {
-				jsonLine := bytes.TrimSpace(bytes.TrimPrefix(line, []byte("data: ")))
-
-				if bytes.Equal(jsonLine, []byte("[DONE]")) {
-					break
-				}
-
-				var streamResponse ChatCompletionStreamResponse
-				if err := json.Unmarshal(jsonLine, &streamResponse); err != nil {
-					responseChan <- ChatCompletionStreamResponse{Error: fmt.Errorf("error unmarshaling stream response: %w", err)}
-					return
-				}
-
-				responseChan <- streamResponse
-			}
-		}
-	}()
+	responseChan = streamJSON(c.requestContext(), respBody, func(err error) ChatCompletionStreamResponse { return ChatCompletionStreamResponse{Error: err} })
 
 	return responseChan, nil
 }

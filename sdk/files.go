@@ -155,47 +155,29 @@ func (c *MistralClient) UploadFile(file io.Reader, filename string, purpose File
 	req.Header.Set("Content-Type", writer.FormDataContentType())
 	req.Header.Set("User-Agent", UserAgent)
 
-	// Send request with retry logic
-	client := &http.Client{Timeout: c.timeout}
-	var lastErr error
-	for attempt := 0; attempt <= c.maxRetries; attempt++ {
-		resp, err := client.Do(req)
-		if err != nil {
-			lastErr = err
-			if attempt < c.maxRetries {
-				continue
-			}
-			return nil, NewMistralConnectionError(err.Error())
-		}
-		defer resp.Body.Close()
-
-		// Check if we should retry
-		if retryStatusCodes[resp.StatusCode] && attempt < c.maxRetries {
-			lastErr = fmt.Errorf("received retry status code: %d", resp.StatusCode)
-			continue
-		}
-
-		// Read response body
-		respBody, err := io.ReadAll(resp.Body)
-		if err != nil {
-			return nil, fmt.Errorf("failed to read response body: %w", err)
-		}
-
-		// Check for errors
-		if resp.StatusCode >= 400 {
-			return nil, NewMistralAPIError(string(respBody), resp.StatusCode, resp.Header)
-		}
-
-		// Parse response
-		var result UploadFileOut
-		if err := json.Unmarshal(respBody, &result); err != nil {
-			return nil, fmt.Errorf("failed to unmarshal response: %w", err)
-		}
-
-		return &result, nil
+	resp, err := c.doRequest(req)
+	if err != nil {
+		return nil, NewMistralConnectionError(err.Error())
+	}
+	defer resp.Body.Close()
+	// Read response body
+	respBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read response body: %w", err)
 	}
 
-	return nil, fmt.Errorf("max retries exceeded: %w", lastErr)
+	// Check for errors
+	if resp.StatusCode >= 400 {
+		return nil, NewMistralAPIError(string(respBody), resp.StatusCode, resp.Header)
+	}
+
+	// Parse response
+	var result UploadFileOut
+	if err := json.Unmarshal(respBody, &result); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
+	}
+
+	return &result, nil
 }
 
 // ListFiles returns a list of files that belong to the user's organization.
@@ -309,8 +291,7 @@ func (c *MistralClient) DownloadFile(fileID string) ([]byte, error) {
 	req.Header.Set("Accept", "application/octet-stream")
 	req.Header.Set("User-Agent", UserAgent)
 
-	client := &http.Client{Timeout: c.timeout}
-	resp, err := client.Do(req)
+	resp, err := c.doRequest(req)
 	if err != nil {
 		return nil, NewMistralConnectionError(err.Error())
 	}

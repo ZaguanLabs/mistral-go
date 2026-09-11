@@ -60,8 +60,12 @@ type WorkflowExecutionLogsStreamParams struct {
 	LastEventID *string    `json:"last_event_id,omitempty"`
 }
 
-func (c *MistralClient) GetWorkflowExecution(executionID string) (APIResponse, error) {
-	return c.requestMap(http.MethodGet, nil, fmt.Sprintf("v1/workflows/executions/%s", executionID))
+func (c *MistralClient) GetWorkflowExecution(executionID string, includeSearchKeys ...bool) (APIResponse, error) {
+	include := false
+	if len(includeSearchKeys) > 0 {
+		include = includeSearchKeys[0]
+	}
+	return c.requestMap(http.MethodGet, nil, appendQuery(fmt.Sprintf("v1/workflows/executions/%s", executionID), queryWithOptionalValues(map[string]any{"include_search_keys": include})))
 }
 
 func (c *MistralClient) GetWorkflowExecutionHistory(executionID string, decodePayloads *bool) (APIResponse, error) {
@@ -158,7 +162,7 @@ func (c *MistralClient) StreamWorkflowExecution(executionID string, params *Work
 	if !ok {
 		return nil, fmt.Errorf("invalid response type: %T", response)
 	}
-	return parseGenericStream(body), nil
+	return parseGenericStreamContext(c.requestContext(), body), nil
 }
 
 func (c *MistralClient) GetWorkflowExecutionLogs(executionID string, params *WorkflowExecutionLogsParams) (APIResponse, error) {
@@ -195,5 +199,5 @@ func (c *MistralClient) StreamWorkflowExecutionLogs(executionID string, params *
 	if !ok {
 		return nil, fmt.Errorf("invalid response type: %T", response)
 	}
-	return parseGenericStream(body), nil
+	return parseGenericStreamContext(c.requestContext(), body), nil
 }

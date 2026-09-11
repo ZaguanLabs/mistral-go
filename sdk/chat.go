@@ -1,8 +1,6 @@
 package sdk
 
 import (
-	"bufio"
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -200,7 +198,7 @@ func (c *MistralClient) ChatStream(model string, messages []ChatMessage, params 
 		params = NewChatRequestParams()
 	}
 
-	responseChannel := make(chan ChatCompletionStreamResponse)
+	var responseChannel <-chan ChatCompletionStreamResponse
 
 	requestData := map[string]interface{}{
 		"model":    model,
@@ -284,53 +282,7 @@ func (c *MistralClient) ChatStream(model string, messages []ChatMessage, params 
 	}
 
 	// Execute the HTTP request in a separate goroutine.
-	go func() {
-		defer close(responseChannel)
-		defer respBody.Close()
-
-		// Assuming ChatCompletionStreamResponse is already defined in your Go code.
-		// Assuming responseChannel is a channel of ChatCompletionStreamResponse.
-
-		// Create a buffered reader to read the stream line by line.
-		reader := bufio.NewReader(respBody)
-
-		for {
-			// Read a line from the buffered reader.
-			line, err := reader.ReadBytes('\n')
-			if err == io.EOF {
-				break // End of stream.
-			} else if err != nil {
-				responseChannel <- ChatCompletionStreamResponse{Error: fmt.Errorf("error reading stream response: %w", err)}
-				return
-			}
-
-			// Skip empty lines.
-			if bytes.Equal(line, []byte("\n")) {
-				continue
-			}
-
-			// Check if the line starts with "data: ".
-			if bytes.HasPrefix(line, []byte("data: ")) {
-				// Trim the prefix and any leading or trailing whitespace.
-				jsonLine := bytes.TrimSpace(bytes.TrimPrefix(line, []byte("data: ")))
-
-				// Check for the special "[DONE]" message.
-				if bytes.Equal(jsonLine, []byte("[DONE]")) {
-					break
-				}
-
-				// Decode the JSON object from the line.
-				var streamResponse ChatCompletionStreamResponse
-				if err := json.Unmarshal(jsonLine, &streamResponse); err != nil {
-					responseChannel <- ChatCompletionStreamResponse{Error: fmt.Errorf("error decoding stream response: %w", err)}
-					continue
-				}
-
-				// Send the decoded response to the channel.
-				responseChannel <- streamResponse
-			}
-		}
-	}()
+	responseChannel = streamJSON(c.requestContext(), respBody, func(err error) ChatCompletionStreamResponse { return ChatCompletionStreamResponse{Error: err} })
 
 	// Return the response channel.
 	return responseChannel, nil

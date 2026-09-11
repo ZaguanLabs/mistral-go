@@ -1,0 +1,14 @@
+{
+  "upstream_version": "2.10.0",
+  "baseline_version": "2.9.4",
+  "checked_at": "2026-09-12",
+  "source": "https://github.com/mistralai/client-python/releases/tag/v2.10.0",
+  "pypi": "https://pypi.org/project/mistralai/2.10.0/",
+  "pypi_sdist_sha256": "af9cb6adc2f11a74cde100c8d29b2b11b1d4fc6e752a949ae36e946e887859d8",
+  "github_archive_sha256": "78fdaa48dc5ab1ed60c3c27c2e77aeb5e78f7bd7ac63b33b0aa2f50187f00923",
+  "compared_python_files": 1208,
+  "source_differences": [],
+  "build": "python -m build",
+  "go_validation": "zsh -f scripts/test-offline.zsh; go build ./...; go vet ./...; git diff --check",
+  "live_api_tests": "not run"
+}

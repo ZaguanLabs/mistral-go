@@ -1,8 +1,6 @@
 package sdk
 
 import (
-	"bufio"
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -280,47 +278,12 @@ func (c *MistralClient) conversationStream(path string, reqMap map[string]interf
 		return nil, fmt.Errorf("invalid response type: %T", response)
 	}
 
-	out := make(chan ConversationStreamEvent)
-	go func() {
-		defer close(out)
-		defer body.Close()
-
-		reader := bufio.NewReader(body)
-		for {
-			line, readErr := reader.ReadBytes('\n')
-			if readErr == io.EOF {
-				break
-			}
-			if readErr != nil {
-				out <- ConversationStreamEvent{Error: fmt.Errorf("error reading stream response: %w", readErr)}
-				return
-			}
-
-			if bytes.Equal(line, []byte("\n")) {
-				continue
-			}
-			if !bytes.HasPrefix(line, []byte("data: ")) {
-				continue
-			}
-
-			jsonLine := bytes.TrimSpace(bytes.TrimPrefix(line, []byte("data: ")))
-			if bytes.Equal(jsonLine, []byte("[DONE]")) {
-				break
-			}
-
-			var payload map[string]interface{}
-			if err := json.Unmarshal(jsonLine, &payload); err != nil {
-				out <- ConversationStreamEvent{Error: fmt.Errorf("error decoding stream event: %w", err)}
-				continue
-			}
-
-			event := ConversationStreamEvent{Data: payload}
-			if t, ok := payload["type"].(string); ok {
-				event.Type = t
-			}
-			out <- event
-		}
-	}()
+	out := streamValues(c.requestContext(), body, func(event ServerEvent) (ConversationStreamEvent, error) {
+		var payload map[string]any
+		err := json.Unmarshal([]byte(event.Data), &payload)
+		name, _ := payload["type"].(string)
+		return ConversationStreamEvent{Type: name, Data: payload}, err
+	}, func(err error) ConversationStreamEvent { return ConversationStreamEvent{Error: err} })
 
 	return out, nil
 }

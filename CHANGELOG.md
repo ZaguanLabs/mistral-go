@@ -5,6 +5,33 @@ All notable changes to the Mistral Go SDK will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.10.0] - 2026-09-12
+
+### Added
+
+- Eight service-account operations, including assignable roles and role management.
+- Five evaluation pipeline configuration operations and detection, moderation, judge, and OTLP export definitions.
+- Connector organization sharing, scoped credential creation/update, HTTP/MCP variants, and OAuth client credentials.
+- Typed batch JSONL input/output, job handles, lifecycle operations, streaming, ordered result validation, cancellation, and opt-in whole-job retry.
+- Workflow backend specifications, deployment creator/location filters, execution search keys, registry workspace sharing, and model billing names.
+- Retry status overrides, configurable jitter, millisecond Retry-After support, cancellable clients, and explicit SSE stream closure.
+- Base64 file/reader conversion preserving seekable stream positions.
+
+### Changed
+
+- SDK and User-Agent version is `2.10.0`.
+- Transcription segment timestamps and OAuth authorization endpoints are nullable pointers.
+- Connector request serialization supplies the protocol discriminator and accepts HTTP/MCP variants.
+- Retries replay request bodies and close discarded responses; SSE handles multiline data, CR/LF framing, final events, and cancellation.
+- Methods removed upstream remain available with Go deprecation notices.
+
+### Validation
+
+- Official source archived, built with `python -m build`, and the built sdist unpacked.
+- Published PyPI sdist SHA-256 verified; core Python source matches the GitHub release archive.
+- Local endpoint, schema, transport, streaming, and batch lifecycle tests pass under the race detector.
+- Live credential-dependent integration tests are excluded from the local release gate.
+
 ## [2.9.4] - 2026-08-25
 
 ### Added - Python SDK v2.9.4 Parity Updates

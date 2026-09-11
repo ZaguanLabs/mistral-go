@@ -136,22 +136,25 @@ type DeploymentLogsStreamParams struct {
 }
 
 type ListWorkflowDeploymentsParams struct {
-	ActiveOnly   *bool
-	IsHardened   *bool
-	WorkflowName *string
-	Search       *string
-	OrderBy      *string
-	Order        *Order
-	Limit        *int
-	Cursor       *string
-	WorkspaceID  *string
+	CreatedBy     *string
+	LocationTypes []string
+	ActiveOnly    *bool
+	IsHardened    *bool
+	WorkflowName  *string
+	Search        *string
+	OrderBy       *string
+	Order         *Order
+	Limit         *int
+	Cursor        *string
+	WorkspaceID   *string
 }
 
 type DeploymentWorkerSpec struct {
-	GitHubURL  string  `json:"github_url,omitempty"`
-	Revision   *string `json:"revision,omitempty"`
-	Entrypoint *string `json:"entrypoint,omitempty"`
-	WorkingDir *string `json:"working_dir,omitempty"`
+	BackendSpec any     `json:"backend_spec,omitempty"`
+	GitHubURL   string  `json:"github_url,omitempty"`
+	Revision    *string `json:"revision,omitempty"`
+	Entrypoint  *string `json:"entrypoint,omitempty"`
+	WorkingDir  *string `json:"working_dir,omitempty"`
 }
 
 type GitCommitAuthor struct {
@@ -168,13 +171,14 @@ type GitCommitMetadata struct {
 }
 
 type DeploymentWorkerSpecResponse struct {
+	BackendSpec any                `json:"backend_spec"`
 	GitHubURL   string             `json:"github_url"`
 	Type        *string            `json:"type,omitempty"`
 	Revision    *string            `json:"revision,omitempty"`
-	Entrypoint  *string            `json:"entrypoint,omitempty"`
-	WorkingDir  *string            `json:"working_dir,omitempty"`
+	Entrypoint  *string            `json:"entrypoint"`
+	WorkingDir  *string            `json:"working_dir"`
 	RestartedAt *string            `json:"restarted_at,omitempty"`
-	CommitSHA   *string            `json:"commit_sha,omitempty"`
+	CommitSHA   *string            `json:"commit_sha"`
 	Commit      *GitCommitMetadata `json:"commit,omitempty"`
 }
 
@@ -381,6 +385,7 @@ func (c *MistralClient) ListWorkflowDeploymentsWithParams(params *ListWorkflowDe
 	}
 	query := queryWithOptionalValues(map[string]any{
 		"active_only": params.ActiveOnly, "is_hardened": params.IsHardened,
+		"created_by": params.CreatedBy, "location_types": params.LocationTypes,
 		"workflow_name": params.WorkflowName, "search": params.Search,
 		"order_by": params.OrderBy, "order": params.Order, "limit": params.Limit,
 		"cursor": params.Cursor, "workspace_id": params.WorkspaceID,
@@ -473,7 +478,7 @@ func (c *MistralClient) StreamWorkflowDeploymentLogs(name string, params *Deploy
 	if !ok {
 		return nil, fmt.Errorf("invalid response type: %T", response)
 	}
-	return parseGenericStream(body), nil
+	return parseGenericStreamContext(c.requestContext(), body), nil
 }
 
 func (c *MistralClient) StreamDeploymentLogs(name string, params *DeploymentLogsStreamParams) (<-chan StreamEvent, error) {
@@ -538,7 +543,7 @@ func (c *MistralClient) GetWorkflowStreamEvents(params *ListWorkflowEventsParams
 	if !ok {
 		return nil, fmt.Errorf("invalid response type: %T", response)
 	}
-	return parseGenericStream(body), nil
+	return parseGenericStreamContext(c.requestContext(), body), nil
 }
 
 func (c *MistralClient) GetWorkflowEvents(params *ListWorkflowEventsParams) (APIResponse, error) {

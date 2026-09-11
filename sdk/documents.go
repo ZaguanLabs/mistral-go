@@ -175,8 +175,7 @@ func (c *MistralClient) UploadDocument(libraryID string, file io.Reader, filenam
 	req.Header.Set("Content-Type", writer.FormDataContentType())
 
 	// Send request
-	client := &http.Client{Timeout: c.timeout}
-	resp, err := client.Do(req)
+	resp, err := c.doRequest(req)
 	if err != nil {
 		return nil, NewMistralConnectionError(err.Error())
 	}

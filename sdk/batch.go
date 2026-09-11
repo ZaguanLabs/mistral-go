@@ -11,13 +11,14 @@ import (
 type BatchJobStatus string
 
 const (
-	BatchJobStatusQueued     BatchJobStatus = "QUEUED"
-	BatchJobStatusRunning    BatchJobStatus = "RUNNING"
-	BatchJobStatusSuccess    BatchJobStatus = "SUCCESS"
-	BatchJobStatusFailed     BatchJobStatus = "FAILED"
-	BatchJobStatusTimedOut   BatchJobStatus = "TIMED_OUT"
-	BatchJobStatusCancelled  BatchJobStatus = "CANCELLED"
-	BatchJobStatusCancelling BatchJobStatus = "CANCELLING"
+	BatchJobStatusQueued                BatchJobStatus = "QUEUED"
+	BatchJobStatusRunning               BatchJobStatus = "RUNNING"
+	BatchJobStatusSuccess               BatchJobStatus = "SUCCESS"
+	BatchJobStatusFailed                BatchJobStatus = "FAILED"
+	BatchJobStatusTimedOut              BatchJobStatus = "TIMED_OUT"
+	BatchJobStatusCancelled             BatchJobStatus = "CANCELLED"
+	BatchJobStatusCancelling            BatchJobStatus = "CANCELLING"
+	BatchJobStatusCancellationRequested BatchJobStatus = "CANCELLATION_REQUESTED"
 )
 
 // BatchEndpoint represents the endpoint for batch processing
@@ -53,19 +54,26 @@ type BatchJobMetadata struct {
 
 // BatchJobOut represents a batch job
 type BatchJobOut struct {
-	ID           string            `json:"id"`
-	Object       string            `json:"object"`
-	Endpoint     BatchEndpoint     `json:"endpoint"`
-	InputFiles   []string          `json:"input_files"`
-	OutputFile   *string           `json:"output_file,omitempty"`
-	ErrorFile    *string           `json:"error_file,omitempty"`
-	CreatedAt    int64             `json:"created_at"`
-	StartedAt    *int64            `json:"started_at,omitempty"`
-	CompletedAt  *int64            `json:"completed_at,omitempty"`
-	Status       BatchJobStatus    `json:"status"`
-	Model        *string           `json:"model,omitempty"`
-	Metadata     *BatchJobMetadata `json:"metadata,omitempty"`
-	TimeoutHours *int              `json:"timeout_hours,omitempty"`
+	TotalRequests     int               `json:"total_requests"`
+	CompletedRequests int               `json:"completed_requests"`
+	SucceededRequests int               `json:"succeeded_requests"`
+	FailedRequests    int               `json:"failed_requests"`
+	Errors            []map[string]any  `json:"errors"`
+	Outputs           []map[string]any  `json:"outputs,omitempty"`
+	AgentID           *string           `json:"agent_id,omitempty"`
+	ID                string            `json:"id"`
+	Object            string            `json:"object"`
+	Endpoint          BatchEndpoint     `json:"endpoint"`
+	InputFiles        []string          `json:"input_files"`
+	OutputFile        *string           `json:"output_file,omitempty"`
+	ErrorFile         *string           `json:"error_file,omitempty"`
+	CreatedAt         int64             `json:"created_at"`
+	StartedAt         *int64            `json:"started_at,omitempty"`
+	CompletedAt       *int64            `json:"completed_at,omitempty"`
+	Status            BatchJobStatus    `json:"status"`
+	Model             *string           `json:"model,omitempty"`
+	Metadata          *BatchJobMetadata `json:"metadata,omitempty"`
+	TimeoutHours      *int              `json:"timeout_hours,omitempty"`
 }
 
 // DeleteBatchJobResponse represents the response from deleting a batch job.

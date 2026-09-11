@@ -41,6 +41,7 @@ type ModelCapabilities struct {
 
 // ModelCard represents a model card.
 type ModelCard struct {
+	BillingModelName            *string            `json:"billing_model_name,omitempty"`
 	ID                          string             `json:"id"`
 	Object                      string             `json:"object"`
 	Created                     int                `json:"created"`

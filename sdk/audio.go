@@ -1,7 +1,6 @@
 package sdk
 
 import (
-	"bufio"
 	"bytes"
 	"encoding/json"
 	"fmt"
@@ -49,16 +48,16 @@ type TranscriptionWord struct {
 
 // TranscriptionSegment represents a segment in the transcription
 type TranscriptionSegment struct {
-	ID               int     `json:"id"`
-	Seek             int     `json:"seek"`
-	Start            float64 `json:"start"`
-	End              float64 `json:"end"`
-	Text             string  `json:"text"`
-	Tokens           []int   `json:"tokens"`
-	Temperature      float64 `json:"temperature"`
-	AvgLogprob       float64 `json:"avg_logprob"`
-	CompressionRatio float64 `json:"compression_ratio"`
-	NoSpeechProb     float64 `json:"no_speech_prob"`
+	ID               int      `json:"id"`
+	Seek             int      `json:"seek"`
+	Start            *float64 `json:"start"`
+	End              *float64 `json:"end"`
+	Text             string   `json:"text"`
+	Tokens           []int    `json:"tokens"`
+	Temperature      float64  `json:"temperature"`
+	AvgLogprob       float64  `json:"avg_logprob"`
+	CompressionRatio float64  `json:"compression_ratio"`
+	NoSpeechProb     float64  `json:"no_speech_prob"`
 }
 
 // TranscriptionResponse represents the response from audio transcription
@@ -156,47 +155,29 @@ func (c *MistralClient) Transcribe(model string, file io.Reader, filename string
 	req.Header.Set("Content-Type", writer.FormDataContentType())
 	req.Header.Set("User-Agent", UserAgent)
 
-	// Send request with retry logic
-	client := &http.Client{Timeout: c.timeout}
-	var lastErr error
-	for attempt := 0; attempt <= c.maxRetries; attempt++ {
-		resp, err := client.Do(req)
-		if err != nil {
-			lastErr = err
-			if attempt < c.maxRetries {
-				continue
-			}
-			return nil, NewMistralConnectionError(err.Error())
-		}
-		defer resp.Body.Close()
-
-		// Check if we should retry
-		if retryStatusCodes[resp.StatusCode] && attempt < c.maxRetries {
-			lastErr = fmt.Errorf("received retry status code: %d", resp.StatusCode)
-			continue
-		}
-
-		// Read response body
-		respBody, err := io.ReadAll(resp.Body)
-		if err != nil {
-			return nil, fmt.Errorf("failed to read response body: %w", err)
-		}
-
-		// Check for errors
-		if resp.StatusCode >= 400 {
-			return nil, NewMistralAPIError(string(respBody), resp.StatusCode, resp.Header)
-		}
-
-		// Parse response
-		var result TranscriptionResponse
-		if err := json.Unmarshal(respBody, &result); err != nil {
-			return nil, fmt.Errorf("failed to unmarshal response: %w", err)
-		}
-
-		return &result, nil
+	resp, err := c.doRequest(req)
+	if err != nil {
+		return nil, NewMistralConnectionError(err.Error())
+	}
+	defer resp.Body.Close()
+	// Read response body
+	respBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read response body: %w", err)
 	}
 
-	return nil, fmt.Errorf("max retries exceeded: %w", lastErr)
+	// Check for errors
+	if resp.StatusCode >= 400 {
+		return nil, NewMistralAPIError(string(respBody), resp.StatusCode, resp.Header)
+	}
+
+	// Parse response
+	var result TranscriptionResponse
+	if err := json.Unmarshal(respBody, &result); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
+	}
+
+	return &result, nil
 }
 
 // TranscribeFromURL transcribes an audio file from a URL
@@ -293,8 +274,7 @@ func (c *MistralClient) TranscribeStream(model string, file io.Reader, filename 
 	req.Header.Set("Accept", "text/event-stream")
 	req.Header.Set("User-Agent", UserAgent)
 
-	client := &http.Client{Timeout: c.timeout}
-	resp, err := client.Do(req)
+	resp, err := c.doRequest(req)
 	if err != nil {
 		return nil, NewMistralConnectionError(err.Error())
 	}
@@ -304,53 +284,16 @@ func (c *MistralClient) TranscribeStream(model string, file io.Reader, filename 
 		return nil, NewMistralAPIError(string(respBody), resp.StatusCode, resp.Header)
 	}
 
-	out := make(chan TranscriptionStreamEvent)
-	go func() {
-		defer close(out)
-		defer resp.Body.Close()
-
-		reader := bufio.NewReader(resp.Body)
-		for {
-			line, readErr := reader.ReadBytes('\n')
-			if readErr == io.EOF {
-				break
-			}
-			if readErr != nil {
-				out <- TranscriptionStreamEvent{Error: fmt.Errorf("error reading stream response: %w", readErr)}
-				return
-			}
-
-			if bytes.Equal(line, []byte("\n")) {
-				continue
-			}
-			if !bytes.HasPrefix(line, []byte("data: ")) {
-				continue
-			}
-
-			jsonLine := bytes.TrimSpace(bytes.TrimPrefix(line, []byte("data: ")))
-			if bytes.Equal(jsonLine, []byte("[DONE]")) {
-				break
-			}
-
-			var payload map[string]any
-			if err := json.Unmarshal(jsonLine, &payload); err != nil {
-				out <- TranscriptionStreamEvent{Error: fmt.Errorf("error decoding stream event: %w", err)}
-				continue
-			}
-
-			event := TranscriptionStreamEvent{}
-			if eventType, ok := payload["type"].(string); ok {
-				event.Type = eventType
-			}
-
-			var data TranscriptionResponse
-			if err := mapToStruct(payload, &data); err == nil {
-				event.Data = &data
-			}
-
-			out <- event
+	out := streamValues(c.requestContext(), resp.Body, func(event ServerEvent) (TranscriptionStreamEvent, error) {
+		var payload map[string]any
+		if err := json.Unmarshal([]byte(event.Data), &payload); err != nil {
+			return TranscriptionStreamEvent{}, err
 		}
-	}()
+		name, _ := payload["type"].(string)
+		var data TranscriptionResponse
+		err := mapToStruct(payload, &data)
+		return TranscriptionStreamEvent{Type: name, Data: &data}, err
+	}, func(err error) TranscriptionStreamEvent { return TranscriptionStreamEvent{Error: err} })
 
 	return out, nil
 }

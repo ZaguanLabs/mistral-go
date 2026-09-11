@@ -44,13 +44,14 @@ type Prompt struct {
 }
 
 type CreatePromptRequest struct {
-	Name         string           `json:"name"`
-	Definition   PromptDefinition `json:"definition"`
-	Title        *string          `json:"title,omitempty"`
-	Description  *string          `json:"description,omitempty"`
-	Notes        *string          `json:"notes,omitempty"`
-	SharingScope *string          `json:"sharing_scope,omitempty"`
-	Aliases      []string         `json:"aliases,omitempty"`
+	WorkspaceRelation *ShareRelation   `json:"workspaceRelation,omitempty"`
+	Name              string           `json:"name"`
+	Definition        PromptDefinition `json:"definition"`
+	Title             *string          `json:"title,omitempty"`
+	Description       *string          `json:"description,omitempty"`
+	Notes             *string          `json:"notes,omitempty"`
+	SharingScope      *string          `json:"sharing_scope,omitempty"`
+	Aliases           []string         `json:"aliases,omitempty"`
 }
 
 type CreatePromptVersionRequest struct {
@@ -60,9 +61,10 @@ type CreatePromptVersionRequest struct {
 }
 
 type UpdatePromptMetadataRequest struct {
-	Title        *string `json:"title,omitempty"`
-	Description  *string `json:"description,omitempty"`
-	SharingScope *string `json:"sharing_scope,omitempty"`
+	WorkspaceRelation *ShareRelation `json:"workspaceRelation,omitempty"`
+	Title             *string        `json:"title,omitempty"`
+	Description       *string        `json:"description,omitempty"`
+	SharingScope      *string        `json:"sharing_scope,omitempty"`
 }
 
 type UpdateRegistryVersionMetadataRequest struct {
@@ -83,11 +85,12 @@ type SkillDefinition struct {
 }
 
 type CreateSkillRequest struct {
-	Name         string          `json:"name"`
-	Definition   SkillDefinition `json:"definition"`
-	Notes        *string         `json:"notes,omitempty"`
-	SharingScope *string         `json:"sharing_scope,omitempty"`
-	Aliases      []string        `json:"aliases,omitempty"`
+	WorkspaceRelation *ShareRelation  `json:"workspaceRelation,omitempty"`
+	Name              string          `json:"name"`
+	Definition        SkillDefinition `json:"definition"`
+	Notes             *string         `json:"notes,omitempty"`
+	SharingScope      *string         `json:"sharing_scope,omitempty"`
+	Aliases           []string        `json:"aliases,omitempty"`
 }
 
 type CreateSkillVersionRequest struct {
@@ -184,8 +187,12 @@ func (c *MistralClient) DeleteSkill(skillID string) (APIResponse, error) {
 	return c.requestMap(http.MethodDelete, nil, fmt.Sprintf("v2/skills/%s", skillID))
 }
 
-func (c *MistralClient) UpdateSkillMetadata(skillID string, sharingScope *string) (APIResponse, error) {
-	return c.requestMap(http.MethodPatch, optionalRequestMap(map[string]any{"sharing_scope": sharingScope}), fmt.Sprintf("v2/skills/%s", skillID))
+func (c *MistralClient) UpdateSkillMetadata(skillID string, sharingScope *string, workspaceRelation ...ShareRelation) (APIResponse, error) {
+	body := optionalRequestMap(map[string]any{"sharing_scope": sharingScope})
+	if len(workspaceRelation) > 0 {
+		body["workspaceRelation"] = workspaceRelation[0]
+	}
+	return c.requestMap(http.MethodPatch, body, fmt.Sprintf("v2/skills/%s", skillID))
 }
 
 func (c *MistralClient) ListSkillVersions(skillID string) (APIResponse, error) {

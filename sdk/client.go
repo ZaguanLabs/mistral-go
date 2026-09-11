@@ -2,6 +2,7 @@ package sdk
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -27,10 +28,12 @@ var retryStatusCodes = map[int]bool{
 }
 
 type MistralClient struct {
-	apiKey     string
-	endpoint   string
-	maxRetries int
-	timeout    time.Duration
+	retryConfig *RetryConfig
+	ctx         context.Context
+	apiKey      string
+	endpoint    string
+	maxRetries  int
+	timeout     time.Duration
 }
 
 func NewMistralClient(apiKey string, endpoint string, maxRetries int, timeout time.Duration) *MistralClient {
@@ -81,12 +84,16 @@ func (c *MistralClient) request(method string, jsonData map[string]interface{}, 
 	if pathURL, parseErr := url.Parse(path); parseErr == nil {
 		if pathURL.Path != "" {
 			uri.Path = pathURL.Path
+			uri.RawPath = pathURL.RawPath
 		}
 		uri.RawQuery = pathURL.RawQuery
 	} else {
 		uri.Path = path
 	}
-	jsonValue, _ := json.Marshal(jsonData)
+	jsonValue, err := json.Marshal(jsonData)
+	if err != nil {
+		return nil, err
+	}
 	req, err := http.NewRequest(method, uri.String(), bytes.NewBuffer(jsonValue))
 	if err != nil {
 		return nil, err
@@ -96,27 +103,13 @@ func (c *MistralClient) request(method string, jsonData map[string]interface{}, 
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("User-Agent", UserAgent)
 
-	client := &http.Client{
-		Timeout: c.timeout,
-	}
-
-	var resp *http.Response
-	for i := 0; i < c.maxRetries; i++ {
-		resp, err = client.Do(req)
-		if err != nil {
-			if i == c.maxRetries-1 {
-				return nil, err
-			}
-			continue
-		}
-		if _, ok := retryStatusCodes[resp.StatusCode]; ok {
-			time.Sleep(time.Duration(i+1) * 500 * time.Millisecond)
-			continue
-		}
-		break
+	resp, err := c.doRequest(req)
+	if err != nil {
+		return nil, err
 	}
 
 	if resp.StatusCode >= 400 {
+		defer resp.Body.Close()
 		responseBytes, _ := io.ReadAll(resp.Body)
 		return nil, fmt.Errorf("(HTTP Error %d) %s", resp.StatusCode, string(responseBytes))
 	}

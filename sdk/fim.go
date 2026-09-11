@@ -1,9 +1,6 @@
 package sdk
 
 import (
-	"bufio"
-	"bytes"
-	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -161,57 +158,20 @@ func (c *MistralClient) FIMStream(params *FIMRequestParams) (<-chan FIMCompletio
 	}
 
 	// Create response channel
-	responseChan := make(chan FIMCompletionStreamResponse)
+	var responseChan <-chan FIMCompletionStreamResponse
 
 	response, err := c.request(http.MethodPost, requestData, "v1/fim/completions", true, nil)
 	if err != nil {
-		close(responseChan)
 		return nil, err
 	}
 
 	respBody, ok := response.(io.ReadCloser)
 	if !ok {
-		close(responseChan)
 		return nil, fmt.Errorf("invalid response type: %T", response)
 	}
 
 	// Start streaming in a goroutine
-	go func() {
-		defer close(responseChan)
-		defer respBody.Close()
-
-		reader := bufio.NewReader(respBody)
-
-		for {
-			line, err := reader.ReadBytes('\n')
-			if err == io.EOF {
-				break
-			} else if err != nil {
-				responseChan <- FIMCompletionStreamResponse{Error: fmt.Errorf("error reading stream response: %w", err)}
-				return
-			}
-
-			if bytes.Equal(line, []byte("\n")) {
-				continue
-			}
-
-			if bytes.HasPrefix(line, []byte("data: ")) {
-				jsonLine := bytes.TrimSpace(bytes.TrimPrefix(line, []byte("data: ")))
-
-				if bytes.Equal(jsonLine, []byte("[DONE]")) {
-					break
-				}
-
-				var streamResponse FIMCompletionStreamResponse
-				if err := json.Unmarshal(jsonLine, &streamResponse); err != nil {
-					responseChan <- FIMCompletionStreamResponse{Error: fmt.Errorf("error unmarshaling stream response: %w", err)}
-					return
-				}
-
-				responseChan <- streamResponse
-			}
-		}
-	}()
+	responseChan = streamJSON(c.requestContext(), respBody, func(err error) FIMCompletionStreamResponse { return FIMCompletionStreamResponse{Error: err} })
 
 	return responseChan, nil
 }

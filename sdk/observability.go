@@ -30,6 +30,7 @@ type UpdateDatasetRequest struct {
 }
 
 type DatasetRecordRequest struct {
+	Source     *string        `json:"source,omitempty"`
 	Payload    any            `json:"payload,omitempty"`
 	Properties map[string]any `json:"properties,omitempty"`
 }
@@ -67,6 +68,7 @@ type SearchChatCompletionEventsRequest struct {
 	ExtraFields  []string       `json:"extra_fields,omitempty"`
 }
 
+// Deprecated: removed from the official Python SDK in v2.10.0.
 func (c *MistralClient) CreateCampaign(req *CreateCampaignRequest) (APIResponse, error) {
 	if req == nil {
 		return nil, fmt.Errorf("request cannot be nil")
@@ -81,22 +83,27 @@ func (c *MistralClient) CreateCampaign(req *CreateCampaignRequest) (APIResponse,
 	return c.requestMap(http.MethodPost, body, "v1/observability/campaigns")
 }
 
+// Deprecated: removed from the official Python SDK in v2.10.0.
 func (c *MistralClient) ListCampaigns(params *ListObservabilityParams) (APIResponse, error) {
 	return c.listObservability("v1/observability/campaigns", params)
 }
 
+// Deprecated: removed from the official Python SDK in v2.10.0.
 func (c *MistralClient) FetchCampaign(campaignID string) (APIResponse, error) {
 	return c.requestMap(http.MethodGet, nil, fmt.Sprintf("v1/observability/campaigns/%s", campaignID))
 }
 
+// Deprecated: removed from the official Python SDK in v2.10.0.
 func (c *MistralClient) DeleteCampaign(campaignID string) (APIResponse, error) {
 	return c.requestMap(http.MethodDelete, nil, fmt.Sprintf("v1/observability/campaigns/%s", campaignID))
 }
 
+// Deprecated: removed from the official Python SDK in v2.10.0.
 func (c *MistralClient) FetchCampaignStatus(campaignID string) (APIResponse, error) {
 	return c.requestMap(http.MethodGet, nil, fmt.Sprintf("v1/observability/campaigns/%s/status", campaignID))
 }
 
+// Deprecated: removed from the official Python SDK in v2.10.0.
 func (c *MistralClient) ListCampaignEvents(campaignID string, pageSize, page *int) (APIResponse, error) {
 	query := queryWithOptionalValues(map[string]any{"page_size": pageSize, "page": page})
 	return c.requestMap(http.MethodGet, nil, appendQuery(fmt.Sprintf("v1/observability/campaigns/%s/selected-events", campaignID), query))
@@ -139,14 +146,19 @@ func (c *MistralClient) CreateDatasetRecord(datasetID string, req *DatasetRecord
 	if req == nil {
 		return nil, fmt.Errorf("request cannot be nil")
 	}
-	body := optionalRequestMap(map[string]any{"payload": req.Payload, "properties": req.Properties})
+	body := optionalRequestMap(map[string]any{"payload": req.Payload, "properties": req.Properties, "source": req.Source})
+	if req.Source == nil {
+		body["source"] = "DIRECT_INPUT"
+	}
 	return c.requestMap(http.MethodPost, body, fmt.Sprintf("v1/observability/datasets/%s/records", datasetID))
 }
 
+// Deprecated: removed from the official Python SDK in v2.10.0.
 func (c *MistralClient) ImportDatasetFromCampaign(datasetID, campaignID string) (APIResponse, error) {
 	return c.requestMap(http.MethodPost, map[string]interface{}{"campaign_id": campaignID}, fmt.Sprintf("v1/observability/datasets/%s/imports/from-campaign", datasetID))
 }
 
+// Deprecated: removed from the official Python SDK in v2.10.0.
 func (c *MistralClient) ImportDatasetFromExplorer(datasetID string, completionEventIDs []string) (APIResponse, error) {
 	return c.requestMap(http.MethodPost, map[string]interface{}{"completion_event_ids": completionEventIDs}, fmt.Sprintf("v1/observability/datasets/%s/imports/from-explorer", datasetID))
 }
@@ -176,15 +188,18 @@ func (c *MistralClient) ListDatasetTasks(datasetID string, pageSize, page *int) 
 	return c.requestMap(http.MethodGet, nil, appendQuery(fmt.Sprintf("v1/observability/datasets/%s/tasks", datasetID), query))
 }
 
+// Deprecated: removed from the official Python SDK in v2.10.0.
 func (c *MistralClient) ListChatCompletionFields() (APIResponse, error) {
 	return c.requestMap(http.MethodGet, nil, "v1/observability/chat-completion-fields")
 }
 
+// Deprecated: removed from the official Python SDK in v2.10.0.
 func (c *MistralClient) FetchChatCompletionFieldOptions(fieldName string, operator *string) (APIResponse, error) {
 	query := queryWithOptionalValues(map[string]any{"operator": operator})
 	return c.requestMap(http.MethodGet, nil, appendQuery(fmt.Sprintf("v1/observability/chat-completion-fields/%s/options", fieldName), query))
 }
 
+// Deprecated: removed from the official Python SDK in v2.10.0.
 func (c *MistralClient) FetchChatCompletionFieldOptionCounts(fieldName string, req *FieldOptionCountsRequest) (APIResponse, error) {
 	body := map[string]interface{}{}
 	if req != nil {
@@ -193,6 +208,7 @@ func (c *MistralClient) FetchChatCompletionFieldOptionCounts(fieldName string, r
 	return c.requestMap(http.MethodPost, body, fmt.Sprintf("v1/observability/chat-completion-fields/%s/options-counts", fieldName))
 }
 
+// Deprecated: removed from the official Python SDK in v2.10.0.
 func (c *MistralClient) SearchChatCompletionEvents(req *SearchChatCompletionEventsRequest) (APIResponse, error) {
 	if req == nil {
 		return nil, fmt.Errorf("request cannot be nil")
@@ -202,19 +218,23 @@ func (c *MistralClient) SearchChatCompletionEvents(req *SearchChatCompletionEven
 	return c.requestMap(http.MethodPost, body, appendQuery("v1/observability/chat-completion-events/search", query))
 }
 
+// Deprecated: removed from the official Python SDK in v2.10.0.
 func (c *MistralClient) SearchChatCompletionEventIDs(searchParams map[string]any, extraFields []string) (APIResponse, error) {
 	body := optionalRequestMap(map[string]any{"search_params": searchParams, "extra_fields": extraFields})
 	return c.requestMap(http.MethodPost, body, "v1/observability/chat-completion-events/search-ids")
 }
 
+// Deprecated: removed from the official Python SDK in v2.10.0.
 func (c *MistralClient) FetchChatCompletionEvent(eventID string) (APIResponse, error) {
 	return c.requestMap(http.MethodGet, nil, fmt.Sprintf("v1/observability/chat-completion-events/%s", eventID))
 }
 
+// Deprecated: removed from the official Python SDK in v2.10.0.
 func (c *MistralClient) FetchSimilarChatCompletionEvents(eventID string) (APIResponse, error) {
 	return c.requestMap(http.MethodGet, nil, fmt.Sprintf("v1/observability/chat-completion-events/%s/similar-events", eventID))
 }
 
+// Deprecated: removed from the official Python SDK in v2.10.0.
 func (c *MistralClient) JudgeChatCompletionEvent(eventID string, judgeDefinition any) (APIResponse, error) {
 	return c.requestMap(http.MethodPost, map[string]interface{}{"judge_definition": judgeDefinition}, fmt.Sprintf("v1/observability/chat-completion-events/%s/live-judging", eventID))
 }

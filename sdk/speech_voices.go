@@ -141,7 +141,7 @@ func (c *MistralClient) SpeechStream(req *SpeechRequest) (<-chan StreamEvent, er
 	if !ok {
 		return nil, fmt.Errorf("invalid response type: %T", response)
 	}
-	return parseGenericStream(bodyStream), nil
+	return parseGenericStreamContext(c.requestContext(), bodyStream), nil
 }
 
 func (c *MistralClient) ListVoices(params *ListVoicesParams) (*VoiceListResponse, error) {

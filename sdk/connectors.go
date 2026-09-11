@@ -6,6 +6,7 @@ import (
 )
 
 type ConnectorRequest struct {
+	AuthMethods             any                          `json:"auth_methods,omitempty"`
 	Name                    string                       `json:"name,omitempty"`
 	Description             *string                      `json:"description,omitempty"`
 	Server                  any                          `json:"server,omitempty"`
@@ -22,18 +23,18 @@ type ConnectorRequest struct {
 }
 
 type UpdateConnectorRequest struct {
-	Title             *string                                     `json:"title,omitempty"`
-	Name              *string                                     `json:"name,omitempty"`
-	Description       *string                                     `json:"description,omitempty"`
-	IconURL           *string                                     `json:"icon_url,omitempty"`
-	SystemPrompt      *string                                     `json:"system_prompt,omitempty"`
-	ConnectionConfig  map[string]any                              `json:"connection_config,omitempty"`
-	ConnectionSecrets map[string]any                              `json:"connection_secrets,omitempty"`
-	Protocol          *string                                     `json:"protocol,omitempty"`
-	Server            any                                         `json:"server,omitempty"`
-	Headers           map[string]any                              `json:"headers,omitempty"`
-	AuthData          map[string]any                              `json:"auth_data,omitempty"`
-	AuthMethods       []AuthenticationMethodCreateOrUpdateRequest `json:"auth_methods,omitempty"`
+	Title             *string        `json:"title,omitempty"`
+	Name              *string        `json:"name,omitempty"`
+	Description       *string        `json:"description,omitempty"`
+	IconURL           *string        `json:"icon_url,omitempty"`
+	SystemPrompt      *string        `json:"system_prompt,omitempty"`
+	ConnectionConfig  map[string]any `json:"connection_config,omitempty"`
+	ConnectionSecrets map[string]any `json:"connection_secrets,omitempty"`
+	Protocol          *string        `json:"protocol,omitempty"`
+	Server            any            `json:"server,omitempty"`
+	Headers           map[string]any `json:"headers,omitempty"`
+	AuthData          map[string]any `json:"auth_data,omitempty"`
+	AuthMethods       any            `json:"auth_methods,omitempty"`
 }
 
 type ConnectorAuthenticationMethodType string
@@ -81,7 +82,7 @@ type OAuth2MetadataSecrets struct {
 
 type ExtendedOAuthServerMetadata struct {
 	Issuer                                             string               `json:"issuer"`
-	AuthorizationEndpoint                              string               `json:"authorization_endpoint"`
+	AuthorizationEndpoint                              *string              `json:"authorization_endpoint,omitempty"`
 	TokenEndpoint                                      string               `json:"token_endpoint"`
 	RegistrationEndpoint                               *string              `json:"registration_endpoint,omitempty"`
 	ScopesSupported                                    []string             `json:"scopes_supported,omitempty"`
@@ -117,6 +118,7 @@ type AuthenticationMethodCreateOrUpdateRequest struct {
 }
 
 type PublicAuthenticationMethod struct {
+	GrantType             *OAuth2GrantType                  `json:"grant_type,omitempty"`
 	MethodType            ConnectorAuthenticationMethodType `json:"method_type"`
 	HasDefaultCredentials bool                              `json:"has_default_credentials"`
 	Headers               []ConnectorAuthenticationHeader   `json:"headers,omitempty"`
@@ -131,10 +133,10 @@ type ListConnectorsParams struct {
 }
 
 type ConnectorCredentialsRequest struct {
-	Name        string         `json:"name,omitempty"`
-	Title       *string        `json:"title,omitempty"`
-	IsDefault   *bool          `json:"is_default,omitempty"`
-	Credentials map[string]any `json:"credentials,omitempty"`
+	Name        string  `json:"name,omitempty"`
+	Title       *string `json:"title,omitempty"`
+	IsDefault   *bool   `json:"is_default,omitempty"`
+	Credentials any     `json:"credentials,omitempty"`
 }
 
 type ConnectorAuthURLParams struct {
@@ -165,26 +167,33 @@ type ToolExecutionConfiguration struct {
 	Exclude              []string `json:"exclude,omitempty"`
 }
 
-func (c *MistralClient) CreateConnector(req *ConnectorRequest) (APIResponse, error) {
+// CreateConnector accepts an MCP or HTTP request, or an equivalent JSON object.
+func (c *MistralClient) CreateConnector(req any) (APIResponse, error) {
+	body, err := connectorRequestBody(req)
+	if err != nil {
+		return nil, err
+	}
+	return c.requestMap(http.MethodPost, body, "v1/connectors")
+}
+
+func connectorRequestBody(req any) (map[string]interface{}, error) {
 	if req == nil {
 		return nil, fmt.Errorf("request cannot be nil")
 	}
-	body := optionalRequestMap(map[string]any{
-		"name":                       req.Name,
-		"description":                req.Description,
-		"server":                     req.Server,
-		"protocol":                   req.Protocol,
-		"title":                      req.Title,
-		"icon_url":                   req.IconURL,
-		"visibility":                 req.Visibility,
-		"headers":                    req.Headers,
-		"global_headers":             req.GlobalHeaders,
-		"auth_data":                  req.AuthData,
-		"oauth2_server_metadata":     req.OAuth2ServerMetadata,
-		"oauth2_server_metadata_url": req.OAuth2ServerMetadataURL,
-		"system_prompt":              req.SystemPrompt,
-	})
-	return c.requestMap(http.MethodPost, body, "v1/connectors")
+	body, err := structToMap(req)
+	if err != nil {
+		return nil, err
+	}
+	if body == nil {
+		return nil, fmt.Errorf("request cannot be nil")
+	}
+	if _, ok := body["protocol"]; !ok {
+		body["protocol"] = "mcp"
+	}
+	if body["protocol"] != "mcp" && body["protocol"] != "http" {
+		return nil, fmt.Errorf("connector protocol must be mcp or http")
+	}
+	return body, nil
 }
 
 func (c *MistralClient) ListConnectors(params *ListConnectorsParams) (APIResponse, error) {
@@ -298,6 +307,7 @@ func (c *MistralClient) ListOrganizationConnectorCredentials(connectorIDOrName s
 	return c.listConnectorCredentials(connectorIDOrName, "organization", params)
 }
 
+// Deprecated: removed from the official Python SDK in v2.10.0.
 func (c *MistralClient) CreateOrUpdateOrganizationConnectorCredentials(connectorIDOrName string, req *ConnectorCredentialsRequest) (APIResponse, error) {
 	return c.createOrUpdateConnectorCredentials(connectorIDOrName, "organization", req)
 }
@@ -306,6 +316,7 @@ func (c *MistralClient) ListWorkspaceConnectorCredentials(connectorIDOrName stri
 	return c.listConnectorCredentials(connectorIDOrName, "workspace", params)
 }
 
+// Deprecated: removed from the official Python SDK in v2.10.0.
 func (c *MistralClient) CreateOrUpdateWorkspaceConnectorCredentials(connectorIDOrName string, req *ConnectorCredentialsRequest) (APIResponse, error) {
 	return c.createOrUpdateConnectorCredentials(connectorIDOrName, "workspace", req)
 }
@@ -314,6 +325,7 @@ func (c *MistralClient) ListUserConnectorCredentials(connectorIDOrName string, p
 	return c.listConnectorCredentials(connectorIDOrName, "user", params)
 }
 
+// Deprecated: removed from the official Python SDK in v2.10.0.
 func (c *MistralClient) CreateOrUpdateUserConnectorCredentials(connectorIDOrName string, req *ConnectorCredentialsRequest) (APIResponse, error) {
 	return c.createOrUpdateConnectorCredentials(connectorIDOrName, "user", req)
 }
@@ -335,24 +347,11 @@ func (c *MistralClient) GetConnector(connectorIDOrName string, fetchCustomerData
 	return c.requestMap(http.MethodGet, nil, appendQuery(fmt.Sprintf("v1/connectors/%s", connectorIDOrName), query))
 }
 
-func (c *MistralClient) UpdateConnector(connectorID string, req *UpdateConnectorRequest) (APIResponse, error) {
-	if req == nil {
-		return nil, fmt.Errorf("request cannot be nil")
+func (c *MistralClient) UpdateConnector(connectorID string, req any) (APIResponse, error) {
+	body, err := connectorRequestBody(req)
+	if err != nil {
+		return nil, err
 	}
-	body := optionalRequestMap(map[string]any{
-		"title":              req.Title,
-		"name":               req.Name,
-		"description":        req.Description,
-		"icon_url":           req.IconURL,
-		"system_prompt":      req.SystemPrompt,
-		"connection_config":  req.ConnectionConfig,
-		"connection_secrets": req.ConnectionSecrets,
-		"protocol":           req.Protocol,
-		"server":             req.Server,
-		"headers":            req.Headers,
-		"auth_data":          req.AuthData,
-		"auth_methods":       req.AuthMethods,
-	})
 	return c.requestMap(http.MethodPatch, body, fmt.Sprintf("v1/connectors/%s", connectorID))
 }
 
