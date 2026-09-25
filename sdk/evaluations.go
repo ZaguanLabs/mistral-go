@@ -51,8 +51,11 @@ type ModerationDefinition struct {
 	TargetAttributes []string `json:"target_attributes,omitempty"`
 }
 type JudgeDefinition struct {
-	Model  string `json:"model"`
-	Prompt string `json:"prompt"`
+	Slug    string            `json:"slug"`
+	Mapping map[string]string `json:"mapping,omitempty"`
+	// Deprecated: upstream judges now use Slug and Mapping.
+	Model  string `json:"-"`
+	Prompt string `json:"-"`
 }
 type PipelineConfigHeader struct {
 	Value *string `json:"value,omitempty"`
@@ -72,41 +75,47 @@ type ExportDefinition struct {
 type PipelineConfigDefinition = any
 
 type CreatePipelineConfigRequest struct {
-	PipelineKind PipelineKind             `json:"pipeline_kind"`
-	Selectors    []PipelineConfigSelector `json:"selectors"`
-	Definition   PipelineConfigDefinition `json:"definition"`
-	Name         string                   `json:"name"`
-	Description  *string                  `json:"description,omitempty"`
-	Slug         *string                  `json:"slug,omitempty"`
-	Group        *string                  `json:"group,omitempty"`
-	Enabled      *bool                    `json:"enabled,omitempty"`
+	PipelineKind PipelineKind               `json:"pipeline_kind"`
+	Selectors    []PipelineConfigSelector   `json:"selectors"`
+	Definitions  []PipelineConfigDefinition `json:"definitions"`
+	// Deprecated: use Definitions. A single legacy value is converted on requests.
+	Definition  PipelineConfigDefinition `json:"-"`
+	Name        string                   `json:"name"`
+	Description *string                  `json:"description,omitempty"`
+	Slug        *string                  `json:"-"`
+	Group       *string                  `json:"-"`
+	Enabled     *bool                    `json:"enabled,omitempty"`
 }
 type UpdatePipelineConfigRequest struct {
-	PipelineKind PipelineKind             `json:"pipeline_kind"`
-	Selectors    []PipelineConfigSelector `json:"selectors"`
-	Definition   PipelineConfigDefinition `json:"definition"`
-	Name         string                   `json:"name"`
-	Enabled      bool                     `json:"enabled"`
-	Description  *string                  `json:"description,omitempty"`
-	Slug         *string                  `json:"slug,omitempty"`
-	Group        *string                  `json:"group,omitempty"`
+	PipelineKind PipelineKind               `json:"pipeline_kind"`
+	Selectors    []PipelineConfigSelector   `json:"selectors"`
+	Definitions  []PipelineConfigDefinition `json:"definitions"`
+	// Deprecated: use Definitions. A single legacy value is converted on requests.
+	Definition  PipelineConfigDefinition `json:"-"`
+	Name        string                   `json:"name"`
+	Enabled     bool                     `json:"enabled"`
+	Description *string                  `json:"description,omitempty"`
+	Slug        *string                  `json:"-"`
+	Group       *string                  `json:"-"`
 }
 type PipelineConfig struct {
-	ID             string                   `json:"id"`
-	CreatedAt      time.Time                `json:"created_at"`
-	UpdatedAt      time.Time                `json:"updated_at"`
-	DeletedAt      *time.Time               `json:"deleted_at"`
-	Scope          PipelineConfigScope      `json:"scope"`
-	WorkspaceID    string                   `json:"workspace_id"`
-	Name           string                   `json:"name"`
-	PipelineKind   PipelineKind             `json:"pipeline_kind"`
-	Selectors      []PipelineConfigSelector `json:"selectors"`
-	Enabled        bool                     `json:"enabled"`
-	DefinitionHash string                   `json:"definition_hash"`
-	Definition     PipelineConfigDefinition `json:"definition"`
-	Description    *string                  `json:"description,omitempty"`
-	Slug           *string                  `json:"slug,omitempty"`
-	Group          *string                  `json:"group,omitempty"`
+	ID             string                     `json:"id"`
+	CreatedAt      time.Time                  `json:"created_at"`
+	UpdatedAt      time.Time                  `json:"updated_at"`
+	DeletedAt      *time.Time                 `json:"deleted_at"`
+	Scope          PipelineConfigScope        `json:"scope"`
+	WorkspaceID    string                     `json:"workspace_id"`
+	Name           string                     `json:"name"`
+	PipelineKind   PipelineKind               `json:"pipeline_kind"`
+	Selectors      []PipelineConfigSelector   `json:"selectors"`
+	Enabled        bool                       `json:"enabled"`
+	DefinitionHash string                     `json:"-"`
+	Definitions    []PipelineConfigDefinition `json:"definitions"`
+	// Deprecated: use Definitions. A single legacy value is converted on requests.
+	Definition  PipelineConfigDefinition `json:"-"`
+	Description *string                  `json:"description,omitempty"`
+	Slug        *string                  `json:"-"`
+	Group       *string                  `json:"-"`
 }
 type PaginatedResultPipelineConfig struct {
 	Count    int              `json:"count"`
@@ -148,7 +157,7 @@ func (c *MistralClient) ListPipelineConfigs(params *ListPipelineConfigsParams) (
 	if params.PageSize != nil {
 		size = *params.PageSize
 	}
-	values := map[string]any{"page": page, "page_size": size, "group": params.Group, "enabled": params.Enabled, "q": params.Q}
+	values := map[string]any{"page": page, "page_size": size, "enabled": params.Enabled, "q": params.Q}
 	if params.PipelineKind != nil {
 		values["pipeline_kind"] = string(*params.PipelineKind)
 	}
@@ -172,6 +181,27 @@ func (v ModerationDefinition) MarshalJSON() ([]byte, error) {
 	type wire ModerationDefinition
 	if v.Model == "" {
 		v.Model = "mistral-moderation-latest"
+	}
+	return json.Marshal(wire(v))
+}
+
+func (v CreatePipelineConfigRequest) MarshalJSON() ([]byte, error) {
+	type wire CreatePipelineConfigRequest
+	if v.Definitions == nil {
+		v.Definitions = []PipelineConfigDefinition{}
+		if v.Definition != nil {
+			v.Definitions = append(v.Definitions, v.Definition)
+		}
+	}
+	return json.Marshal(wire(v))
+}
+func (v UpdatePipelineConfigRequest) MarshalJSON() ([]byte, error) {
+	type wire UpdatePipelineConfigRequest
+	if v.Definitions == nil {
+		v.Definitions = []PipelineConfigDefinition{}
+		if v.Definition != nil {
+			v.Definitions = append(v.Definitions, v.Definition)
+		}
 	}
 	return json.Marshal(wire(v))
 }

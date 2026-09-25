@@ -1,12 +1,12 @@
 # Mistral Go SDK
 
-**Version 2.10.0** - Python SDK v2.10.0 Compatibility 🚀
+**Version 2.10.1** - Python SDK v2.10.1 Compatibility 🚀
 
 [![Minimal Dependencies](https://img.shields.io/badge/dependencies-minimal-brightgreen.svg)](https://github.com/ZaguanLabs/mistral-go)
 [![Go Version](https://img.shields.io/badge/go-%3E%3D1.20-blue.svg)](https://golang.org/)
 [![Pure Go](https://img.shields.io/badge/pure-go-success.svg)](https://pkg.go.dev/std)
 
-A Go SDK for the Mistral AI API, designed to provide developers with powerful tools to integrate advanced AI capabilities into their applications. This SDK has been significantly enhanced to match the official Mistral Python SDK v2.10.0.
+A Go SDK for the Mistral AI API, designed to provide developers with powerful tools to integrate advanced AI capabilities into their applications. This SDK has been significantly enhanced to match the official Mistral Python SDK v2.10.1.
 
 **✨ Minimal Dependencies** - REST functionality uses the Go standard library; realtime audio adds one pure-Go WebSocket dependency for official SDK parity.
 
@@ -32,6 +32,12 @@ A Go SDK for the Mistral AI API, designed to provide developers with powerful to
 - **Connectors API**: Connector management, tool calls, authentication methods, and credentials
 - **Observability API**: Campaigns, datasets, records, judges, chat completion events, logs, spans, span evaluations, and traces
 - **RAG API**: Ingestion pipeline configuration and search index summaries, details, metrics, schema summaries, and schema files
+
+## Version 2.10.1 - Python SDK v2.10.1 Compatibility
+
+Adds managed-index CRUD, pagination, ingestion, document deletion, and search, including typed schemas, embedding configurations, retrievers, and filters. Evaluation requests now use `Definitions`; judges use `Slug` and `Mapping`. Workflow execution carries `Traceparent` in its body and header. Service accounts support initial roles and organization-wide listing; connector and workflow metadata track upstream additions.
+
+Migration: replace `Definition` with `Definitions: []PipelineConfigDefinition{...}` and replace inline judge `Model`/`Prompt` with a registered judge `Slug`. Removed pipeline `Slug`/`Group` fields are no longer sent. Legacy single `Definition` is wrapped in a list for source compatibility. Voice-list offset pagination is deprecated upstream.
 
 ## Version 2.10.0 - Python SDK v2.10.0 Compatibility
 

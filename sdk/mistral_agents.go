@@ -9,6 +9,7 @@ import (
 
 // MistralAgent represents a Mistral agent
 type MistralAgent struct {
+	OwnerID      *string                `json:"owner_id,omitempty"`
 	ID           string                 `json:"id"`
 	Object       string                 `json:"object"`
 	Model        string                 `json:"model"`

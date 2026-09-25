@@ -144,6 +144,7 @@ func (c *MistralClient) SpeechStream(req *SpeechRequest) (<-chan StreamEvent, er
 	return parseGenericStreamContext(c.requestContext(), bodyStream), nil
 }
 
+// Deprecated: upstream offset pagination is superseded by /v2/audio/voices.
 func (c *MistralClient) ListVoices(params *ListVoicesParams) (*VoiceListResponse, error) {
 	if params == nil {
 		params = &ListVoicesParams{}

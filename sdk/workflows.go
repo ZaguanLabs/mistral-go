@@ -37,6 +37,7 @@ type ListWorkflowRegistrationsParams struct {
 }
 
 type ExecuteWorkflowRequest struct {
+	Traceparent             *string        `json:"traceparent,omitempty"`
 	ExecutionID             *string        `json:"execution_id,omitempty"`
 	Input                   any            `json:"input,omitempty"`
 	WaitForResult           *bool          `json:"wait_for_result,omitempty"`
@@ -209,6 +210,7 @@ type ListDeploymentWorkersParams struct {
 }
 
 type ExecuteWorkflowAndWaitParams struct {
+	Traceparent             *string
 	WorkflowIdentifier      string
 	Input                   any
 	ExecutionID             *string
@@ -281,6 +283,7 @@ func (c *MistralClient) ExecuteWorkflowAndWait(params *ExecuteWorkflowAndWaitPar
 		TimeoutSeconds:          params.TimeoutSeconds,
 		CustomTracingAttributes: params.CustomTracingAttributes,
 		ForceNewTrace:           params.ForceNewTrace,
+		Traceparent:             params.Traceparent,
 		TaskQueue:               params.TaskQueue,
 		DeploymentName:          params.DeploymentName,
 	}
@@ -643,6 +646,7 @@ func (c *MistralClient) executeWorkflowPath(path string, req *ExecuteWorkflowReq
 		"timeout_seconds":           req.TimeoutSeconds,
 		"custom_tracing_attributes": req.CustomTracingAttributes,
 		"force_new_trace":           req.ForceNewTrace,
+		"traceparent":               req.Traceparent,
 		"extensions":                req.Extensions,
 		"task_queue":                req.TaskQueue,
 		"deployment_name":           req.DeploymentName,

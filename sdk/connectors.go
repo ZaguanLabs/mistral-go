@@ -127,6 +127,7 @@ type PublicAuthenticationMethod struct {
 }
 
 type ListConnectorsParams struct {
+	SupportsMCP  *bool          `json:"supports_mcp,omitempty"`
 	QueryFilters map[string]any `json:"query_filters,omitempty"`
 	Cursor       *string        `json:"cursor,omitempty"`
 	PageSize     *int           `json:"page_size,omitempty"`
@@ -200,7 +201,7 @@ func (c *MistralClient) ListConnectors(params *ListConnectorsParams) (APIRespons
 	if params == nil {
 		params = &ListConnectorsParams{}
 	}
-	query := queryWithOptionalValues(map[string]any{"cursor": params.Cursor, "page_size": params.PageSize})
+	query := queryWithOptionalValues(map[string]any{"cursor": params.Cursor, "page_size": params.PageSize, "supports_mcp": params.SupportsMCP})
 	body := optionalRequestMap(map[string]any{"query_filters": params.QueryFilters})
 	if len(body) == 0 {
 		return c.requestMap(http.MethodGet, nil, appendQuery("v1/connectors", query))

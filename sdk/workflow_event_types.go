@@ -3,6 +3,7 @@ package sdk
 // WorkflowEventResponse is the common wire envelope used by workflow,
 // activity-task, custom-task, and workflow-task events.
 type WorkflowEventResponse struct {
+	ChainRunID           *string        `json:"chain_run_id"`
 	EventID              string         `json:"event_id"`
 	EventTimestamp       int            `json:"event_timestamp"`
 	RootWorkflowExecID   string         `json:"root_workflow_exec_id"`

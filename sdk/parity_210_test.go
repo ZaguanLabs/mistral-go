@@ -37,8 +37,8 @@ func TestPython210Endpoints(t *testing.T) {
 		{name: "ListAssignableRoles", method: "GET", path: "/v1/service-accounts/assignable-roles", query: map[string][]string{"workspace_id": {"ws"}}, call: func(c *MistralClient) error { _, e := c.ListAssignableServiceAccountRoles("ws"); return e }},
 		{name: "ListRoles", method: "GET", path: "/v1/service-accounts/id/roles", call: func(c *MistralClient) error { _, e := c.ListServiceAccountRoles("id"); return e }},
 		{name: "SetRoles", method: "PUT", path: "/v1/service-accounts/id/roles", body: map[string]any{"role_ids": []any{}}, call: func(c *MistralClient) error { _, e := c.SetServiceAccountRoles("id", nil); return e }},
-		{name: "CreatePipeline", method: "POST", path: "/v1/observability/pipeline-configs", body: map[string]any{"pipeline_kind": "judge", "selectors": []any{}, "definition": map[string]any{"model": "m", "prompt": "p"}, "name": "eval", "enabled": true}, call: func(c *MistralClient) error {
-			_, e := c.CreatePipelineConfig(&CreatePipelineConfigRequest{PipelineKind: kind, Selectors: []PipelineConfigSelector{}, Definition: JudgeDefinition{Model: "m", Prompt: "p"}, Name: "eval"})
+		{name: "CreatePipeline", method: "POST", path: "/v1/observability/pipeline-configs", body: map[string]any{"pipeline_kind": "judge", "selectors": []any{}, "definitions": []any{map[string]any{"slug": "judge"}}, "name": "eval", "enabled": true}, call: func(c *MistralClient) error {
+			_, e := c.CreatePipelineConfig(&CreatePipelineConfigRequest{PipelineKind: kind, Selectors: []PipelineConfigSelector{}, Definitions: []PipelineConfigDefinition{JudgeDefinition{Slug: "judge"}}, Name: "eval"})
 			return e
 		}},
 		{name: "ListPipelines", method: "GET", path: "/v1/observability/pipeline-configs", query: map[string][]string{"page": {"1"}, "page_size": {"50"}, "pipeline_kind": {"judge"}, "enabled": {"false"}}, response: `{"pipeline_configs":{"count":1,"results":[{"id":"pipeline"}]}}`, call: func(c *MistralClient) error {
@@ -49,8 +49,8 @@ func TestPython210Endpoints(t *testing.T) {
 			return e
 		}},
 		{name: "GetPipeline", method: "GET", path: "/v1/observability/pipeline-configs/id", call: func(c *MistralClient) error { _, e := c.GetPipelineConfig("id"); return e }},
-		{name: "UpdatePipeline", method: "PUT", path: "/v1/observability/pipeline-configs/id", body: map[string]any{"pipeline_kind": "judge", "selectors": []any{}, "definition": map[string]any{"model": "m", "prompt": "p"}, "name": "eval", "enabled": false}, call: func(c *MistralClient) error {
-			_, e := c.UpdatePipelineConfig("id", &UpdatePipelineConfigRequest{PipelineKind: kind, Selectors: []PipelineConfigSelector{}, Definition: JudgeDefinition{Model: "m", Prompt: "p"}, Name: "eval"})
+		{name: "UpdatePipeline", method: "PUT", path: "/v1/observability/pipeline-configs/id", body: map[string]any{"pipeline_kind": "judge", "selectors": []any{}, "definitions": []any{map[string]any{"slug": "judge"}}, "name": "eval", "enabled": false}, call: func(c *MistralClient) error {
+			_, e := c.UpdatePipelineConfig("id", &UpdatePipelineConfigRequest{PipelineKind: kind, Selectors: []PipelineConfigSelector{}, Definitions: []PipelineConfigDefinition{JudgeDefinition{Slug: "judge"}}, Name: "eval"})
 			return e
 		}},
 		{name: "DeletePipeline", method: "DELETE", path: "/v1/observability/pipeline-configs/id", response: "204", call: func(c *MistralClient) error { return c.DeletePipelineConfig("id") }},

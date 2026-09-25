@@ -3,12 +3,14 @@ package sdk
 import (
 	"bytes"
 	"context"
+	"crypto/rand"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
 	"net/url"
 	"os"
+	"strings"
 	"time"
 )
 
@@ -90,6 +92,25 @@ func (c *MistralClient) request(method string, jsonData map[string]interface{}, 
 	} else {
 		uri.Path = path
 	}
+
+	// The execute API carries trace context in both the body and header.
+	traceparent := ""
+	if method == http.MethodPost && strings.HasPrefix(strings.TrimPrefix(uri.Path, "/"), "v1/workflows/") && strings.HasSuffix(uri.Path, "/execute") {
+		body := make(map[string]interface{}, len(jsonData)+1)
+		for key, value := range jsonData {
+			body[key] = value
+		}
+		traceparent, _ = body["traceparent"].(string)
+		if traceparent == "" {
+			var trace [24]byte
+			if _, err := rand.Read(trace[:]); err != nil {
+				return nil, err
+			}
+			traceparent = fmt.Sprintf("00-%x-%x-01", trace[:16], trace[16:])
+			body["traceparent"] = traceparent
+		}
+		jsonData = body
+	}
 	jsonValue, err := json.Marshal(jsonData)
 	if err != nil {
 		return nil, err
@@ -102,6 +123,9 @@ func (c *MistralClient) request(method string, jsonData map[string]interface{}, 
 	req.Header.Set("Authorization", "Bearer "+c.apiKey)
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("User-Agent", UserAgent)
+	if traceparent != "" {
+		req.Header.Set("traceparent", traceparent)
+	}
 
 	resp, err := c.doRequest(req)
 	if err != nil {

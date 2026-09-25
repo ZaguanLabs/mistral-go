@@ -20,9 +20,10 @@ type ServiceAccount struct {
 	DeletedAt      *time.Time `json:"deleted_at"`
 }
 type CreateServiceAccountRequest struct {
-	Name        string  `json:"name"`
-	WorkspaceID string  `json:"workspace_id"`
-	Description *string `json:"description,omitempty"`
+	RoleIDs     []string `json:"role_ids,omitempty"`
+	Name        string   `json:"name"`
+	WorkspaceID string   `json:"workspace_id"`
+	Description *string  `json:"description,omitempty"`
 }
 type UpdateServiceAccountRequest struct {
 	// A nil Description clears the description, matching an explicit Python None.
@@ -64,9 +65,13 @@ func (c *MistralClient) CreateServiceAccount(req *CreateServiceAccountRequest) (
 }
 func (c *MistralClient) ListServiceAccounts(params *ListServiceAccountsParams) (*ListServiceAccountsResponse, error) {
 	if params == nil {
-		return nil, fmt.Errorf("parameters cannot be nil")
+		params = &ListServiceAccountsParams{Limit: 100}
 	}
-	query := queryWithOptionalValues(map[string]any{"workspace_id": params.WorkspaceID, "offset": params.Offset, "limit": params.Limit, "include_deleted": params.IncludeDeleted})
+	var workspace *string
+	if params.WorkspaceID != "" {
+		workspace = &params.WorkspaceID
+	}
+	query := queryWithOptionalValues(map[string]any{"workspace_id": workspace, "offset": params.Offset, "limit": params.Limit, "include_deleted": params.IncludeDeleted})
 	return requestTyped[ListServiceAccountsResponse](c, http.MethodGet, nil, appendQuery("v1/service-accounts", query))
 }
 func (c *MistralClient) GetServiceAccount(id string) (*ServiceAccount, error) {

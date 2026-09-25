@@ -1,5 +1,15 @@
 # Changelog
 
+## 2.10.1 - 2026-09-25
+
+- Add all eight managed-index operations with typed schemas, embedding models, filters, retrievers, search results, and pagination tokens.
+- Send evaluation `definitions` arrays and judge `slug`/`mapping`; stop sending removed pipeline fields.
+- Add service-account initial roles and organization-wide listing.
+- Carry explicit or generated workflow trace context in body and header; expose chain-run IDs and agent ownership.
+- Add connector MCP capability metadata/filtering and upstream voice pagination deprecation.
+- Preserve search chunk extension fields and arbitrary variants through the existing map-oriented API.
+
+
 All notable changes to the Mistral Go SDK will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),

@@ -106,6 +106,7 @@ func (v UpdateHTTPConnectorRequest) MarshalJSON() ([]byte, error) {
 // Connector retains both HTTP and MCP variant fields; Protocol is the discriminator.
 // Unknown variants remain available through Raw.
 type Connector struct {
+	SupportsMCP           bool                         `json:"supports_mcp"`
 	ID                    string                       `json:"id"`
 	Name                  string                       `json:"name"`
 	Description           string                       `json:"description"`
