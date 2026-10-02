@@ -1,5 +1,15 @@
 # Changelog
 
+## 3.0.0 - 2026-10-02
+
+- Align with official Python SDK 3.0.0; migrate module imports to `/v3` and minimum Go version to 1.25.
+- Add service-account token rotation and authentication precedence for REST and realtime.
+- Add guarded HTTP connector clients and official MCP client sessions with gateway-specific errors.
+- Add managed-index navigation, read, grep, chunk retrieval, RRF search and filters.
+- Add pipelines, span dataset imports, span-evaluation aggregation, deployment unharden and paginated voice search.
+- Restore singular pipeline-config definitions and update connector, deployment and completion-tool contracts.
+- Parse structured assistant content from concatenated text chunks.
+
 ## 2.10.1 - 2026-09-25
 
 - Add all eight managed-index operations with typed schemas, embedding models, filters, retrievers, search results, and pagination tokens.

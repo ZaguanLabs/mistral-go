@@ -549,7 +549,8 @@ type ManagedIndexFields struct {
 }
 
 type ManagedIndexResponse struct {
-	ID string `json:"id"`
+	CreatorID string `json:"creator_id"`
+	ID        string `json:"id"`
 
 	Name string `json:"name"`
 
@@ -585,7 +586,8 @@ func (v MistralEmbeddingModel) MarshalJSON() ([]byte, error) {
 }
 
 type NearestNeighbourRetriever struct {
-	TopK *int `json:"top_k,omitempty"`
+	MaxCandidates *int `json:"max_candidates,omitempty"`
+	TopK          *int `json:"top_k,omitempty"`
 
 	Type string `json:"type"`
 

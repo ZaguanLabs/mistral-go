@@ -3,6 +3,7 @@ package sdk
 import (
 	"fmt"
 	"net/http"
+	"net/url"
 )
 
 type ConnectorRequest struct {
@@ -202,7 +203,17 @@ func (c *MistralClient) ListConnectors(params *ListConnectorsParams) (APIRespons
 		params = &ListConnectorsParams{}
 	}
 	query := queryWithOptionalValues(map[string]any{"cursor": params.Cursor, "page_size": params.PageSize, "supports_mcp": params.SupportsMCP})
-	body := optionalRequestMap(map[string]any{"query_filters": params.QueryFilters})
+	filters := map[string]any{}
+	for key, value := range params.QueryFilters {
+		if key != "active" {
+			filters[key] = value
+		}
+	}
+	var filterBody any
+	if params.QueryFilters != nil {
+		filterBody = filters
+	}
+	body := optionalRequestMap(map[string]any{"query_filters": filterBody})
 	if len(body) == 0 {
 		return c.requestMap(http.MethodGet, nil, appendQuery("v1/connectors", query))
 	}
@@ -247,7 +258,6 @@ func (c *MistralClient) ListConnectorTools(connectorIDOrName string, params *Lis
 		params = &ListConnectorToolsParams{}
 	}
 	query := queryWithOptionalValues(map[string]any{
-		"page":             params.Page,
 		"page_size":        params.PageSize,
 		"refresh":          params.Refresh,
 		"pretty":           params.Pretty,
@@ -343,9 +353,9 @@ func (c *MistralClient) DeleteUserConnectorCredentials(connectorIDOrName, creden
 	return c.deleteConnectorCredentials(connectorIDOrName, "user", credentialsName)
 }
 
-func (c *MistralClient) GetConnector(connectorIDOrName string, fetchCustomerData *bool, fetchConnectionSecrets *bool) (APIResponse, error) {
-	query := queryWithOptionalValues(map[string]any{"fetch_customer_data": fetchCustomerData, "fetch_connection_secrets": fetchConnectionSecrets})
-	return c.requestMap(http.MethodGet, nil, appendQuery(fmt.Sprintf("v1/connectors/%s", connectorIDOrName), query))
+func (c *MistralClient) GetConnector(connectorIDOrName string, fetchUserData *bool) (APIResponse, error) {
+	query := queryWithOptionalValues(map[string]any{"fetch_user_data": fetchUserData})
+	return c.requestMap(http.MethodGet, nil, appendQuery("v1/connectors/"+url.PathEscape(connectorIDOrName), query))
 }
 
 func (c *MistralClient) UpdateConnector(connectorID string, req any) (APIResponse, error) {

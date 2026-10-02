@@ -123,7 +123,7 @@ func TestChatNewRequestFieldsWithMock(t *testing.T) {
 		ReasoningEffort: &reasoning,
 		PromptCacheKey:  &cacheKey,
 		Guardrails:      []GuardrailConfig{{GuardrailID: "guardrail"}},
-		Tools:           []any{BuiltInTool{Type: ToolTypeWebSearch}},
+		Tools:           []any{BuiltInTool{Type: ToolTypeImageGeneration}},
 		ToolChoice:      ToolChoiceAuto,
 		ResponseFormat:  map[string]any{"type": "json_schema", "json_schema": map[string]any{"name": "result"}},
 	}

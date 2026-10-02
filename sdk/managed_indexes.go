@@ -7,6 +7,9 @@ import (
 )
 
 type ListManagedIndexesParams struct {
+	Name      *string
+	Status    *ManagedIndexStatus
+	CreatorID *string
 	PageSize  *int
 	PageToken *string
 }
@@ -20,6 +23,9 @@ func (c *MistralClient) CreateManagedIndex(req *CreateManagedIndexRequest) (*Man
 	return requestTyped[ManagedIndexResponse](c, http.MethodPost, req, "v1/rag/managed_indexes")
 }
 func (c *MistralClient) ListManagedIndexes(params *ListManagedIndexesParams) (*ListManagedIndexesResponse, error) {
+	if params == nil {
+		params = &ListManagedIndexesParams{}
+	}
 	size := 20
 	var token *string
 	if params != nil {
@@ -28,7 +34,7 @@ func (c *MistralClient) ListManagedIndexes(params *ListManagedIndexesParams) (*L
 		}
 		token = params.PageToken
 	}
-	return requestTyped[ListManagedIndexesResponse](c, http.MethodGet, nil, appendQuery("v1/rag/managed_indexes", queryWithOptionalValues(map[string]any{"page_size": size, "page_token": token})))
+	return requestTyped[ListManagedIndexesResponse](c, http.MethodGet, nil, appendQuery("v1/rag/managed_indexes", queryWithOptionalValues(map[string]any{"page_size": size, "page_token": token, "name": params.Name, "status": enumString(params.Status), "creator_id": params.CreatorID})))
 }
 func (c *MistralClient) GetManagedIndex(name string) (*ManagedIndexResponse, error) {
 	return requestTyped[ManagedIndexResponse](c, http.MethodGet, nil, managedIndexPath(name))

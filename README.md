@@ -1,14 +1,14 @@
 # Mistral Go SDK
 
-**Version 2.10.1** - Python SDK v2.10.1 Compatibility 🚀
+**Version 3.0.0** — Python SDK 3.0.0 compatibility
 
 [![Minimal Dependencies](https://img.shields.io/badge/dependencies-minimal-brightgreen.svg)](https://github.com/ZaguanLabs/mistral-go)
-[![Go Version](https://img.shields.io/badge/go-%3E%3D1.20-blue.svg)](https://golang.org/)
+[![Go Version](https://img.shields.io/badge/go-%3E%3D1.25-blue.svg)](https://golang.org/)
 [![Pure Go](https://img.shields.io/badge/pure-go-success.svg)](https://pkg.go.dev/std)
 
-A Go SDK for the Mistral AI API, designed to provide developers with powerful tools to integrate advanced AI capabilities into their applications. This SDK has been significantly enhanced to match the official Mistral Python SDK v2.10.1.
+A Go SDK for the Mistral AI API, designed to provide developers with powerful tools to integrate advanced AI capabilities into their applications. This SDK has been significantly enhanced to match the official Mistral Python SDK v3.0.0.
 
-**✨ Minimal Dependencies** - REST functionality uses the Go standard library; realtime audio adds one pure-Go WebSocket dependency for official SDK parity.
+REST uses the Go standard library. Realtime audio uses a WebSocket dependency; connector MCP sessions use the official MCP Go SDK. Go 1.25 or newer is required.
 
 ## Features
 
@@ -32,6 +32,20 @@ A Go SDK for the Mistral AI API, designed to provide developers with powerful to
 - **Connectors API**: Connector management, tool calls, authentication methods, and credentials
 - **Observability API**: Campaigns, datasets, records, judges, chat completion events, logs, spans, span evaluations, and traces
 - **RAG API**: Ingestion pipeline configuration and search index summaries, details, metrics, schema summaries, and schema files
+
+## Version 3.0.0 — migration
+
+Use `github.com/ZaguanLabs/mistral-go/v3/sdk` and Go 1.25 or newer. Existing `/v2` consumers remain on the 2.x releases.
+
+- Pipeline-config requests use one `Definition`; multiple judge `Definitions` belong to the new `CreatePipeline`/`UpdatePipeline` APIs. A legacy single-element list is converted; longer lists are rejected.
+- `GetConnector(id, fetchUserData)` replaces obsolete customer/secrets flags. Connector tool listing no longer sends `page`, and connector filters no longer send `active`.
+- Deployment build settings and secrets belong in `DeploymentMistralCloudBackendSpec`. Legacy top-level entrypoint, working-directory and CPU/memory resource fields are no longer sent.
+- Chat and agent completion tools accept function, image-generation, document-library and connector variants. Use connectors for web search and code execution.
+- `MISTRAL_SA_TOKEN_PATH` enables rotated service-account credentials. Per-request headers and explicit keys take precedence.
+
+New methods include managed-index navigate/read/grep/chunk retrieval, reciprocal-rank-fusion search, pipelines, dataset imports from spans, span-evaluation aggregation, deployment unharden, filtered voice search, and HTTP/MCP connector gateway clients. Structured response parsing accepts text chunks.
+
+See [release notes](docs/RELEASE_NOTES_v3.0.0.md) for validation and source provenance.
 
 ## Version 2.10.1 - Python SDK v2.10.1 Compatibility
 
@@ -108,14 +122,14 @@ See [docs/IMPROVEMENTS.md](docs/IMPROVEMENTS.md) for detailed changes.
 
 ## Getting Started
 
-To begin using the Mistral Go Client in your project, ensure you have Go installed on your system. This client library is compatible with Go 1.20 and higher.
+To begin using the Mistral Go Client in your project, ensure you have Go installed on your system. This client library is compatible with Go 1.25 and higher.
 
 ### Installation
 
 To install the Mistral Go Client, run the following command:
 
 ```bash
-go get github.com/ZaguanLabs/mistral-go/v2/sdk
+go get github.com/ZaguanLabs/mistral-go/v3/sdk
 ```
 
 ### Basic Usage
@@ -125,7 +139,7 @@ package main
 
 import (
 	"log"
-	"github.com/ZaguanLabs/mistral-go/v2/sdk"
+	"github.com/ZaguanLabs/mistral-go/v3/sdk"
 )
 
 func main() {
@@ -693,7 +707,7 @@ Comprehensive guides and documentation are available in the [`docs/`](docs/) dir
 
 ### Version Information
 ```go
-import "github.com/ZaguanLabs/mistral-go/v2/sdk"
+import "github.com/ZaguanLabs/mistral-go/v3/sdk"
 
 info := sdk.GetVersionInfo()
 fmt.Printf("SDK: %s v%s\n", info.SDKName, info.Version)

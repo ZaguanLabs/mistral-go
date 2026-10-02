@@ -87,14 +87,14 @@ func TestPipelineDefinitionsAndOrganizationAccounts(t *testing.T) {
 		if strings.Contains(r.URL.Path, "pipeline-configs") {
 			var body map[string]any
 			json.NewDecoder(r.Body).Decode(&body)
-			if _, exists := body["definition"]; exists {
-				t.Error("obsolete single definition")
+			if _, exists := body["definitions"]; exists {
+				t.Error("obsolete definitions list")
 			}
 			if _, exists := body["slug"]; exists {
 				t.Error("obsolete slug")
 			}
-			defs, ok := body["definitions"].([]any)
-			if !ok || len(defs) != 1 || defs[0].(map[string]any)["slug"] != "judge" {
+			definition, ok := body["definition"].(map[string]any)
+			if !ok || definition["slug"] != "judge" {
 				t.Errorf("body: %#v", body)
 			}
 		} else if r.Method == "GET" {

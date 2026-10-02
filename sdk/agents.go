@@ -47,6 +47,9 @@ func (c *MistralClient) AgentComplete(agentID string, messages []ChatMessage, pa
 	if params == nil {
 		params = &AgentCompletionRequest{}
 	}
+	if err := validateCompletionTools(params.Tools); err != nil {
+		return nil, err
+	}
 
 	// Set required fields
 	params.AgentID = agentID
@@ -146,6 +149,9 @@ func (c *MistralClient) AgentComplete(agentID string, messages []ChatMessage, pa
 func (c *MistralClient) AgentCompleteStream(agentID string, messages []ChatMessage, params *AgentCompletionRequest) (<-chan ChatCompletionStreamResponse, error) {
 	if params == nil {
 		params = &AgentCompletionRequest{}
+	}
+	if err := validateCompletionTools(params.Tools); err != nil {
+		return nil, err
 	}
 
 	// Set required fields

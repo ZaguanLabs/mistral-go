@@ -53,7 +53,7 @@ func TestNewParityEndpoints(t *testing.T) {
 			return err
 		}},
 		{"DeleteUserConnectorCredentials", http.MethodDelete, "/v1/connectors/conn/user/credentials/cred", func(c *MistralClient) error { _, err := c.DeleteUserConnectorCredentials("conn", "cred"); return err }},
-		{"GetConnector", http.MethodGet, "/v1/connectors/conn", func(c *MistralClient) error { _, err := c.GetConnector("conn", nil, nil); return err }},
+		{"GetConnector", http.MethodGet, "/v1/connectors/conn", func(c *MistralClient) error { _, err := c.GetConnector("conn", nil); return err }},
 		{"UpdateConnector", http.MethodPatch, "/v1/connectors/conn", func(c *MistralClient) error {
 			_, err := c.UpdateConnector("conn", &UpdateConnectorRequest{Name: &str})
 			return err

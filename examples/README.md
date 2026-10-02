@@ -1,6 +1,6 @@
 # Mistral Go SDK Examples
 
-This directory contains comprehensive examples demonstrating all major features of the Mistral Go SDK v2.0.0.
+This directory contains comprehensive examples demonstrating all major features of the Mistral Go SDK v3.0.0.
 
 ## Prerequisites
 
@@ -96,9 +96,9 @@ go run examples/main.go
 
 ## API Coverage
 
-All examples use the v2 import path:
+All examples use the v3 import path:
 ```go
-import "github.com/ZaguanLabs/mistral-go/v2/sdk"
+import "github.com/ZaguanLabs/mistral-go/v3/sdk"
 ```
 
 ## Additional Resources

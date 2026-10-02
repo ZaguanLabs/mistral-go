@@ -3,7 +3,7 @@ package sdk
 // Version information for the Mistral Go SDK
 const (
 	// Version is the current version of the SDK
-	Version = "2.10.1"
+	Version = "3.0.0"
 
 	// SDKName is the name of the SDK
 	SDKName = "mistral-go"
@@ -27,7 +27,7 @@ func GetVersionInfo() VersionInfo {
 		Version:       Version,
 		SDKName:       SDKName,
 		UserAgent:     UserAgent,
-		GoVersion:     "1.21+",
+		GoVersion:     "1.25+",
 		FeatureParity: "100%",
 	}
 }

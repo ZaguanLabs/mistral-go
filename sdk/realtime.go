@@ -81,8 +81,22 @@ func (c *MistralClient) RealtimeTranscriptionConnect(ctx context.Context, model 
 	headers := http.Header{}
 	headers.Set("Authorization", "Bearer "+c.apiKey)
 	headers.Set("User-Agent", UserAgent)
+	callerAuth := false
+	if params != nil {
+		for key := range params.Headers {
+			if strings.EqualFold(key, "Authorization") {
+				callerAuth = true
+			}
+		}
+	}
+	if !callerAuth {
+		if err := c.authorizeRequest(&http.Request{Header: headers}); err != nil {
+			return nil, err
+		}
+	}
 	if params != nil {
 		for key, values := range params.Headers {
+			headers.Del(key)
 			for _, value := range values {
 				headers.Add(key, value)
 			}

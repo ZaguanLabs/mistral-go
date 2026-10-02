@@ -30,6 +30,8 @@ type UpdateServiceAccountRequest struct {
 	Description *string `json:"description"`
 }
 type ListServiceAccountsParams struct {
+	Q              *string
+	Order          *Order
 	WorkspaceID    string
 	Offset         int
 	Limit          int
@@ -71,7 +73,7 @@ func (c *MistralClient) ListServiceAccounts(params *ListServiceAccountsParams) (
 	if params.WorkspaceID != "" {
 		workspace = &params.WorkspaceID
 	}
-	query := queryWithOptionalValues(map[string]any{"workspace_id": workspace, "offset": params.Offset, "limit": params.Limit, "include_deleted": params.IncludeDeleted})
+	query := queryWithOptionalValues(map[string]any{"workspace_id": workspace, "offset": params.Offset, "limit": params.Limit, "include_deleted": params.IncludeDeleted, "q": params.Q, "order": params.Order})
 	return requestTyped[ListServiceAccountsResponse](c, http.MethodGet, nil, appendQuery("v1/service-accounts", query))
 }
 func (c *MistralClient) GetServiceAccount(id string) (*ServiceAccount, error) {

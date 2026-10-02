@@ -30,15 +30,18 @@ var retryStatusCodes = map[int]bool{
 }
 
 type MistralClient struct {
-	retryConfig *RetryConfig
-	ctx         context.Context
-	apiKey      string
-	endpoint    string
-	maxRetries  int
-	timeout     time.Duration
+	explicitAPIKey bool
+	requestHeaders http.Header
+	retryConfig    *RetryConfig
+	ctx            context.Context
+	apiKey         string
+	endpoint       string
+	maxRetries     int
+	timeout        time.Duration
 }
 
 func NewMistralClient(apiKey string, endpoint string, maxRetries int, timeout time.Duration) *MistralClient {
+	explicitAPIKey := apiKey != ""
 	if apiKey == "" {
 		apiKey = os.Getenv("MISTRAL_API_KEY")
 	}
@@ -53,19 +56,16 @@ func NewMistralClient(apiKey string, endpoint string, maxRetries int, timeout ti
 	}
 
 	return &MistralClient{
-		apiKey:     apiKey,
-		endpoint:   endpoint,
-		maxRetries: maxRetries,
-		timeout:    timeout,
+		apiKey:         apiKey,
+		explicitAPIKey: explicitAPIKey,
+		endpoint:       endpoint,
+		maxRetries:     maxRetries,
+		timeout:        timeout,
 	}
 }
 
 // NewMistralClientDefault creates a new Mistral API client with the default endpoint and the given API key. Defaults to using MISTRAL_API_KEY from the environment.
 func NewMistralClientDefault(apiKey string) *MistralClient {
-	if apiKey == "" {
-		apiKey = os.Getenv("MISTRAL_API_KEY")
-	}
-
 	return NewMistralClient(apiKey, Endpoint, DefaultMaxRetries, DefaultTimeout)
 }
 

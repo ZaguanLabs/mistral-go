@@ -113,11 +113,12 @@ type DeltaMessage struct {
 
 // ChatMessage represents a single message in a chat.
 type ChatMessage struct {
-	Role       string     `json:"role"`
-	Content    string     `json:"content,omitempty"`
-	ToolCalls  []ToolCall `json:"tool_calls,omitempty"`
-	ToolCallID string     `json:"tool_call_id,omitempty"` // For tool role messages
-	Name       string     `json:"name,omitempty"`         // For function/tool messages
+	ContentChunks []map[string]any `json:"-"`
+	Role          string           `json:"role"`
+	Content       string           `json:"content,omitempty"`
+	ToolCalls     []ToolCall       `json:"tool_calls,omitempty"`
+	ToolCallID    string           `json:"tool_call_id,omitempty"` // For tool role messages
+	Name          string           `json:"name,omitempty"`         // For function/tool messages
 }
 
 // SystemMessage creates a system message

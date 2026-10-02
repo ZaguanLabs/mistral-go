@@ -75,28 +75,28 @@ type ExportDefinition struct {
 type PipelineConfigDefinition = any
 
 type CreatePipelineConfigRequest struct {
-	PipelineKind PipelineKind               `json:"pipeline_kind"`
-	Selectors    []PipelineConfigSelector   `json:"selectors"`
-	Definitions  []PipelineConfigDefinition `json:"definitions"`
-	// Deprecated: use Definitions. A single legacy value is converted on requests.
-	Definition  PipelineConfigDefinition `json:"-"`
-	Name        string                   `json:"name"`
-	Description *string                  `json:"description,omitempty"`
-	Slug        *string                  `json:"-"`
-	Group       *string                  `json:"-"`
-	Enabled     *bool                    `json:"enabled,omitempty"`
+	PipelineKind PipelineKind             `json:"pipeline_kind"`
+	Selectors    []PipelineConfigSelector `json:"selectors"`
+	// Deprecated: set Definition; a single-element list is accepted for migration.
+	Definitions []PipelineConfigDefinition `json:"definitions,omitempty"`
+	Definition  PipelineConfigDefinition   `json:"definition"`
+	Name        string                     `json:"name"`
+	Description *string                    `json:"description,omitempty"`
+	Slug        *string                    `json:"-"`
+	Group       *string                    `json:"-"`
+	Enabled     *bool                      `json:"enabled,omitempty"`
 }
 type UpdatePipelineConfigRequest struct {
-	PipelineKind PipelineKind               `json:"pipeline_kind"`
-	Selectors    []PipelineConfigSelector   `json:"selectors"`
-	Definitions  []PipelineConfigDefinition `json:"definitions"`
-	// Deprecated: use Definitions. A single legacy value is converted on requests.
-	Definition  PipelineConfigDefinition `json:"-"`
-	Name        string                   `json:"name"`
-	Enabled     bool                     `json:"enabled"`
-	Description *string                  `json:"description,omitempty"`
-	Slug        *string                  `json:"-"`
-	Group       *string                  `json:"-"`
+	PipelineKind PipelineKind             `json:"pipeline_kind"`
+	Selectors    []PipelineConfigSelector `json:"selectors"`
+	// Deprecated: set Definition; a single-element list is accepted for migration.
+	Definitions []PipelineConfigDefinition `json:"definitions,omitempty"`
+	Definition  PipelineConfigDefinition   `json:"definition"`
+	Name        string                     `json:"name"`
+	Enabled     bool                       `json:"enabled"`
+	Description *string                    `json:"description,omitempty"`
+	Slug        *string                    `json:"-"`
+	Group       *string                    `json:"-"`
 }
 type PipelineConfig struct {
 	ID             string                     `json:"id"`
@@ -110,12 +110,11 @@ type PipelineConfig struct {
 	Selectors      []PipelineConfigSelector   `json:"selectors"`
 	Enabled        bool                       `json:"enabled"`
 	DefinitionHash string                     `json:"-"`
-	Definitions    []PipelineConfigDefinition `json:"definitions"`
-	// Deprecated: use Definitions. A single legacy value is converted on requests.
-	Definition  PipelineConfigDefinition `json:"-"`
-	Description *string                  `json:"description,omitempty"`
-	Slug        *string                  `json:"-"`
-	Group       *string                  `json:"-"`
+	Definitions    []PipelineConfigDefinition `json:"definitions,omitempty"`
+	Definition     PipelineConfigDefinition   `json:"definition"`
+	Description    *string                    `json:"description,omitempty"`
+	Slug           *string                    `json:"-"`
+	Group          *string                    `json:"-"`
 }
 type PaginatedResultPipelineConfig struct {
 	Count    int              `json:"count"`
@@ -187,21 +186,23 @@ func (v ModerationDefinition) MarshalJSON() ([]byte, error) {
 
 func (v CreatePipelineConfigRequest) MarshalJSON() ([]byte, error) {
 	type wire CreatePipelineConfigRequest
-	if v.Definitions == nil {
-		v.Definitions = []PipelineConfigDefinition{}
-		if v.Definition != nil {
-			v.Definitions = append(v.Definitions, v.Definition)
+	if v.Definition == nil {
+		if len(v.Definitions) != 1 {
+			return nil, fmt.Errorf("pipeline config requires one definition; use CreatePipeline for multiple judges")
 		}
+		v.Definition = v.Definitions[0]
 	}
+	v.Definitions = nil
 	return json.Marshal(wire(v))
 }
 func (v UpdatePipelineConfigRequest) MarshalJSON() ([]byte, error) {
 	type wire UpdatePipelineConfigRequest
-	if v.Definitions == nil {
-		v.Definitions = []PipelineConfigDefinition{}
-		if v.Definition != nil {
-			v.Definitions = append(v.Definitions, v.Definition)
+	if v.Definition == nil {
+		if len(v.Definitions) != 1 {
+			return nil, fmt.Errorf("pipeline config requires one definition; use UpdatePipeline for multiple judges")
 		}
+		v.Definition = v.Definitions[0]
 	}
+	v.Definitions = nil
 	return json.Marshal(wire(v))
 }

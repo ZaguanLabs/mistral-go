@@ -15,10 +15,13 @@ type DeploymentK8sBackendSpec struct {
 	Entrypoint *string `json:"entrypoint,omitempty"`
 	WorkingDir *string `json:"working_dir,omitempty"`
 }
+
+// Deprecated: use DeploymentMistralCloudBackendSpec.
 type DeploymentKoyebBackendSpec struct {
-	Type           string  `json:"type"`
-	BuildDirectory *string `json:"build_directory,omitempty"`
-	DockerfilePath *string `json:"dockerfile_path,omitempty"`
+	Secrets        []DeploymentSecretBinding `json:"secrets,omitempty"`
+	Type           string                    `json:"type"`
+	BuildDirectory *string                   `json:"build_directory,omitempty"`
+	DockerfilePath *string                   `json:"dockerfile_path,omitempty"`
 }
 
 func (v DeploymentK8sBackendSpec) MarshalJSON() ([]byte, error) {
@@ -32,8 +35,9 @@ func (v DeploymentKoyebBackendSpec) MarshalJSON() ([]byte, error) {
 	return json.Marshal(wire(v))
 }
 
-// UsageInfoDollarDefs is the dollar-usage variant. Unlike UsageInfo it has no service_tier.
+// UsageInfoDollarDefs is the dollar-usage variant.
 type UsageInfoDollarDefs struct {
+	ServiceTier             *string        `json:"service_tier,omitempty"`
 	PromptTokens            int            `json:"prompt_tokens"`
 	TotalTokens             int            `json:"total_tokens"`
 	CompletionTokens        *int           `json:"completion_tokens,omitempty"`

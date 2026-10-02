@@ -102,6 +102,9 @@ func (c *MistralClient) Chat(model string, messages []ChatMessage, params *ChatR
 	if params == nil {
 		params = NewChatRequestParams()
 	}
+	if err := validateCompletionTools(params.Tools); err != nil {
+		return nil, err
+	}
 
 	requestData := map[string]interface{}{
 		"model":    model,
@@ -196,6 +199,9 @@ func (c *MistralClient) Chat(model string, messages []ChatMessage, params *ChatR
 func (c *MistralClient) ChatStream(model string, messages []ChatMessage, params *ChatRequestParams) (<-chan ChatCompletionStreamResponse, error) {
 	if params == nil {
 		params = NewChatRequestParams()
+	}
+	if err := validateCompletionTools(params.Tools); err != nil {
+		return nil, err
 	}
 
 	var responseChannel <-chan ChatCompletionStreamResponse

@@ -142,6 +142,12 @@ func (c *MistralClient) doRequest(req *http.Request) (*http.Response, error) {
 	if c.ctx != nil {
 		req = req.Clone(c.ctx)
 	}
+	if err := c.authorizeRequest(req); err != nil {
+		if req.Body != nil {
+			req.Body.Close()
+		}
+		return nil, err
+	}
 	attempts := c.maxRetries
 	if attempts < 1 {
 		attempts = 1

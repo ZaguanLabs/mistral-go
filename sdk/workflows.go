@@ -120,13 +120,14 @@ type TriggerScheduleRequest struct {
 }
 
 type DeploymentLogsParams struct {
-	WorkerName   *string    `json:"worker_name,omitempty"`
-	WorkflowName *string    `json:"workflow_name,omitempty"`
-	After        *time.Time `json:"after,omitempty"`
-	Before       *time.Time `json:"before,omitempty"`
-	Order        *Order     `json:"order,omitempty"`
-	Cursor       *string    `json:"cursor,omitempty"`
-	Limit        *int       `json:"limit,omitempty"`
+	LogType      *DeploymentLogType `json:"log_type,omitempty"`
+	WorkerName   *string            `json:"worker_name,omitempty"`
+	WorkflowName *string            `json:"workflow_name,omitempty"`
+	After        *time.Time         `json:"after,omitempty"`
+	Before       *time.Time         `json:"before,omitempty"`
+	Order        *Order             `json:"order,omitempty"`
+	Cursor       *string            `json:"cursor,omitempty"`
+	Limit        *int               `json:"limit,omitempty"`
 }
 
 type DeploymentLogsStreamParams struct {
@@ -137,6 +138,7 @@ type DeploymentLogsStreamParams struct {
 }
 
 type ListWorkflowDeploymentsParams struct {
+	Owner         *string
 	CreatedBy     *string
 	LocationTypes []string
 	ActiveOnly    *bool
@@ -154,8 +156,10 @@ type DeploymentWorkerSpec struct {
 	BackendSpec any     `json:"backend_spec,omitempty"`
 	GitHubURL   string  `json:"github_url,omitempty"`
 	Revision    *string `json:"revision,omitempty"`
-	Entrypoint  *string `json:"entrypoint,omitempty"`
-	WorkingDir  *string `json:"working_dir,omitempty"`
+	// Deprecated: removed upstream; configure the backend build instead.
+	Entrypoint *string `json:"-"`
+	// Deprecated: use BackendSpec.BuildDirectory.
+	WorkingDir *string `json:"-"`
 }
 
 type GitCommitAuthor struct {
@@ -172,23 +176,27 @@ type GitCommitMetadata struct {
 }
 
 type DeploymentWorkerSpecResponse struct {
-	BackendSpec any                `json:"backend_spec"`
-	GitHubURL   string             `json:"github_url"`
-	Type        *string            `json:"type,omitempty"`
-	Revision    *string            `json:"revision,omitempty"`
-	Entrypoint  *string            `json:"entrypoint"`
-	WorkingDir  *string            `json:"working_dir"`
-	RestartedAt *string            `json:"restarted_at,omitempty"`
-	CommitSHA   *string            `json:"commit_sha"`
-	Commit      *GitCommitMetadata `json:"commit,omitempty"`
+	BackendSpec any     `json:"backend_spec"`
+	GitHubURL   string  `json:"github_url"`
+	Type        *string `json:"type,omitempty"`
+	Revision    *string `json:"revision,omitempty"`
+	// Deprecated: removed upstream; configure the backend build instead.
+	Entrypoint *string `json:"-"`
+	// Deprecated: use BackendSpec.BuildDirectory.
+	WorkingDir  *string `json:"-"`
+	RestartedAt *string `json:"restarted_at,omitempty"`
+	// Deprecated: use Commit.SHA.
+	CommitSHA *string            `json:"-"`
+	Commit    *GitCommitMetadata `json:"commit,omitempty"`
 }
 
 type DeploymentResourceConfig struct {
-	Replicas      *int    `json:"replicas,omitempty"`
-	CPURequest    *string `json:"cpu_request,omitempty"`
-	CPULimit      *string `json:"cpu_limit,omitempty"`
-	MemoryRequest *string `json:"memory_request,omitempty"`
-	MemoryLimit   *string `json:"memory_limit,omitempty"`
+	Replicas *int `json:"replicas,omitempty"`
+	// Deprecated: CPU and memory resource fields are no longer serialized.
+	CPURequest    *string `json:"-"`
+	CPULimit      *string `json:"-"`
+	MemoryRequest *string `json:"-"`
+	MemoryLimit   *string `json:"-"`
 }
 
 type CreateWorkflowDeploymentRequest struct {
@@ -388,7 +396,7 @@ func (c *MistralClient) ListWorkflowDeploymentsWithParams(params *ListWorkflowDe
 	}
 	query := queryWithOptionalValues(map[string]any{
 		"active_only": params.ActiveOnly, "is_hardened": params.IsHardened,
-		"created_by": params.CreatedBy, "location_types": params.LocationTypes,
+		"created_by": params.CreatedBy, "location_types": params.LocationTypes, "owner": params.Owner,
 		"workflow_name": params.WorkflowName, "search": params.Search,
 		"order_by": params.OrderBy, "order": params.Order, "limit": params.Limit,
 		"cursor": params.Cursor, "workspace_id": params.WorkspaceID,
@@ -448,6 +456,7 @@ func (c *MistralClient) GetWorkflowDeploymentLogs(name string, params *Deploymen
 		params = &DeploymentLogsParams{}
 	}
 	query := queryWithOptionalValues(map[string]any{
+		"log_type":      enumString(params.LogType),
 		"worker_name":   params.WorkerName,
 		"workflow_name": params.WorkflowName,
 		"after":         params.After,

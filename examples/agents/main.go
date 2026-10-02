@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/ZaguanLabs/mistral-go/v2/sdk"
+	"github.com/ZaguanLabs/mistral-go/v3/sdk"
 )
 
 func main() {
