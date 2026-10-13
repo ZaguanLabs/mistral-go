@@ -11,10 +11,10 @@ import (
 type PipelineKind string
 
 const (
-	PipelineKindDetection  PipelineKind = "detection"
-	PipelineKindModeration PipelineKind = "moderation"
-	PipelineKindJudge      PipelineKind = "judge"
-	PipelineKindExport     PipelineKind = "export"
+	PipelineKindDetection  PipelineKind = "detection-v1"
+	PipelineKindModeration PipelineKind = "moderation-v1"
+	PipelineKindJudge      PipelineKind = "judge-v1"
+	PipelineKindExport     PipelineKind = "export-v1"
 )
 
 type SourceKind string
@@ -51,8 +51,9 @@ type ModerationDefinition struct {
 	TargetAttributes []string `json:"target_attributes,omitempty"`
 }
 type JudgeDefinition struct {
-	Slug    string            `json:"slug"`
-	Mapping map[string]string `json:"mapping,omitempty"`
+	Slug     string                 `json:"slug"`
+	Mapping  map[string]string      `json:"mapping,omitempty"`
+	Sampling PipelineConfigSampling `json:"sampling,omitempty"`
 	// Deprecated: upstream judges now use Slug and Mapping.
 	Model  string `json:"-"`
 	Prompt string `json:"-"`
@@ -113,8 +114,9 @@ type PipelineConfig struct {
 	Definitions    []PipelineConfigDefinition `json:"definitions,omitempty"`
 	Definition     PipelineConfigDefinition   `json:"definition"`
 	Description    *string                    `json:"description,omitempty"`
-	Slug           *string                    `json:"-"`
+	Slug           *string                    `json:"slug,omitempty"`
 	Group          *string                    `json:"-"`
+	Sampling       PipelineConfigSampling     `json:"sampling,omitempty"`
 }
 type PaginatedResultPipelineConfig struct {
 	Count    int              `json:"count"`
@@ -134,6 +136,7 @@ type ListPipelineConfigsParams struct {
 	Q            *string
 }
 
+// Deprecated: removed from Python 3.2.0; use the pipeline APIs.
 func (c *MistralClient) CreatePipelineConfig(req *CreatePipelineConfigRequest) (*PipelineConfig, error) {
 	if req == nil {
 		return nil, fmt.Errorf("request cannot be nil")
@@ -145,6 +148,8 @@ func (c *MistralClient) CreatePipelineConfig(req *CreatePipelineConfigRequest) (
 	}
 	return requestTyped[PipelineConfig](c, http.MethodPost, &copy, "v1/observability/pipeline-configs")
 }
+
+// Deprecated: removed from Python 3.2.0; use the pipeline APIs.
 func (c *MistralClient) ListPipelineConfigs(params *ListPipelineConfigsParams) (*PipelineConfigsResponse, error) {
 	if params == nil {
 		params = &ListPipelineConfigsParams{}
@@ -162,15 +167,21 @@ func (c *MistralClient) ListPipelineConfigs(params *ListPipelineConfigsParams) (
 	}
 	return requestTyped[PipelineConfigsResponse](c, http.MethodGet, nil, appendQuery("v1/observability/pipeline-configs", queryWithOptionalValues(values)))
 }
+
+// Deprecated: removed from Python 3.2.0; use the pipeline APIs.
 func (c *MistralClient) GetPipelineConfig(id string) (*PipelineConfig, error) {
 	return requestTyped[PipelineConfig](c, http.MethodGet, nil, "v1/observability/pipeline-configs/"+url.PathEscape(id))
 }
+
+// Deprecated: removed from Python 3.2.0; use the pipeline APIs.
 func (c *MistralClient) UpdatePipelineConfig(id string, req *UpdatePipelineConfigRequest) (*PipelineConfig, error) {
 	if req == nil {
 		return nil, fmt.Errorf("request cannot be nil")
 	}
 	return requestTyped[PipelineConfig](c, http.MethodPut, req, "v1/observability/pipeline-configs/"+url.PathEscape(id))
 }
+
+// Deprecated: removed from Python 3.2.0; use the pipeline APIs.
 func (c *MistralClient) DeletePipelineConfig(id string) error {
 	_, err := c.request(http.MethodDelete, nil, "v1/observability/pipeline-configs/"+url.PathEscape(id), false, nil)
 	return err

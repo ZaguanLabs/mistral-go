@@ -111,7 +111,7 @@ type ExtendedOAuthServerMetadata struct {
 
 type AuthenticationMethodCreateOrUpdateRequest struct {
 	MethodType            ConnectorAuthenticationMethodType `json:"method_type"`
-	AuthDirection         *AuthDirection                    `json:"auth_direction,omitempty"`
+	AuthDirection         *AuthDirection                    `json:"-"`
 	Headers               []ConnectorAuthenticationHeader   `json:"headers,omitempty"`
 	GlobalHeaders         map[string]GlobalHeaderValue      `json:"global_headers,omitempty"`
 	OAuth2MetadataSecrets *OAuth2MetadataSecrets            `json:"oauth2_metadata_secrets,omitempty"`

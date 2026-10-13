@@ -177,12 +177,14 @@ type CreatePipelineRequest struct {
 	Description *string                  `json:"description,omitempty"`
 	Enabled     *bool                    `json:"enabled,omitempty"`
 }
+
+// UpdatePipelineRequest updates only supplied fields; pointer booleans preserve false.
 type UpdatePipelineRequest struct {
-	Name        string                   `json:"name"`
-	Selectors   []PipelineConfigSelector `json:"selectors"`
-	Definitions []JudgeDefinition        `json:"definitions"`
-	Enabled     bool                     `json:"enabled"`
-	Description *string                  `json:"description,omitempty"`
+	Name        *string                   `json:"name,omitempty"`
+	Selectors   *[]PipelineConfigSelector `json:"selectors,omitempty"`
+	Definitions *[]JudgeDefinition        `json:"definitions,omitempty"`
+	Enabled     *bool                     `json:"enabled,omitempty"`
+	Description *string                   `json:"description,omitempty"`
 }
 type Pipeline struct {
 	ID              string                   `json:"id"`

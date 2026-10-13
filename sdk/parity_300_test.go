@@ -32,7 +32,7 @@ func TestPython300Endpoints(t *testing.T) {
 		}},
 		{name: "get pipeline", method: "GET", path: "/v1/observability/pipelines/a%2Fb", call: func(c *MistralClient) error { _, e := c.GetPipeline("a/b"); return e }},
 		{name: "update pipeline", method: "PUT", path: "/v1/observability/pipelines/id", body: map[string]any{"name": "eval", "selectors": []any{}, "definitions": []any{}, "enabled": false}, call: func(c *MistralClient) error {
-			_, e := c.UpdatePipeline("id", &UpdatePipelineRequest{Name: "eval", Selectors: []PipelineConfigSelector{}, Definitions: []JudgeDefinition{}})
+			_, e := c.UpdatePipeline("id", &UpdatePipelineRequest{Name: StringPtr("eval"), Selectors: slicePointer([]PipelineConfigSelector{}), Definitions: slicePointer([]JudgeDefinition{}), Enabled: &disabled})
 			return e
 		}},
 		{name: "delete pipeline", method: "DELETE", path: "/v1/observability/pipelines/id", response: "204", call: func(c *MistralClient) error { return c.DeletePipeline("id") }},
@@ -181,3 +181,5 @@ func TestPython300ModelsAndStructuredContent(t *testing.T) {
 		}
 	}
 }
+
+func slicePointer[T any](v []T) *[]T { return &v }

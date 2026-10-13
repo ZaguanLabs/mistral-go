@@ -8,6 +8,14 @@ import (
 
 // AgentCompletionRequest represents a request for agent completion
 type AgentCompletionRequest struct {
+	MinTokens         *int     `json:"min_tokens,omitempty"`
+	RepetitionPenalty *float64 `json:"repetition_penalty,omitempty"`
+	TopK              *int     `json:"top_k,omitempty"`
+	Logprobs          *bool    `json:"logprobs,omitempty"`
+	TopLogprobs       *int     `json:"top_logprobs,omitempty"`
+	PromptLogprobs    *bool    `json:"prompt_logprobs,omitempty"`
+	TopPromptLogprobs *int     `json:"top_prompt_logprobs,omitempty"`
+
 	AgentID           string                `json:"agent_id"`
 	Messages          []ChatMessage         `json:"messages"`
 	MaxTokens         *int                  `json:"max_tokens,omitempty"`
@@ -90,6 +98,27 @@ func (c *MistralClient) AgentComplete(agentID string, messages []ChatMessage, pa
 	}
 	if params.PresencePenalty != nil {
 		reqMap["presence_penalty"] = params.PresencePenalty
+	}
+	if params.MinTokens != nil {
+		reqMap["min_tokens"] = *params.MinTokens
+	}
+	if params.RepetitionPenalty != nil {
+		reqMap["repetition_penalty"] = *params.RepetitionPenalty
+	}
+	if params.TopK != nil {
+		reqMap["top_k"] = *params.TopK
+	}
+	if params.Logprobs != nil {
+		reqMap["logprobs"] = *params.Logprobs
+	}
+	if params.TopLogprobs != nil {
+		reqMap["top_logprobs"] = *params.TopLogprobs
+	}
+	if params.PromptLogprobs != nil {
+		reqMap["prompt_logprobs"] = *params.PromptLogprobs
+	}
+	if params.TopPromptLogprobs != nil {
+		reqMap["top_prompt_logprobs"] = *params.TopPromptLogprobs
 	}
 	if params.FrequencyPenalty != nil {
 		reqMap["frequency_penalty"] = params.FrequencyPenalty
@@ -193,6 +222,27 @@ func (c *MistralClient) AgentCompleteStream(agentID string, messages []ChatMessa
 	}
 	if params.PresencePenalty != nil {
 		reqMap["presence_penalty"] = params.PresencePenalty
+	}
+	if params.MinTokens != nil {
+		reqMap["min_tokens"] = *params.MinTokens
+	}
+	if params.RepetitionPenalty != nil {
+		reqMap["repetition_penalty"] = *params.RepetitionPenalty
+	}
+	if params.TopK != nil {
+		reqMap["top_k"] = *params.TopK
+	}
+	if params.Logprobs != nil {
+		reqMap["logprobs"] = *params.Logprobs
+	}
+	if params.TopLogprobs != nil {
+		reqMap["top_logprobs"] = *params.TopLogprobs
+	}
+	if params.PromptLogprobs != nil {
+		reqMap["prompt_logprobs"] = *params.PromptLogprobs
+	}
+	if params.TopPromptLogprobs != nil {
+		reqMap["top_prompt_logprobs"] = *params.TopPromptLogprobs
 	}
 	if params.FrequencyPenalty != nil {
 		reqMap["frequency_penalty"] = params.FrequencyPenalty

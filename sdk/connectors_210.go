@@ -132,7 +132,7 @@ type Connector struct {
 	Mistral               bool                         `json:"mistral,omitempty"`
 	IsAuthenticated       *bool                        `json:"is_authenticated,omitempty"`
 	Tools                 []map[string]any             `json:"tools,omitempty"`
-	SystemPromptRoute     *string                      `json:"system_prompt_route,omitempty"`
+	SystemPromptRoute     *string                      `json:"-"`
 	ConnectionConfig      map[string]any               `json:"connection_config,omitempty"`
 	ExecutionEnv          map[string]any               `json:"execution_env,omitempty"`
 	Raw                   json.RawMessage              `json:"-"`

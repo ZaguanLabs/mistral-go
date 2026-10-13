@@ -15,9 +15,10 @@ import (
 type FilePurpose string
 
 const (
-	FilePurposeFineTune   FilePurpose = "fine-tune"
-	FilePurposeBatch      FilePurpose = "batch"
-	FilePurposeAssistants FilePurpose = "assistants"
+	FilePurposeFineTune      FilePurpose = "fine-tune"
+	FilePurposeAgenticSafety FilePurpose = "agentic_safety"
+	FilePurposeBatch         FilePurpose = "batch"
+	FilePurposeAssistants    FilePurpose = "assistants"
 )
 
 // SampleType represents the type of sample in a file

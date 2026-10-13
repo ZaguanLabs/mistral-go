@@ -9,6 +9,14 @@ import (
 
 // ChatRequestParams represents the parameters for the Chat/ChatStream method of MistralClient.
 type ChatRequestParams struct {
+	MinTokens         *int     `json:"min_tokens,omitempty"`
+	RepetitionPenalty *float64 `json:"repetition_penalty,omitempty"`
+	TopK              *int     `json:"top_k,omitempty"`
+	Logprobs          *bool    `json:"logprobs,omitempty"`
+	TopLogprobs       *int     `json:"top_logprobs,omitempty"`
+	PromptLogprobs    *bool    `json:"prompt_logprobs,omitempty"`
+	TopPromptLogprobs *int     `json:"top_prompt_logprobs,omitempty"`
+
 	// Sampling parameters
 	Temperature *float64 `json:"temperature,omitempty"` // The temperature to use for sampling, between 0.0 and 0.7. Higher values make output more random.
 	TopP        *float64 `json:"top_p,omitempty"`       // Nucleus sampling parameter. We recommend altering this or Temperature but not both.
@@ -16,7 +24,6 @@ type ChatRequestParams struct {
 
 	// Token limits
 	MaxTokens *int `json:"max_tokens,omitempty"` // Maximum tokens to generate
-	MinTokens *int `json:"min_tokens,omitempty"` // Minimum tokens to generate (for FIM)
 
 	// Stop sequences
 	Stop any `json:"stop,omitempty"` // Stop generation if this token, or one of these tokens, is detected
@@ -56,16 +63,21 @@ func NewChatRequestParams() *ChatRequestParams {
 
 // ChatCompletionResponseChoice represents a choice in the chat completion response.
 type ChatCompletionResponseChoice struct {
-	Index        int          `json:"index"`
-	Message      ChatMessage  `json:"message"`
-	FinishReason FinishReason `json:"finish_reason,omitempty"`
+	PromptLogprobs *ChatCompletionResponseChoiceLogprobs `json:"prompt_logprobs,omitempty"`
+	Messages       []DeltaMessage                        `json:"messages,omitempty"`
+	Logprobs       *ChatCompletionResponseChoiceLogprobs `json:"logprobs,omitempty"`
+	Index          int                                   `json:"index"`
+	Message        ChatMessage                           `json:"message"`
+	FinishReason   FinishReason                          `json:"finish_reason,omitempty"`
 }
 
 // ChatCompletionResponseChoice represents a choice in the chat completion response.
 type ChatCompletionResponseChoiceStream struct {
-	Index        int          `json:"index"`
-	Delta        DeltaMessage `json:"delta"`
-	FinishReason FinishReason `json:"finish_reason,omitempty"`
+	PromptLogprobs *ChatCompletionResponseChoiceLogprobs `json:"prompt_logprobs,omitempty"`
+	Logprobs       *ChatCompletionResponseChoiceLogprobs `json:"logprobs,omitempty"`
+	Index          int                                   `json:"index"`
+	Delta          DeltaMessage                          `json:"delta"`
+	FinishReason   FinishReason                          `json:"finish_reason,omitempty"`
 }
 
 // ChatCompletionResponse represents the response from the chat completion endpoint.
@@ -138,6 +150,27 @@ func (c *MistralClient) Chat(model string, messages []ChatMessage, params *ChatR
 	}
 	if params.PresencePenalty != nil {
 		requestData["presence_penalty"] = *params.PresencePenalty
+	}
+	if params.MinTokens != nil {
+		requestData["min_tokens"] = *params.MinTokens
+	}
+	if params.RepetitionPenalty != nil {
+		requestData["repetition_penalty"] = *params.RepetitionPenalty
+	}
+	if params.TopK != nil {
+		requestData["top_k"] = *params.TopK
+	}
+	if params.Logprobs != nil {
+		requestData["logprobs"] = *params.Logprobs
+	}
+	if params.TopLogprobs != nil {
+		requestData["top_logprobs"] = *params.TopLogprobs
+	}
+	if params.PromptLogprobs != nil {
+		requestData["prompt_logprobs"] = *params.PromptLogprobs
+	}
+	if params.TopPromptLogprobs != nil {
+		requestData["top_prompt_logprobs"] = *params.TopPromptLogprobs
 	}
 	if params.FrequencyPenalty != nil {
 		requestData["frequency_penalty"] = *params.FrequencyPenalty
@@ -239,6 +272,27 @@ func (c *MistralClient) ChatStream(model string, messages []ChatMessage, params 
 	}
 	if params.PresencePenalty != nil {
 		requestData["presence_penalty"] = *params.PresencePenalty
+	}
+	if params.MinTokens != nil {
+		requestData["min_tokens"] = *params.MinTokens
+	}
+	if params.RepetitionPenalty != nil {
+		requestData["repetition_penalty"] = *params.RepetitionPenalty
+	}
+	if params.TopK != nil {
+		requestData["top_k"] = *params.TopK
+	}
+	if params.Logprobs != nil {
+		requestData["logprobs"] = *params.Logprobs
+	}
+	if params.TopLogprobs != nil {
+		requestData["top_logprobs"] = *params.TopLogprobs
+	}
+	if params.PromptLogprobs != nil {
+		requestData["prompt_logprobs"] = *params.PromptLogprobs
+	}
+	if params.TopPromptLogprobs != nil {
+		requestData["top_prompt_logprobs"] = *params.TopPromptLogprobs
 	}
 	if params.FrequencyPenalty != nil {
 		requestData["frequency_penalty"] = *params.FrequencyPenalty

@@ -1,5 +1,12 @@
 # Changelog
 
+## 3.2.0 - 2026-10-13
+
+- Align with official Python SDK 3.2.0: evaluation projects, v2 runs/records/statistics, optimizations, pipeline-result search and whoami.
+- Add chat sampling/logprob controls, speech phoneme hints, resource content chunks and voice-kind metadata.
+- Add typed evaluation/filter/statistics schemas and pipeline sampling definitions.
+- Send partial pipeline updates and versioned pipeline kinds; stop serializing removed connector fields.
+
 ## 3.0.0 - 2026-10-02
 
 - Align with official Python SDK 3.0.0; migrate module imports to `/v3` and minimum Go version to 1.25.

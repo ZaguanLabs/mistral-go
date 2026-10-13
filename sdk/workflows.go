@@ -24,6 +24,7 @@ type ListWorkflowsParams struct {
 }
 
 type ListWorkflowRegistrationsParams struct {
+	WorkflowName             *string `json:"workflow_name,omitempty"`
 	WorkflowID               *string `json:"workflow_id,omitempty"`
 	TaskQueue                *string `json:"task_queue,omitempty"`
 	ActiveOnly               *bool   `json:"active_only,omitempty"`
@@ -263,6 +264,7 @@ func (c *MistralClient) GetWorkflowRegistrations(params *ListWorkflowRegistratio
 		"task_queue":                  params.TaskQueue,
 		"active_only":                 params.ActiveOnly,
 		"include_shared":              params.IncludeShared,
+		"workflow_name":               params.WorkflowName,
 		"workflow_search":             params.WorkflowSearch,
 		"archived":                    params.Archived,
 		"with_workflow":               params.WithWorkflow,

@@ -16,14 +16,15 @@ const (
 )
 
 type SpeechRequest struct {
-	Input          string             `json:"input"`
-	Model          *string            `json:"model,omitempty"`
-	Metadata       map[string]any     `json:"metadata,omitempty"`
-	Stream         *bool              `json:"stream,omitempty"`
-	PromptCacheKey *string            `json:"prompt_cache_key,omitempty"`
-	VoiceID        *string            `json:"voice_id,omitempty"`
-	RefAudio       *string            `json:"ref_audio,omitempty"`
-	ResponseFormat SpeechOutputFormat `json:"response_format,omitempty"`
+	PhonemeHints   map[string][]IPAPhoneme `json:"phoneme_hints,omitempty"`
+	Input          string                  `json:"input"`
+	Model          *string                 `json:"model,omitempty"`
+	Metadata       map[string]any          `json:"metadata,omitempty"`
+	Stream         *bool                   `json:"stream,omitempty"`
+	PromptCacheKey *string                 `json:"prompt_cache_key,omitempty"`
+	VoiceID        *string                 `json:"voice_id,omitempty"`
+	RefAudio       *string                 `json:"ref_audio,omitempty"`
+	ResponseFormat SpeechOutputFormat      `json:"response_format,omitempty"`
 }
 
 type SpeechResponse struct {
@@ -40,6 +41,7 @@ const (
 )
 
 type Voice struct {
+	Kind            *VoiceKind     `json:"kind,omitempty"`
 	ID              string         `json:"id,omitempty"`
 	Name            string         `json:"name,omitempty"`
 	Slug            string         `json:"slug,omitempty"`
@@ -106,6 +108,9 @@ func (c *MistralClient) Speech(req *SpeechRequest) (*SpeechResponse, error) {
 		"ref_audio":        req.RefAudio,
 		"response_format":  req.ResponseFormat,
 	})
+	if req.PhonemeHints != nil {
+		body["phoneme_hints"] = req.PhonemeHints
+	}
 	response, err := c.requestMap(http.MethodPost, body, "v1/audio/speech")
 	if err != nil {
 		return nil, err
@@ -133,6 +138,9 @@ func (c *MistralClient) SpeechStream(req *SpeechRequest) (<-chan StreamEvent, er
 		"ref_audio":        req.RefAudio,
 		"response_format":  req.ResponseFormat,
 	})
+	if req.PhonemeHints != nil {
+		body["phoneme_hints"] = req.PhonemeHints
+	}
 	response, err := c.request(http.MethodPost, body, "v1/audio/speech", true, nil)
 	if err != nil {
 		return nil, err
