@@ -28,12 +28,24 @@ type AudioFormat struct {
 }
 
 type RealtimeTranscriptionConnectParams struct {
+	Diarize           *bool                `json:"diarize,omitempty"`
+	ContextBias       []string             `json:"context_bias,omitempty"`
+	Language          *string              `json:"language,omitempty"`
+	SpeakerReferences map[string]string    `json:"speaker_references,omitempty"`
+	TurnDetection     *TurnDetectionConfig `json:"turn_detection,omitempty"`
+
 	AudioFormat            *AudioFormat `json:"audio_format,omitempty"`
 	TargetStreamingDelayMS *int         `json:"target_streaming_delay_ms,omitempty"`
 	Headers                http.Header  `json:"-"`
 }
 
 type RealtimeTranscriptionSession struct {
+	Diarize           *bool                `json:"diarize,omitempty"`
+	ContextBias       []string             `json:"context_bias,omitempty"`
+	Language          *string              `json:"language,omitempty"`
+	SpeakerReferences []string             `json:"speaker_references,omitempty"`
+	TurnDetection     *TurnDetectionConfig `json:"turn_detection,omitempty"`
+
 	RequestID              string      `json:"request_id"`
 	Model                  string      `json:"model"`
 	AudioFormat            AudioFormat `json:"audio_format"`
@@ -122,8 +134,8 @@ func (c *MistralClient) RealtimeTranscriptionConnect(ctx context.Context, model 
 		initial: initial,
 	}
 
-	if params != nil && (params.AudioFormat != nil || params.TargetStreamingDelayMS != nil) {
-		if err := realtime.UpdateSession(ctx, params.AudioFormat, params.TargetStreamingDelayMS); err != nil {
+	if params != nil && (params.AudioFormat != nil || params.TargetStreamingDelayMS != nil || params.Diarize != nil || params.ContextBias != nil || params.Language != nil || params.SpeakerReferences != nil || params.TurnDetection != nil) {
+		if err := realtime.UpdateSessionWithParams(ctx, &RealtimeTranscriptionSessionUpdatePayload{AudioFormat: params.AudioFormat, TargetStreamingDelayMs: params.TargetStreamingDelayMS, Diarize: params.Diarize, ContextBias: params.ContextBias, Language: params.Language, SpeakerReferences: params.SpeakerReferences, TurnDetection: params.TurnDetection}); err != nil {
 			_ = realtime.Close(websocket.StatusInternalError, "session update failed")
 			return nil, err
 		}
@@ -390,4 +402,14 @@ func realtimeErrorMessage(event RealtimeTranscriptionEvent) error {
 		}
 	}
 	return fmt.Errorf("realtime transcription error")
+}
+
+func (r *RealtimeConnection) UpdateSessionWithParams(ctx context.Context, payload *RealtimeTranscriptionSessionUpdatePayload) error {
+	if payload == nil {
+		return fmt.Errorf("session update is required")
+	}
+	if err := r.ensureOpen(); err != nil {
+		return err
+	}
+	return r.writeJSON(ctx, map[string]any{"type": "session.update", "session": payload})
 }

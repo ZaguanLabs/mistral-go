@@ -14,13 +14,13 @@ type ListManagedIndexesParams struct {
 	PageToken *string
 }
 
-func managedIndexPath(name string) string { return "v1/rag/managed_indexes/" + url.PathEscape(name) }
+func managedIndexPath(name string) string { return "v1/context/search-indexes/" + url.PathEscape(name) }
 
 func (c *MistralClient) CreateManagedIndex(req *CreateManagedIndexRequest) (*ManagedIndexResponse, error) {
 	if req == nil {
 		return nil, fmt.Errorf("request cannot be nil")
 	}
-	return requestTyped[ManagedIndexResponse](c, http.MethodPost, req, "v1/rag/managed_indexes")
+	return requestTyped[ManagedIndexResponse](c, http.MethodPost, req, "v1/context/search-indexes")
 }
 func (c *MistralClient) ListManagedIndexes(params *ListManagedIndexesParams) (*ListManagedIndexesResponse, error) {
 	if params == nil {
@@ -34,7 +34,7 @@ func (c *MistralClient) ListManagedIndexes(params *ListManagedIndexesParams) (*L
 		}
 		token = params.PageToken
 	}
-	return requestTyped[ListManagedIndexesResponse](c, http.MethodGet, nil, appendQuery("v1/rag/managed_indexes", queryWithOptionalValues(map[string]any{"page_size": size, "page_token": token, "name": params.Name, "status": enumString(params.Status), "creator_id": params.CreatorID})))
+	return requestTyped[ListManagedIndexesResponse](c, http.MethodGet, nil, appendQuery("v1/context/search-indexes", queryWithOptionalValues(map[string]any{"page_size": size, "page_token": token, "name": params.Name, "status": enumString(params.Status), "creator_id": params.CreatorID})))
 }
 func (c *MistralClient) GetManagedIndex(name string) (*ManagedIndexResponse, error) {
 	return requestTyped[ManagedIndexResponse](c, http.MethodGet, nil, managedIndexPath(name))

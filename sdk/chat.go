@@ -103,11 +103,12 @@ type ChatCompletionStreamResponse struct {
 
 // UsageInfo represents the usage information of a response.
 type UsageInfo struct {
-	PromptTokens       int     `json:"prompt_tokens"`
-	TotalTokens        int     `json:"total_tokens"`
-	CompletionTokens   int     `json:"completion_tokens,omitempty"`
-	PromptAudioSeconds *int    `json:"prompt_audio_seconds,omitempty"`
-	ServiceTier        *string `json:"service_tier,omitempty"`
+	CompletionTokensDetails *CompletionTokensDetails `json:"completion_tokens_details,omitempty"`
+	PromptTokens            int                      `json:"prompt_tokens"`
+	TotalTokens             int                      `json:"total_tokens"`
+	CompletionTokens        int                      `json:"completion_tokens,omitempty"`
+	PromptAudioSeconds      *int                     `json:"prompt_audio_seconds,omitempty"`
+	ServiceTier             *string                  `json:"service_tier,omitempty"`
 }
 
 func (c *MistralClient) Chat(model string, messages []ChatMessage, params *ChatRequestParams) (*ChatCompletionResponse, error) {

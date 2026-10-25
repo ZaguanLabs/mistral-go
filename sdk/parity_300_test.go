@@ -36,26 +36,26 @@ func TestPython300Endpoints(t *testing.T) {
 			return e
 		}},
 		{name: "delete pipeline", method: "DELETE", path: "/v1/observability/pipelines/id", response: "204", call: func(c *MistralClient) error { return c.DeletePipeline("id") }},
-		{name: "navigate", method: "POST", path: "/v1/rag/managed_indexes/index/navigate", body: map[string]any{"source_id": "src", "start_offset": float64(0), "end_offset": float64(4), "direction": "next", "top_k": float64(1), "content_type": "content"}, call: func(c *MistralClient) error {
+		{name: "navigate", method: "POST", path: "/v1/context/search-indexes/index/navigate", body: map[string]any{"source_id": "src", "start_offset": float64(0), "end_offset": float64(4), "direction": "next", "top_k": float64(1), "content_type": "content"}, call: func(c *MistralClient) error {
 			_, e := c.NavigateManagedIndex("index", &NavigateRequest{SourceID: "src", StartOffset: 0, EndOffset: 4, Direction: NavigationNext})
 			return e
 		}},
-		{name: "read", method: "POST", path: "/v1/rag/managed_indexes/index/read", body: map[string]any{"source_id": "src", "start_offset": float64(0), "top_k": float64(20), "content_type": "content"}, call: func(c *MistralClient) error {
+		{name: "read", method: "POST", path: "/v1/context/search-indexes/index/read", body: map[string]any{"source_id": "src", "start_offset": float64(0), "top_k": float64(20), "content_type": "content"}, call: func(c *MistralClient) error {
 			_, e := c.ReadManagedIndex("index", &ReadRequest{SourceID: "src", StartOffset: &zero})
 			return e
 		}},
-		{name: "grep", method: "POST", path: "/v1/rag/managed_indexes/index/grep", body: map[string]any{"source_id": "src", "pattern": "text", "top_k": float64(5), "content_type": "content"}, call: func(c *MistralClient) error {
+		{name: "grep", method: "POST", path: "/v1/context/search-indexes/index/grep", body: map[string]any{"source_id": "src", "pattern": "text", "top_k": float64(5), "content_type": "content"}, call: func(c *MistralClient) error {
 			_, e := c.GrepManagedIndex("index", &GrepRequest{SourceID: "src", Pattern: "text"})
 			return e
 		}},
-		{name: "chunk", method: "GET", path: "/v1/rag/managed_indexes/a%2Fb/chunks/c%2Fd", response: `{"id":"chunk","extension":42}`, call: func(c *MistralClient) error {
+		{name: "chunk", method: "GET", path: "/v1/context/search-indexes/a%2Fb/chunks/c%2Fd", response: `{"id":"chunk","extension":42}`, call: func(c *MistralClient) error {
 			v, e := c.GetManagedIndexChunk("a/b", "c/d")
 			if e == nil && string(v.Extra["extension"]) != "42" {
 				t.Error(v)
 			}
 			return e
 		}},
-		{name: "indexes", method: "GET", path: "/v1/rag/managed_indexes", query: map[string][]string{"page_size": {"20"}, "name": {"index"}, "status": {"ready"}, "creator_id": {"creator"}}, call: func(c *MistralClient) error {
+		{name: "indexes", method: "GET", path: "/v1/context/search-indexes", query: map[string][]string{"page_size": {"20"}, "name": {"index"}, "status": {"ready"}, "creator_id": {"creator"}}, call: func(c *MistralClient) error {
 			_, e := c.ListManagedIndexes(&ListManagedIndexesParams{Name: StringPtr("index"), Status: &status, CreatorID: StringPtr("creator")})
 			return e
 		}},

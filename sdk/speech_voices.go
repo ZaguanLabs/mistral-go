@@ -16,15 +16,17 @@ const (
 )
 
 type SpeechRequest struct {
-	PhonemeHints   map[string][]IPAPhoneme `json:"phoneme_hints,omitempty"`
-	Input          string                  `json:"input"`
-	Model          *string                 `json:"model,omitempty"`
-	Metadata       map[string]any          `json:"metadata,omitempty"`
-	Stream         *bool                   `json:"stream,omitempty"`
-	PromptCacheKey *string                 `json:"prompt_cache_key,omitempty"`
-	VoiceID        *string                 `json:"voice_id,omitempty"`
-	RefAudio       *string                 `json:"ref_audio,omitempty"`
-	ResponseFormat SpeechOutputFormat      `json:"response_format,omitempty"`
+	Expressiveness      *float64                `json:"expressiveness,omitempty"`
+	ConversationHistory []any                   `json:"conversation_history,omitempty"`
+	PhonemeHints        map[string][]IPAPhoneme `json:"phoneme_hints,omitempty"`
+	Input               string                  `json:"input"`
+	Model               *string                 `json:"model,omitempty"`
+	Metadata            map[string]any          `json:"metadata,omitempty"`
+	Stream              *bool                   `json:"stream,omitempty"`
+	PromptCacheKey      *string                 `json:"prompt_cache_key,omitempty"`
+	VoiceID             *string                 `json:"voice_id,omitempty"`
+	RefAudio            *string                 `json:"ref_audio,omitempty"`
+	ResponseFormat      SpeechOutputFormat      `json:"response_format,omitempty"`
 }
 
 type SpeechResponse struct {
@@ -99,14 +101,16 @@ func (c *MistralClient) Speech(req *SpeechRequest) (*SpeechResponse, error) {
 		return nil, fmt.Errorf("request cannot be nil")
 	}
 	body := optionalRequestMap(map[string]any{
-		"input":            req.Input,
-		"model":            req.Model,
-		"metadata":         req.Metadata,
-		"stream":           req.Stream,
-		"prompt_cache_key": req.PromptCacheKey,
-		"voice_id":         req.VoiceID,
-		"ref_audio":        req.RefAudio,
-		"response_format":  req.ResponseFormat,
+		"input":                req.Input,
+		"model":                req.Model,
+		"metadata":             req.Metadata,
+		"stream":               req.Stream,
+		"prompt_cache_key":     req.PromptCacheKey,
+		"voice_id":             req.VoiceID,
+		"ref_audio":            req.RefAudio,
+		"response_format":      req.ResponseFormat,
+		"expressiveness":       req.Expressiveness,
+		"conversation_history": req.ConversationHistory,
 	})
 	if req.PhonemeHints != nil {
 		body["phoneme_hints"] = req.PhonemeHints
@@ -129,14 +133,16 @@ func (c *MistralClient) SpeechStream(req *SpeechRequest) (<-chan StreamEvent, er
 	stream := true
 	req.Stream = &stream
 	body := optionalRequestMap(map[string]any{
-		"input":            req.Input,
-		"model":            req.Model,
-		"metadata":         req.Metadata,
-		"stream":           req.Stream,
-		"prompt_cache_key": req.PromptCacheKey,
-		"voice_id":         req.VoiceID,
-		"ref_audio":        req.RefAudio,
-		"response_format":  req.ResponseFormat,
+		"input":                req.Input,
+		"model":                req.Model,
+		"metadata":             req.Metadata,
+		"stream":               req.Stream,
+		"prompt_cache_key":     req.PromptCacheKey,
+		"voice_id":             req.VoiceID,
+		"ref_audio":            req.RefAudio,
+		"response_format":      req.ResponseFormat,
+		"expressiveness":       req.Expressiveness,
+		"conversation_history": req.ConversationHistory,
 	})
 	if req.PhonemeHints != nil {
 		body["phoneme_hints"] = req.PhonemeHints

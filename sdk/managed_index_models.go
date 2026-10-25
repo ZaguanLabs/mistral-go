@@ -451,7 +451,8 @@ func (v KeywordFieldDefinition) MarshalJSON() ([]byte, error) {
 }
 
 type KeywordRetriever struct {
-	Query string `json:"query"`
+	Operator *string `json:"operator,omitempty"`
+	Query    string  `json:"query"`
 
 	TopK *int `json:"top_k,omitempty"`
 
@@ -463,6 +464,10 @@ type KeywordRetriever struct {
 }
 
 func (v KeywordRetriever) MarshalJSON() ([]byte, error) {
+	if v.Operator == nil {
+		value := "or"
+		v.Operator = &value
+	}
 	type wire KeywordRetriever
 	if v.TopK == nil {
 		value := 20

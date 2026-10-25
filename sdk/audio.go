@@ -20,6 +20,7 @@ const (
 
 // TranscriptionRequest represents a request for audio transcription
 type TranscriptionRequest struct {
+	SpeakerReferences      map[string]string      `json:"speaker_references,omitempty"`
 	Model                  string                 `json:"model"`
 	File                   io.Reader              `json:"-"` // File content (not serialized)
 	Filename               string                 `json:"-"` // Filename (not serialized)
@@ -119,6 +120,15 @@ func (c *MistralClient) Transcribe(model string, file io.Reader, filename string
 		}
 	}
 
+	if params.SpeakerReferences != nil {
+		encoded, err := json.Marshal(params.SpeakerReferences)
+		if err != nil {
+			return nil, err
+		}
+		if err := writer.WriteField("speaker_references", string(encoded)); err != nil {
+			return nil, err
+		}
+	}
 	if params.Diarize != nil {
 		if err := writer.WriteField("diarize", fmt.Sprintf("%t", *params.Diarize)); err != nil {
 			return nil, fmt.Errorf("failed to write diarize field: %w", err)
@@ -246,6 +256,15 @@ func (c *MistralClient) TranscribeStream(model string, file io.Reader, filename 
 			return nil, fmt.Errorf("failed to write temperature field: %w", err)
 		}
 	}
+	if params.SpeakerReferences != nil {
+		encoded, err := json.Marshal(params.SpeakerReferences)
+		if err != nil {
+			return nil, err
+		}
+		if err := writer.WriteField("speaker_references", string(encoded)); err != nil {
+			return nil, err
+		}
+	}
 	if params.Diarize != nil {
 		if err := writer.WriteField("diarize", fmt.Sprintf("%t", *params.Diarize)); err != nil {
 			return nil, fmt.Errorf("failed to write diarize field: %w", err)
@@ -316,6 +335,9 @@ func buildTranscriptionRequestMap(params *TranscriptionRequest) map[string]inter
 	}
 	if params.Diarize != nil {
 		reqMap["diarize"] = *params.Diarize
+	}
+	if params.SpeakerReferences != nil {
+		reqMap["speaker_references"] = params.SpeakerReferences
 	}
 	if len(params.ContextBias) > 0 {
 		reqMap["context_bias"] = params.ContextBias

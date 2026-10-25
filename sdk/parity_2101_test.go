@@ -13,40 +13,40 @@ func TestManagedIndexesWireContract(t *testing.T) {
 		name, method, path, query, body, response string
 		call                                      func(*MistralClient) error
 	}{
-		{"create", "POST", "/v1/rag/managed_indexes", "", `{"name":"index","config":{"embedding":{"name":"mistral-embed","dimensions":1024,"type":"mistral"}}}`, `{"id":"i","status":"provisioning"}`, func(c *MistralClient) error {
+		{"create", "POST", "/v1/context/search-indexes", "", `{"name":"index","config":{"embedding":{"name":"mistral-embed","dimensions":1024,"type":"mistral"}}}`, `{"id":"i","status":"provisioning"}`, func(c *MistralClient) error {
 			r, e := c.CreateManagedIndex(&CreateManagedIndexRequest{Name: "index", Config: ManagedIndexConfig{Embedding: MistralEmbeddingModel{Name: "mistral-embed", Dimensions: 1024}}})
 			if e == nil && r.Status != ManagedIndexStatusProvisioning {
 				t.Fatal(r)
 			}
 			return e
 		}},
-		{"list", "GET", "/v1/rag/managed_indexes", "page_size=20", "", `{"data":[],"next_page_token":"next"}`, func(c *MistralClient) error {
+		{"list", "GET", "/v1/context/search-indexes", "page_size=20", "", `{"data":[],"next_page_token":"next"}`, func(c *MistralClient) error {
 			r, e := c.ListManagedIndexes(nil)
 			if e == nil && (r.NextPageToken == nil || *r.NextPageToken != "next") {
 				t.Fatal(r)
 			}
 			return e
 		}},
-		{"next", "GET", "/v1/rag/managed_indexes", "page_size=20&page_token=next", "", `{"data":[]}`, func(c *MistralClient) error {
+		{"next", "GET", "/v1/context/search-indexes", "page_size=20&page_token=next", "", `{"data":[]}`, func(c *MistralClient) error {
 			token := "next"
 			_, e := c.ListManagedIndexes(&ListManagedIndexesParams{PageToken: &token})
 			return e
 		}},
-		{"get", "GET", "/v1/rag/managed_indexes/a%2Fb", "", "", `{}`, func(c *MistralClient) error { _, e := c.GetManagedIndex("a/b"); return e }},
-		{"update", "PUT", "/v1/rag/managed_indexes/index", "", `{"schema":{"document_fields":{"title":{"indexed":true,"required":false,"system":false,"type":"text"}}}}`, `{}`, func(c *MistralClient) error {
+		{"get", "GET", "/v1/context/search-indexes/a%2Fb", "", "", `{}`, func(c *MistralClient) error { _, e := c.GetManagedIndex("a/b"); return e }},
+		{"update", "PUT", "/v1/context/search-indexes/index", "", `{"schema":{"document_fields":{"title":{"indexed":true,"required":false,"system":false,"type":"text"}}}}`, `{}`, func(c *MistralClient) error {
 			_, e := c.UpdateManagedIndex("index", &UpdateManagedIndexRequest{Schema: ManagedIndexFields{DocumentFields: map[string]any{"title": TextFieldDefinition{}}}})
 			return e
 		}},
-		{"delete", "DELETE", "/v1/rag/managed_indexes/index", "", "", `{"status":"deleting"}`, func(c *MistralClient) error { _, e := c.DeleteManagedIndex("index"); return e }},
-		{"ingest", "POST", "/v1/rag/managed_indexes/index/documents", "", `{"documents":[{"id":"doc","content":"hello"}]}`, `{"accepted":1,"rejected":0,"results":[{"status":"accepted","document_id":"doc"}]}`, func(c *MistralClient) error {
+		{"delete", "DELETE", "/v1/context/search-indexes/index", "", "", `{"status":"deleting"}`, func(c *MistralClient) error { _, e := c.DeleteManagedIndex("index"); return e }},
+		{"ingest", "POST", "/v1/context/search-indexes/index/documents", "", `{"documents":[{"id":"doc","content":"hello"}]}`, `{"accepted":1,"rejected":0,"results":[{"status":"accepted","document_id":"doc"}]}`, func(c *MistralClient) error {
 			_, e := c.IngestManagedIndexDocuments("index", &IngestDocumentsRequest{Documents: []map[string]any{{"id": "doc", "content": "hello"}}})
 			return e
 		}},
-		{"delete documents", "DELETE", "/v1/rag/managed_indexes/index/documents", "", `{"document_ids":["doc"]}`, `{"deleted_document_ids":["doc"],"missing":[]}`, func(c *MistralClient) error {
+		{"delete documents", "DELETE", "/v1/context/search-indexes/index/documents", "", `{"document_ids":["doc"]}`, `{"deleted_document_ids":["doc"],"missing":[]}`, func(c *MistralClient) error {
 			_, e := c.DeleteManagedIndexDocuments("index", &DeleteDocumentsRequest{DocumentIDs: []string{"doc"}})
 			return e
 		}},
-		{"search", "POST", "/v1/rag/managed_indexes/index/search", "", `{"retriever":{"query":"hello","top_k":20,"type":"keyword","filter":{"type":"equal","field":"lang","value":"en"}}}`, `{"hits":[{"chunk":{"id":"c","extra":"kept"},"score":0.5,"index_name":"index"}]}`, func(c *MistralClient) error {
+		{"search", "POST", "/v1/context/search-indexes/index/search", "", `{"retriever":{"query":"hello","top_k":20,"operator":"or","type":"keyword","filter":{"type":"equal","field":"lang","value":"en"}}}`, `{"hits":[{"chunk":{"id":"c","extra":"kept"},"score":0.5,"index_name":"index"}]}`, func(c *MistralClient) error {
 			r, e := c.SearchManagedIndex("index", &SearchRequest{Retriever: KeywordRetriever{Query: "hello", Filter: Equal{Field: "lang", Value: "en"}}})
 			if e == nil && string(r.Hits[0].Chunk.Extra["extra"]) != `"kept"` {
 				t.Fatal(r)

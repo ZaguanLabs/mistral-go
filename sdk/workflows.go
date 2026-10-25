@@ -139,18 +139,20 @@ type DeploymentLogsStreamParams struct {
 }
 
 type ListWorkflowDeploymentsParams struct {
-	Owner         *string
-	CreatedBy     *string
-	LocationTypes []string
-	ActiveOnly    *bool
-	IsHardened    *bool
-	WorkflowName  *string
-	Search        *string
-	OrderBy       *string
-	Order         *Order
-	Limit         *int
-	Cursor        *string
-	WorkspaceID   *string
+	RepositoryURL  *string
+	DockerfilePath *string
+	Owner          *string
+	CreatedBy      *string
+	LocationTypes  []string
+	ActiveOnly     *bool
+	IsHardened     *bool
+	WorkflowName   *string
+	Search         *string
+	OrderBy        *string
+	Order          *Order
+	Limit          *int
+	Cursor         *string
+	WorkspaceID    *string
 }
 
 type DeploymentWorkerSpec struct {
@@ -402,6 +404,7 @@ func (c *MistralClient) ListWorkflowDeploymentsWithParams(params *ListWorkflowDe
 		"workflow_name": params.WorkflowName, "search": params.Search,
 		"order_by": params.OrderBy, "order": params.Order, "limit": params.Limit,
 		"cursor": params.Cursor, "workspace_id": params.WorkspaceID,
+		"repository_url": params.RepositoryURL, "dockerfile_path": params.DockerfilePath,
 	})
 	return c.requestMap(http.MethodGet, nil, appendQuery("v1/workflows/deployments", query))
 }

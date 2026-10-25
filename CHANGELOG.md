@@ -1,5 +1,13 @@
 # Changelog
 
+## 3.4.0 - 2026-10-25
+
+- Add audio agents/sessions, Responses and input-token counting, and managed-index summary APIs.
+- Move managed-index routes to `/v1/context/search-indexes`.
+- Add realtime diarization, speaker references, turn detection, context bias and language; speech expressiveness and conversation history; deployment build filters and updated usage/model metadata.
+- Generate current models and defaults from official Python 3.4.0.
+- Add native voice-session lifecycle, function handlers, events, transcript accumulation and worker registration tokens; applications provide media/audio transports.
+
 ## 3.2.0 - 2026-10-13
 
 - Align with official Python SDK 3.2.0: evaluation projects, v2 runs/records/statistics, optimizations, pipeline-result search and whoami.

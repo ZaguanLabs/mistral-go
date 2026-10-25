@@ -100,6 +100,8 @@ type UpdatePipelineConfigRequest struct {
 	Group       *string                    `json:"-"`
 }
 type PipelineConfig struct {
+	ScorerSlug     *string                    `json:"scorer_slug,omitempty"`
+	ScorerVersion  *int                       `json:"scorer_version,omitempty"`
 	ID             string                     `json:"id"`
 	CreatedAt      time.Time                  `json:"created_at"`
 	UpdatedAt      time.Time                  `json:"updated_at"`

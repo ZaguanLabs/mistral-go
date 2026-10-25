@@ -41,24 +41,26 @@ type ModelCapabilities struct {
 
 // ModelCard represents a model card.
 type ModelCard struct {
-	BillingModelName            *string            `json:"billing_model_name,omitempty"`
-	ID                          string             `json:"id"`
-	Object                      string             `json:"object"`
-	Created                     int                `json:"created"`
-	OwnedBy                     string             `json:"owned_by"`
-	Name                        *string            `json:"name,omitempty"`
-	Description                 *string            `json:"description,omitempty"`
-	MaxContextLength            *int               `json:"max_context_length,omitempty"`
-	Aliases                     []string           `json:"aliases,omitempty"`
-	Deprecation                 *string            `json:"deprecation,omitempty"`
-	DeprecationReplacementModel *string            `json:"deprecation_replacement_model,omitempty"`
-	DefaultModelTemperature     *float64           `json:"default_model_temperature,omitempty"`
-	Type                        string             `json:"type,omitempty"`
-	Root                        string             `json:"root,omitempty"`
-	Parent                      string             `json:"parent,omitempty"`
-	Permission                  []ModelPermission  `json:"permission,omitempty"`
-	Capabilities                *ModelCapabilities `json:"capabilities,omitempty"`
-	Internal                    *bool              `json:"internal,omitempty"`
+	AudioTranscriptionCapabilities *AudioTranscriptionCapabilities `json:"audio_transcription_capabilities,omitempty"`
+	AudioSpeechCapabilities        *AudioSpeechCapabilities        `json:"audio_speech_capabilities,omitempty"`
+	BillingModelName               *string                         `json:"billing_model_name,omitempty"`
+	ID                             string                          `json:"id"`
+	Object                         string                          `json:"object"`
+	Created                        int                             `json:"created"`
+	OwnedBy                        string                          `json:"owned_by"`
+	Name                           *string                         `json:"name,omitempty"`
+	Description                    *string                         `json:"description,omitempty"`
+	MaxContextLength               *int                            `json:"max_context_length,omitempty"`
+	Aliases                        []string                        `json:"aliases,omitempty"`
+	Deprecation                    *string                         `json:"deprecation,omitempty"`
+	DeprecationReplacementModel    *string                         `json:"deprecation_replacement_model,omitempty"`
+	DefaultModelTemperature        *float64                        `json:"default_model_temperature,omitempty"`
+	Type                           string                          `json:"type,omitempty"`
+	Root                           string                          `json:"root,omitempty"`
+	Parent                         string                          `json:"parent,omitempty"`
+	Permission                     []ModelPermission               `json:"permission,omitempty"`
+	Capabilities                   *ModelCapabilities              `json:"capabilities,omitempty"`
+	Internal                       *bool                           `json:"internal,omitempty"`
 }
 
 // ModelList represents a list of models.

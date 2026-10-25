@@ -1,12 +1,12 @@
 # Mistral Go SDK
 
-**Version 3.2.0** — Python SDK 3.2.0 compatibility
+**Version 3.4.0** — Python SDK 3.4.0 compatibility
 
 [![Minimal Dependencies](https://img.shields.io/badge/dependencies-minimal-brightgreen.svg)](https://github.com/ZaguanLabs/mistral-go)
 [![Go Version](https://img.shields.io/badge/go-%3E%3D1.25-blue.svg)](https://golang.org/)
 [![Pure Go](https://img.shields.io/badge/pure-go-success.svg)](https://pkg.go.dev/std)
 
-A Go SDK for the Mistral AI API, designed to provide developers with powerful tools to integrate advanced AI capabilities into their applications. This SDK has been significantly enhanced to match the official Mistral Python SDK v3.2.0.
+A Go SDK for the Mistral AI API, designed to provide developers with powerful tools to integrate advanced AI capabilities into their applications. This SDK has been significantly enhanced to match the official Mistral Python SDK v3.4.0.
 
 REST uses the Go standard library. Realtime audio uses a WebSocket dependency; connector MCP sessions use the official MCP Go SDK. Go 1.25 or newer is required.
 
@@ -33,13 +33,13 @@ REST uses the Go standard library. Realtime audio uses a WebSocket dependency; c
 - **Observability API**: Campaigns, datasets, records, judges, chat completion events, logs, spans, span evaluations, and traces
 - **RAG API**: Ingestion pipeline configuration and search index summaries, details, metrics, schema summaries, and schema files
 
-## Version 3.2.0
+## Version 3.4.0
 
-Adds evaluation projects, v2 runs and records, statistics and optimization APIs; pipeline-result search; current-principal identity; chat sampling and logprob controls; speech pronunciation hints; resource content chunks; and voice-kind metadata.
+Adds audio agents and sessions, Responses creation and token counting, managed-index summary operations, richer realtime transcription, speech conversation history and expressiveness, deployment build filters, and current request/response models.
 
-Pipeline updates use optional pointer fields so omitted values remain unchanged. `Enabled: BoolPtr(false)` explicitly disables a pipeline. Pipeline kinds now use the upstream `*-v1` names. Connector auth direction and system-prompt routes are no longer sent.
+Voice sessions expose events, transcripts, local function handlers, updates and cleanup through native Go media/audio interfaces. Applications supply `VoiceAgentSessionOptions.TransportFactory` and optional audio devices; the Python LiveKit and PortAudio adapters are not bundled.
 
-See [release notes](docs/RELEASE_NOTES_v3.2.0.md).
+See [release notes](docs/RELEASE_NOTES_v3.4.0.md).
 
 ## Version 3.0.0 — migration
 
