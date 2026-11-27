@@ -209,6 +209,8 @@ type PipelinesResponse struct {
 	Pipelines PaginatedResultPipeline `json:"pipelines"`
 }
 type ListPipelinesParams struct {
+	From     *time.Time
+	To       *time.Time
 	Enabled  *bool
 	PageSize *int
 	Page     *int
@@ -237,7 +239,7 @@ func (c *MistralClient) ListPipelines(params *ListPipelinesParams) (*PipelinesRe
 	if params.PageSize != nil {
 		size = *params.PageSize
 	}
-	return requestTyped[PipelinesResponse](c, http.MethodGet, nil, appendQuery("v1/observability/pipelines", queryWithOptionalValues(map[string]any{"enabled": params.Enabled, "page_size": size, "page": page, "q": params.Q})))
+	return requestTyped[PipelinesResponse](c, http.MethodGet, nil, appendQuery("v1/observability/pipelines", queryWithOptionalValues(map[string]any{"from": params.From, "to": params.To, "enabled": params.Enabled, "page_size": size, "page": page, "q": params.Q})))
 }
 func (c *MistralClient) GetPipeline(id string) (*Pipeline, error) {
 	return requestTyped[Pipeline](c, http.MethodGet, nil, "v1/observability/pipelines/"+url.PathEscape(id))
@@ -304,6 +306,7 @@ type DatasetImportTask struct {
 	Progress    *int                 `json:"progress,omitempty"`
 	Message     *string              `json:"message,omitempty"`
 	Result      *DatasetImportResult `json:"result,omitempty"`
+	CreatorType *PrincipalType       `json:"creator_type,omitempty"`
 }
 
 func (c *MistralClient) ImportDatasetFromSpans(id string, req *ImportDatasetFromSpansRequest) (*DatasetImportTask, error) {

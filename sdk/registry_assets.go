@@ -1,6 +1,7 @@
 package sdk
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -344,7 +345,9 @@ func structToMap(value any) (map[string]interface{}, error) {
 		return nil, fmt.Errorf("encode request: %w", err)
 	}
 	var result map[string]interface{}
-	if err := json.Unmarshal(data, &result); err != nil {
+	decoder := json.NewDecoder(bytes.NewReader(data))
+	decoder.UseNumber()
+	if err := decoder.Decode(&result); err != nil {
 		return nil, fmt.Errorf("convert request: %w", err)
 	}
 	return result, nil

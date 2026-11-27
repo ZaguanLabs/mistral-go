@@ -20,13 +20,15 @@ type CreateCampaignRequest struct {
 }
 
 type CreateDatasetRequest struct {
-	Name        string  `json:"name"`
-	Description *string `json:"description,omitempty"`
+	Name        string         `json:"name"`
+	Description *string        `json:"description,omitempty"`
+	Metadata    map[string]any `json:"metadata,omitempty"`
 }
 
 type UpdateDatasetRequest struct {
-	Name        *string `json:"name,omitempty"`
-	Description *string `json:"description,omitempty"`
+	Name        *string        `json:"name,omitempty"`
+	Description *string        `json:"description,omitempty"`
+	Metadata    map[string]any `json:"metadata,omitempty"`
 }
 
 type DatasetRecordRequest struct {
@@ -114,6 +116,9 @@ func (c *MistralClient) CreateDataset(req *CreateDatasetRequest) (APIResponse, e
 		return nil, fmt.Errorf("request cannot be nil")
 	}
 	body := optionalRequestMap(map[string]any{"name": req.Name, "description": req.Description})
+	if req.Metadata != nil {
+		body["metadata"] = req.Metadata
+	}
 	return c.requestMap(http.MethodPost, body, "v1/observability/datasets")
 }
 
@@ -134,6 +139,9 @@ func (c *MistralClient) UpdateDataset(datasetID string, req *UpdateDatasetReques
 		return nil, fmt.Errorf("request cannot be nil")
 	}
 	body := optionalRequestMap(map[string]any{"name": req.Name, "description": req.Description})
+	if req.Metadata != nil {
+		body["metadata"] = req.Metadata
+	}
 	return c.requestMap(http.MethodPatch, body, fmt.Sprintf("v1/observability/datasets/%s", datasetID))
 }
 
@@ -167,6 +175,7 @@ func (c *MistralClient) ImportDatasetFromFile(datasetID, fileID string) (APIResp
 	return c.requestMap(http.MethodPost, map[string]interface{}{"file_id": fileID}, fmt.Sprintf("v1/observability/datasets/%s/imports/from-file", datasetID))
 }
 
+// Deprecated: removed from the upstream observability API in 3.9.0.
 func (c *MistralClient) ImportDatasetFromPlayground(datasetID string, conversationIDs []string) (APIResponse, error) {
 	return c.requestMap(http.MethodPost, map[string]interface{}{"conversation_ids": conversationIDs}, fmt.Sprintf("v1/observability/datasets/%s/imports/from-playground", datasetID))
 }
@@ -239,6 +248,7 @@ func (c *MistralClient) JudgeChatCompletionEvent(eventID string, judgeDefinition
 	return c.requestMap(http.MethodPost, map[string]interface{}{"judge_definition": judgeDefinition}, fmt.Sprintf("v1/observability/chat-completion-events/%s/live-judging", eventID))
 }
 
+// Deprecated: removed from the upstream observability API in 3.9.0.
 func (c *MistralClient) CreateJudge(req *JudgeRequest) (APIResponse, error) {
 	if req == nil {
 		return nil, fmt.Errorf("request cannot be nil")
@@ -246,6 +256,7 @@ func (c *MistralClient) CreateJudge(req *JudgeRequest) (APIResponse, error) {
 	return c.requestMap(http.MethodPost, judgeRequestMap(req), "v1/observability/judges")
 }
 
+// Deprecated: removed from the upstream observability API in 3.9.0.
 func (c *MistralClient) ListJudges(params *ListJudgesParams) (APIResponse, error) {
 	if params == nil {
 		params = &ListJudgesParams{}
@@ -260,6 +271,7 @@ func (c *MistralClient) ListJudges(params *ListJudgesParams) (APIResponse, error
 	return c.requestMap(http.MethodGet, nil, appendQuery("v1/observability/judges", query))
 }
 
+// Deprecated: removed from the upstream observability API in 3.9.0.
 func (c *MistralClient) FetchJudge(judgeID string) (APIResponse, error) {
 	return c.requestMap(http.MethodGet, nil, fmt.Sprintf("v1/observability/judges/%s", judgeID))
 }
@@ -275,6 +287,7 @@ func (c *MistralClient) UpdateJudge(judgeID string, req *JudgeRequest) (APIRespo
 	return c.requestMap(http.MethodPut, judgeRequestMap(req), fmt.Sprintf("v1/observability/judges/%s", judgeID))
 }
 
+// Deprecated: removed from the upstream observability API in 3.9.0.
 func (c *MistralClient) JudgeConversation(judgeID string, req *JudgeConversationRequest) (APIResponse, error) {
 	if req == nil {
 		return nil, fmt.Errorf("request cannot be nil")
@@ -295,6 +308,7 @@ func (c *MistralClient) BulkDeleteDatasetRecords(datasetRecordIDs []string) (API
 	return c.requestMap(http.MethodPost, map[string]interface{}{"dataset_record_ids": datasetRecordIDs}, "v1/observability/dataset-records/bulk-delete")
 }
 
+// Deprecated: removed from the upstream observability API in 3.9.0.
 func (c *MistralClient) JudgeDatasetRecord(datasetRecordID string, judgeDefinition any) (APIResponse, error) {
 	return c.requestMap(http.MethodPost, map[string]interface{}{"judge_definition": judgeDefinition}, fmt.Sprintf("v1/observability/dataset-records/%s/live-judging", datasetRecordID))
 }

@@ -188,9 +188,16 @@ func streamJSON[T any](ctx context.Context, body io.ReadCloser, failure func(err
 	}, failure)
 }
 func parseGenericStreamContext(ctx context.Context, body io.ReadCloser) <-chan StreamEvent {
+	return workflowEventStream(ctx, body, nil)
+}
+func workflowEventStream(ctx context.Context, body io.ReadCloser, encoding *workflowEncoding) <-chan StreamEvent {
 	return streamValues(ctx, body, func(event ServerEvent) (StreamEvent, error) {
 		var payload map[string]any
 		err := json.Unmarshal([]byte(event.Data), &payload)
+		if encoding != nil && err == nil {
+			wrapped, _ := payload["data"].(map[string]any)
+			_ = encoding.decodeEvent(ctx, wrapped)
+		}
 		name, _ := payload["type"].(string)
 		if name == "" {
 			name = event.Event

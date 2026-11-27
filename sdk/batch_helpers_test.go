@@ -126,7 +126,7 @@ func TestBatchRunLifecycle(t *testing.T) {
 				source = BatchInputFile{FileID: "caller-input"}
 			}
 			threshold := 0
-			result, err := client.Run(context.Background(), source, &BatchRunOptions{InlineThreshold: &threshold, PollInterval: time.Millisecond, MaxFailedJobRetries: 1})
+			result, err := client.Run(context.Background(), source, &BatchRunOptions{InlineThreshold: &threshold, PollInterval: time.Millisecond, MaxFailedJobRetries: 1, CleanupResultFiles: preuploaded})
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -144,8 +144,8 @@ func TestBatchRunLifecycle(t *testing.T) {
 				t.Errorf("uploaded %d deleted %v", uploaded, deleted)
 			}
 			for _, id := range []string{"output-1", "error-1", "output-2", "error-2"} {
-				if !deleted["/v1/files/"+id] {
-					t.Errorf("not cleaned: %s", id)
+				if deleted["/v1/files/"+id] != preuploaded {
+					t.Errorf("unexpected cleanup for %s", id)
 				}
 			}
 		})

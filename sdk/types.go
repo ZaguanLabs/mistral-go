@@ -99,7 +99,7 @@ type FunctionCall struct {
 
 // ToolCall represents the call to a tool by the llm
 type ToolCall struct {
-	Id       string       `json:"id"`
+	Id       string       `json:"id,omitempty"`
 	Type     ToolType     `json:"type"`
 	Function FunctionCall `json:"function"`
 }

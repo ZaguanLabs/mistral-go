@@ -77,7 +77,7 @@ func TestVersionInfoStructure(t *testing.T) {
 func TestFeatureParity(t *testing.T) {
 	info := GetVersionInfo()
 
-	if info.FeatureParity != "100%" {
-		t.Errorf("Expected FeatureParity to be '100%%', got %s", info.FeatureParity)
+	if info.FeatureParity != "Python SDK "+Version {
+		t.Errorf("missing Python SDK compatibility target: %s", info.FeatureParity)
 	}
 }

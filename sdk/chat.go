@@ -109,6 +109,7 @@ type UsageInfo struct {
 	CompletionTokens        int                      `json:"completion_tokens,omitempty"`
 	PromptAudioSeconds      *int                     `json:"prompt_audio_seconds,omitempty"`
 	ServiceTier             *string                  `json:"service_tier,omitempty"`
+	PromptTokensDetails     *PromptTokensDetails     `json:"prompt_tokens_details,omitempty"`
 }
 
 func (c *MistralClient) Chat(model string, messages []ChatMessage, params *ChatRequestParams) (*ChatCompletionResponse, error) {

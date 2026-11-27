@@ -14,6 +14,7 @@ type CreateRealtimeSessionRequest struct {
 	Model      string               `json:"model"`
 	Purpose    ClientSessionPurpose `json:"purpose,omitempty"`
 	TTLSeconds *int                 `json:"ttl_seconds,omitempty"`
+	Metadata   map[string]any       `json:"metadata,omitempty"`
 }
 
 type ClientSecret struct {
@@ -41,6 +42,9 @@ func (c *MistralClient) CreateRealtimeSession(req *CreateRealtimeSessionRequest)
 		purpose = ClientSessionPurposeRealtime
 	}
 	body := map[string]interface{}{"model": req.Model, "purpose": purpose}
+	if req.Metadata != nil {
+		body["metadata"] = req.Metadata
+	}
 	if req.TTLSeconds != nil {
 		body["ttl_seconds"] = *req.TTLSeconds
 	}

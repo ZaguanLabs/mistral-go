@@ -127,8 +127,13 @@ func allowedGatewayURL(request, base *url.URL) bool {
 	relative := strings.TrimPrefix(path, prefix)
 	for _, part := range strings.Split(relative, "/") {
 		decoded, err := url.PathUnescape(part)
-		if err != nil || decoded == "." || decoded == ".." {
+		if err != nil {
 			return false
+		}
+		for _, segment := range strings.Split(decoded, "/") {
+			if segment == "." || segment == ".." {
+				return false
+			}
 		}
 	}
 	return true
@@ -155,7 +160,7 @@ func (t *connectorGatewayTransport) RoundTrip(req *http.Request) (*http.Response
 			callerAuth = true
 		}
 	}
-	if !callerAuth {
+	if !callerAuth && t.client.httpClient == nil {
 		if err := t.client.authorizeRequest(copy); err != nil {
 			if copy.Body != nil {
 				copy.Body.Close()
@@ -190,7 +195,17 @@ func (c *MistralClient) gatewayHTTPClient(connector, suffix string, credentialsN
 	if timeout == 0 {
 		timeout = 5 * time.Minute
 	}
-	client := &http.Client{Timeout: timeout, Transport: &connectorGatewayTransport{base: base, client: c, credentials: credentials, transport: http.DefaultTransport}, CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse }}
+	client := &http.Client{Timeout: timeout}
+	if c.httpClient != nil {
+		borrowed := *c.httpClient
+		client = &borrowed
+	}
+	transport := client.Transport
+	if transport == nil {
+		transport = http.DefaultTransport
+	}
+	client.Transport = &connectorGatewayTransport{base: base, client: c, credentials: credentials, transport: transport}
+	client.CheckRedirect = func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse }
 	return client, base, nil
 }
 

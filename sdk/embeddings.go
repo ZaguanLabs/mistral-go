@@ -1,7 +1,6 @@
 package sdk
 
 import (
-	"fmt"
 	"net/http"
 )
 
@@ -23,11 +22,12 @@ type EmbeddingResponse struct {
 
 // EmbeddingRequest represents parameters for creating embeddings
 type EmbeddingRequest struct {
-	Model           string          `json:"model"`
-	Input           []string        `json:"input"`
-	EncodingFormat  *EncodingFormat `json:"encoding_format,omitempty"`
-	OutputDimension *int            `json:"output_dimension,omitempty"`
-	OutputDtype     *EmbeddingDtype `json:"output_dtype,omitempty"`
+	Model           string                 `json:"model"`
+	Input           EmbeddingRequestInputs `json:"input"`
+	Metadata        map[string]any         `json:"metadata,omitempty"`
+	EncodingFormat  *EncodingFormat        `json:"encoding_format,omitempty"`
+	OutputDimension *int                   `json:"output_dimension,omitempty"`
+	OutputDtype     *EmbeddingDtype        `json:"output_dtype,omitempty"`
 }
 
 // Embeddings creates embeddings for the given input texts (simple version)
@@ -44,44 +44,16 @@ func (c *MistralClient) Embeddings(model string, input []string) (*EmbeddingResp
 //
 // Returns embeddings for the input texts
 func (c *MistralClient) EmbeddingsWithParams(model string, input []string, params *EmbeddingRequest) (*EmbeddingResponse, error) {
-	if params == nil {
-		params = &EmbeddingRequest{}
+	var request EmbeddingRequest
+	if params != nil {
+		request = *params
 	}
+	request.Model = model
+	request.Input = input
+	return c.CreateEmbeddings(request)
+}
 
-	params.Model = model
-	params.Input = input
-
-	requestData := map[string]interface{}{
-		"model": model,
-		"input": input,
-	}
-
-	// Add optional parameters
-	if params.EncodingFormat != nil {
-		requestData["encoding_format"] = *params.EncodingFormat
-	}
-	if params.OutputDimension != nil {
-		requestData["output_dimension"] = *params.OutputDimension
-	}
-	if params.OutputDtype != nil {
-		requestData["output_dtype"] = *params.OutputDtype
-	}
-
-	response, err := c.request(http.MethodPost, requestData, "v1/embeddings", false, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	respData, ok := response.(map[string]interface{})
-	if !ok {
-		return nil, fmt.Errorf("invalid response type: %T", response)
-	}
-
-	var embeddingResponse EmbeddingResponse
-	err = mapToStruct(respData, &embeddingResponse)
-	if err != nil {
-		return nil, err
-	}
-
-	return &embeddingResponse, nil
+// CreateEmbeddings accepts text, image, and audio inputs, individually or in batches.
+func (c *MistralClient) CreateEmbeddings(request EmbeddingRequest) (*EmbeddingResponse, error) {
+	return requestTyped[EmbeddingResponse](c, http.MethodPost, request, "v1/embeddings")
 }

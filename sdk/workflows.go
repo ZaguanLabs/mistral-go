@@ -8,6 +8,7 @@ import (
 )
 
 type ListWorkflowsParams struct {
+	ExcludeTags              []string          `json:"exclude_tags,omitempty"`
 	Status                   any               `json:"status,omitempty"`
 	ActiveOnly               *bool             `json:"active_only,omitempty"`
 	IncludeShared            *bool             `json:"include_shared,omitempty"`
@@ -24,20 +25,22 @@ type ListWorkflowsParams struct {
 }
 
 type ListWorkflowRegistrationsParams struct {
-	WorkflowName             *string `json:"workflow_name,omitempty"`
-	WorkflowID               *string `json:"workflow_id,omitempty"`
-	TaskQueue                *string `json:"task_queue,omitempty"`
-	ActiveOnly               *bool   `json:"active_only,omitempty"`
-	IncludeShared            *bool   `json:"include_shared,omitempty"`
-	WorkflowSearch           *string `json:"workflow_search,omitempty"`
-	Archived                 *bool   `json:"archived,omitempty"`
-	WithWorkflow             *bool   `json:"with_workflow,omitempty"`
-	AvailableInChatAssistant *bool   `json:"available_in_chat_assistant,omitempty"`
-	Limit                    *int    `json:"limit,omitempty"`
-	Cursor                   *string `json:"cursor,omitempty"`
+	ExcludeTags              []string `json:"exclude_tags,omitempty"`
+	WorkflowName             *string  `json:"workflow_name,omitempty"`
+	WorkflowID               *string  `json:"workflow_id,omitempty"`
+	TaskQueue                *string  `json:"task_queue,omitempty"`
+	ActiveOnly               *bool    `json:"active_only,omitempty"`
+	IncludeShared            *bool    `json:"include_shared,omitempty"`
+	WorkflowSearch           *string  `json:"workflow_search,omitempty"`
+	Archived                 *bool    `json:"archived,omitempty"`
+	WithWorkflow             *bool    `json:"with_workflow,omitempty"`
+	AvailableInChatAssistant *bool    `json:"available_in_chat_assistant,omitempty"`
+	Limit                    *int     `json:"limit,omitempty"`
+	Cursor                   *string  `json:"cursor,omitempty"`
 }
 
 type ExecuteWorkflowRequest struct {
+	CallContext             map[string]any `json:"call_context,omitempty"`
 	Traceparent             *string        `json:"traceparent,omitempty"`
 	ExecutionID             *string        `json:"execution_id,omitempty"`
 	Input                   any            `json:"input,omitempty"`
@@ -62,23 +65,24 @@ type GetWorkflowRegistrationParams struct {
 }
 
 type ListWorkflowRunsParams struct {
-	WorkflowIdentifier *string            `json:"workflow_identifier,omitempty"`
-	RootExecutionID    *string            `json:"root_execution_id,omitempty"`
-	Search             *string            `json:"search,omitempty"`
-	Status             any                `json:"status,omitempty"`
-	DeploymentName     *string            `json:"deployment_name,omitempty"`
-	SortBy             *WorkflowRunSortBy `json:"sort_by,omitempty"`
-	Order              *Order             `json:"order,omitempty"`
-	StartTimeAfter     *time.Time         `json:"start_time_after,omitempty"`
-	StartTimeBefore    *time.Time         `json:"start_time_before,omitempty"`
-	EndTimeAfter       *time.Time         `json:"end_time_after,omitempty"`
-	EndTimeBefore      *time.Time         `json:"end_time_before,omitempty"`
-	UserID             *string            `json:"user_id,omitempty"`
-	WorkflowTags       []string           `json:"workflow_tags,omitempty"`
-	IncludeInternal    *bool              `json:"include_internal,omitempty"`
-	PageSize           *int               `json:"page_size,omitempty"`
-	NextPageToken      *string            `json:"next_page_token,omitempty"`
-	SearchKey          *string            `json:"search_key,omitempty"`
+	ExcludeWorkflowTags []string           `json:"exclude_workflow_tags,omitempty"`
+	WorkflowIdentifier  *string            `json:"workflow_identifier,omitempty"`
+	RootExecutionID     *string            `json:"root_execution_id,omitempty"`
+	Search              *string            `json:"search,omitempty"`
+	Status              any                `json:"status,omitempty"`
+	DeploymentName      *string            `json:"deployment_name,omitempty"`
+	SortBy              *WorkflowRunSortBy `json:"sort_by,omitempty"`
+	Order               *Order             `json:"order,omitempty"`
+	StartTimeAfter      *time.Time         `json:"start_time_after,omitempty"`
+	StartTimeBefore     *time.Time         `json:"start_time_before,omitempty"`
+	EndTimeAfter        *time.Time         `json:"end_time_after,omitempty"`
+	EndTimeBefore       *time.Time         `json:"end_time_before,omitempty"`
+	UserID              *string            `json:"user_id,omitempty"`
+	WorkflowTags        []string           `json:"workflow_tags,omitempty"`
+	IncludeInternal     *bool              `json:"include_internal,omitempty"`
+	PageSize            *int               `json:"page_size,omitempty"`
+	NextPageToken       *string            `json:"next_page_token,omitempty"`
+	SearchKey           *string            `json:"search_key,omitempty"`
 }
 
 type ListWorkflowEventsParams struct {
@@ -156,9 +160,12 @@ type ListWorkflowDeploymentsParams struct {
 }
 
 type DeploymentWorkerSpec struct {
-	BackendSpec any     `json:"backend_spec,omitempty"`
-	GitHubURL   string  `json:"github_url,omitempty"`
-	Revision    *string `json:"revision,omitempty"`
+	RepositoryURL  *string  `json:"repository_url,omitempty"`
+	ArchiveID      *string  `json:"archive_id,omitempty"`
+	RequestedRoles []string `json:"requested_roles,omitempty"`
+	BackendSpec    any      `json:"backend_spec,omitempty"`
+	GitHubURL      string   `json:"github_url,omitempty"`
+	Revision       *string  `json:"revision,omitempty"`
 	// Deprecated: removed upstream; configure the backend build instead.
 	Entrypoint *string `json:"-"`
 	// Deprecated: use BackendSpec.BuildDirectory.
@@ -180,7 +187,7 @@ type GitCommitMetadata struct {
 
 type DeploymentWorkerSpecResponse struct {
 	BackendSpec any     `json:"backend_spec"`
-	GitHubURL   string  `json:"github_url"`
+	GitHubURL   string  `json:"github_url,omitempty"`
 	Type        *string `json:"type,omitempty"`
 	Revision    *string `json:"revision,omitempty"`
 	// Deprecated: removed upstream; configure the backend build instead.
@@ -189,8 +196,11 @@ type DeploymentWorkerSpecResponse struct {
 	WorkingDir  *string `json:"-"`
 	RestartedAt *string `json:"restarted_at,omitempty"`
 	// Deprecated: use Commit.SHA.
-	CommitSHA *string            `json:"-"`
-	Commit    *GitCommitMetadata `json:"commit,omitempty"`
+	CommitSHA      *string            `json:"-"`
+	Commit         *GitCommitMetadata `json:"commit,omitempty"`
+	RepositoryURL  *string            `json:"repository_url,omitempty"`
+	ArchiveID      *string            `json:"archive_id,omitempty"`
+	RequestedRoles []string           `json:"requested_roles,omitempty"`
 }
 
 type DeploymentResourceConfig struct {
@@ -221,6 +231,7 @@ type ListDeploymentWorkersParams struct {
 }
 
 type ExecuteWorkflowAndWaitParams struct {
+	CallContext             map[string]any
 	Traceparent             *string
 	WorkflowIdentifier      string
 	Input                   any
@@ -248,6 +259,7 @@ func (c *MistralClient) GetWorkflows(params *ListWorkflowsParams) (APIResponse, 
 		"deployment_status":           params.DeploymentStatus,
 		"archived":                    params.Archived,
 		"tags":                        params.Tags,
+		"exclude_tags":                params.ExcludeTags,
 		"sort_by":                     params.SortBy,
 		"order":                       params.Order,
 		"cursor":                      params.Cursor,
@@ -268,6 +280,7 @@ func (c *MistralClient) GetWorkflowRegistrations(params *ListWorkflowRegistratio
 		"include_shared":              params.IncludeShared,
 		"workflow_name":               params.WorkflowName,
 		"workflow_search":             params.WorkflowSearch,
+		"exclude_tags":                params.ExcludeTags,
 		"archived":                    params.Archived,
 		"with_workflow":               params.WithWorkflow,
 		"available_in_chat_assistant": params.AvailableInChatAssistant,
@@ -296,6 +309,7 @@ func (c *MistralClient) ExecuteWorkflowAndWait(params *ExecuteWorkflowAndWaitPar
 		CustomTracingAttributes: params.CustomTracingAttributes,
 		ForceNewTrace:           params.ForceNewTrace,
 		Traceparent:             params.Traceparent,
+		CallContext:             params.CallContext,
 		TaskQueue:               params.TaskQueue,
 		DeploymentName:          params.DeploymentName,
 	}
@@ -398,11 +412,15 @@ func (c *MistralClient) ListWorkflowDeploymentsWithParams(params *ListWorkflowDe
 	if params == nil {
 		params = &ListWorkflowDeploymentsParams{}
 	}
+	limit := 100
+	if params.Limit != nil {
+		limit = *params.Limit
+	}
 	query := queryWithOptionalValues(map[string]any{
 		"active_only": params.ActiveOnly, "is_hardened": params.IsHardened,
 		"created_by": params.CreatedBy, "location_types": params.LocationTypes, "owner": params.Owner,
 		"workflow_name": params.WorkflowName, "search": params.Search,
-		"order_by": params.OrderBy, "order": params.Order, "limit": params.Limit,
+		"order_by": params.OrderBy, "order": params.Order, "limit": limit,
 		"cursor": params.Cursor, "workspace_id": params.WorkspaceID,
 		"repository_url": params.RepositoryURL, "dockerfile_path": params.DockerfilePath,
 	})
@@ -510,24 +528,26 @@ func (c *MistralClient) ListWorkflowRuns(params *ListWorkflowRunsParams) (APIRes
 	if params == nil {
 		params = &ListWorkflowRunsParams{}
 	}
+	internal := params.IncludeInternal != nil && *params.IncludeInternal
 	query := queryWithOptionalValues(map[string]any{
-		"workflow_identifier": params.WorkflowIdentifier,
-		"root_execution_id":   params.RootExecutionID,
-		"search":              params.Search,
-		"status":              params.Status,
-		"deployment_name":     params.DeploymentName,
-		"sort_by":             params.SortBy,
-		"order":               params.Order,
-		"start_time_after":    params.StartTimeAfter,
-		"start_time_before":   params.StartTimeBefore,
-		"end_time_after":      params.EndTimeAfter,
-		"end_time_before":     params.EndTimeBefore,
-		"user_id":             params.UserID,
-		"workflow_tags":       params.WorkflowTags,
-		"include_internal":    params.IncludeInternal,
-		"page_size":           params.PageSize,
-		"next_page_token":     params.NextPageToken,
-		"search_key":          params.SearchKey,
+		"workflow_identifier":   params.WorkflowIdentifier,
+		"root_execution_id":     params.RootExecutionID,
+		"search":                params.Search,
+		"status":                params.Status,
+		"deployment_name":       params.DeploymentName,
+		"sort_by":               params.SortBy,
+		"order":                 params.Order,
+		"start_time_after":      params.StartTimeAfter,
+		"start_time_before":     params.StartTimeBefore,
+		"end_time_after":        params.EndTimeAfter,
+		"end_time_before":       params.EndTimeBefore,
+		"user_id":               params.UserID,
+		"workflow_tags":         params.WorkflowTags,
+		"exclude_workflow_tags": params.ExcludeWorkflowTags,
+		"include_internal":      internal,
+		"page_size":             params.PageSize,
+		"next_page_token":       params.NextPageToken,
+		"search_key":            params.SearchKey,
 	})
 	return c.requestMap(http.MethodGet, nil, appendQuery("v1/workflows/runs", query))
 }
@@ -560,7 +580,7 @@ func (c *MistralClient) GetWorkflowStreamEvents(params *ListWorkflowEventsParams
 	if !ok {
 		return nil, fmt.Errorf("invalid response type: %T", response)
 	}
-	return parseGenericStreamContext(c.requestContext(), body), nil
+	return workflowEventStream(c.requestContext(), body, c.workflowEncoding), nil
 }
 
 func (c *MistralClient) GetWorkflowEvents(params *ListWorkflowEventsParams) (APIResponse, error) {
@@ -661,6 +681,7 @@ func (c *MistralClient) executeWorkflowPath(path string, req *ExecuteWorkflowReq
 		"custom_tracing_attributes": req.CustomTracingAttributes,
 		"force_new_trace":           req.ForceNewTrace,
 		"traceparent":               req.Traceparent,
+		"call_context":              req.CallContext,
 		"extensions":                req.Extensions,
 		"task_queue":                req.TaskQueue,
 		"deployment_name":           req.DeploymentName,

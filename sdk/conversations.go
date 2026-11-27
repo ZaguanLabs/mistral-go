@@ -10,8 +10,58 @@ import (
 
 // ConversationInput represents input for a conversation
 type ConversationInput struct {
+	wire    json.RawMessage
 	Type    string      `json:"type"`
 	Content interface{} `json:"content"`
+}
+
+// ConversationInputs prepares structured conversation history in caller order.
+// Text becomes a user message. Native entry models and wire-shaped maps retain
+// their tool identifiers, arguments, results, and other variant fields.
+func ConversationInputs(entries ...any) ([]ConversationInput, error) {
+	out := make([]ConversationInput, 0, len(entries))
+	for i, entry := range entries {
+		if text, ok := entry.(string); ok {
+			entry = map[string]any{"type": "message.input", "role": "user", "content": text}
+		}
+		data, err := json.Marshal(entry)
+		if err != nil {
+			return nil, err
+		}
+		var fields map[string]json.RawMessage
+		if err = json.Unmarshal(data, &fields); err != nil {
+			return nil, fmt.Errorf("conversation entry %d: %w", i, err)
+		}
+		var kind string
+		if err = json.Unmarshal(fields["type"], &kind); err != nil {
+			return nil, fmt.Errorf("conversation entry %d requires a type", i)
+		}
+		required, ok := conversationEntryFields[kind]
+		if !ok {
+			return nil, fmt.Errorf("unknown conversation entry type %q", kind)
+		}
+		for _, key := range required {
+			if len(fields[key]) == 0 {
+				return nil, fmt.Errorf("%s entry requires %s", kind, key)
+			}
+		}
+		out = append(out, ConversationInput{Type: kind, wire: data})
+	}
+	return out, nil
+}
+
+var conversationEntryFields = map[string][]string{
+	"message.input": {"role", "content"}, "message.output": {"content"},
+	"function.call": {"tool_call_id", "name", "arguments"}, "function.result": {"tool_call_id", "result"},
+	"tool.execution": {"name", "arguments"}, "agent.handoff": {"previous_agent_id", "previous_agent_name", "next_agent_id", "next_agent_name"},
+}
+
+func (v ConversationInput) MarshalJSON() ([]byte, error) {
+	if v.wire != nil {
+		return v.wire, nil
+	}
+	type wire ConversationInput
+	return json.Marshal(wire(v))
 }
 
 // ConversationStartRequest represents a request to start a conversation

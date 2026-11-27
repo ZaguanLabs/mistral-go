@@ -194,7 +194,6 @@ func (c *MistralClient) CreateVoice(req *VoiceRequest) (*Voice, error) {
 	body := optionalRequestMap(map[string]any{
 		"name":             req.Name,
 		"sample_audio":     req.SampleAudio,
-		"slug":             req.Slug,
 		"languages":        req.Languages,
 		"gender":           req.Gender,
 		"age":              req.Age,

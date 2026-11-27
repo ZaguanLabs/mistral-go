@@ -14,14 +14,12 @@ import (
 )
 
 // VoiceAgentTransport is the native media/RPC boundary. It carries PCM audio,
-// agent events, function invocations and acknowledged session updates.
+// agent events and function invocations. Session updates use the REST API.
 type VoiceAgentTransport interface {
 	Start(context.Context) error
 	WaitForAgent(context.Context) error
 	SendAudio(context.Context, []byte) error
 	SetInputEnabled(context.Context, bool) error
-	UpdateSession(context.Context, []byte) ([]byte, error)
-	AddFunctionHandlers([]*VoiceFunctionHandler)
 	Close() error
 }
 
@@ -341,6 +339,8 @@ type VoiceSessionUpdate struct {
 	Turn         *AudioTurnConfig `json:"turn,omitempty"`
 }
 
+// Deprecated: use MistralClient.UpdateAudioSession for current REST sessions.
+// This compatibility method requires a transport serving the earlier RPC.
 func (s *VoiceAgentSession) Update(ctx context.Context, update VoiceSessionUpdate) (*VoiceAgentSessionUpdatedEvent, error) {
 	t, err := s.requireTransport()
 	if err != nil {
@@ -360,7 +360,14 @@ func (s *VoiceAgentSession) Update(ctx context.Context, update VoiceSessionUpdat
 	if err != nil {
 		return nil, err
 	}
-	response, err := t.UpdateSession(ctx, data)
+	legacy, ok := t.(interface {
+		UpdateSession(context.Context, []byte) ([]byte, error)
+		AddFunctionHandlers([]*VoiceFunctionHandler)
+	})
+	if !ok {
+		return nil, fmt.Errorf("this transport uses REST session updates")
+	}
+	response, err := legacy.UpdateSession(ctx, data)
 	if err != nil {
 		return nil, err
 	}
@@ -393,7 +400,7 @@ func (s *VoiceAgentSession) Update(ctx context.Context, update VoiceSessionUpdat
 			handlers = append(handlers, h)
 		}
 	}
-	t.AddFunctionHandlers(handlers)
+	legacy.AddFunctionHandlers(handlers)
 	return &event, nil
 }
 func (s *VoiceAgentSession) Close(ctx context.Context, reason string) error {

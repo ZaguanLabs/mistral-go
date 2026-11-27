@@ -8,8 +8,9 @@ import (
 )
 
 type WorkflowSignalRequest struct {
-	Name  string `json:"name"`
-	Input any    `json:"input,omitempty"`
+	CallContext map[string]any `json:"call_context,omitempty"`
+	Name        string         `json:"name"`
+	Input       any            `json:"input,omitempty"`
 }
 
 type WorkflowQueryRequest struct {
@@ -18,8 +19,9 @@ type WorkflowQueryRequest struct {
 }
 
 type WorkflowUpdateRequest struct {
-	Name  string `json:"name"`
-	Input any    `json:"input,omitempty"`
+	CallContext map[string]any `json:"call_context,omitempty"`
+	Name        string         `json:"name"`
+	Input       any            `json:"input,omitempty"`
 }
 
 type BatchWorkflowExecutionRequest struct {
@@ -77,7 +79,7 @@ func (c *MistralClient) SignalWorkflowExecution(executionID string, req *Workflo
 	if req == nil {
 		return nil, fmt.Errorf("request cannot be nil")
 	}
-	body := optionalRequestMap(map[string]any{"name": req.Name, "input": req.Input})
+	body := optionalRequestMap(map[string]any{"name": req.Name, "input": req.Input, "call_context": req.CallContext})
 	return c.requestMap(http.MethodPost, body, fmt.Sprintf("v1/workflows/executions/%s/signals", executionID))
 }
 
@@ -122,7 +124,7 @@ func (c *MistralClient) UpdateWorkflowExecution(executionID string, req *Workflo
 	if req == nil {
 		return nil, fmt.Errorf("request cannot be nil")
 	}
-	body := optionalRequestMap(map[string]any{"name": req.Name, "input": req.Input})
+	body := optionalRequestMap(map[string]any{"name": req.Name, "input": req.Input, "call_context": req.CallContext})
 	return c.requestMap(http.MethodPost, body, fmt.Sprintf("v1/workflows/executions/%s/updates", executionID))
 }
 
@@ -162,7 +164,7 @@ func (c *MistralClient) StreamWorkflowExecution(executionID string, params *Work
 	if !ok {
 		return nil, fmt.Errorf("invalid response type: %T", response)
 	}
-	return parseGenericStreamContext(c.requestContext(), body), nil
+	return workflowEventStream(c.requestContext(), body, c.workflowEncoding), nil
 }
 
 func (c *MistralClient) GetWorkflowExecutionLogs(executionID string, params *WorkflowExecutionLogsParams) (APIResponse, error) {

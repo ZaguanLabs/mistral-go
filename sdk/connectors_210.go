@@ -40,6 +40,7 @@ type ConnectionCredentialsInput struct {
 	OAuth       *OAuth2ClientCredentialsInput `json:"oauth,omitempty"`
 	Headers     map[string]string             `json:"headers,omitempty"`
 	BearerToken *string                       `json:"bearer_token,omitempty"`
+	QueryParams map[string]string             `json:"query_params,omitempty"`
 }
 
 // ConnectorAuthMethod represents bearer, none, and both OAuth2 grant variants.

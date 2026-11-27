@@ -30,14 +30,17 @@ var retryStatusCodes = map[int]bool{
 }
 
 type MistralClient struct {
-	explicitAPIKey bool
-	requestHeaders http.Header
-	retryConfig    *RetryConfig
-	ctx            context.Context
-	apiKey         string
-	endpoint       string
-	maxRetries     int
-	timeout        time.Duration
+	telemetry        *mistralTelemetry
+	workflowEncoding *workflowEncoding
+	httpClient       *http.Client
+	explicitAPIKey   bool
+	requestHeaders   http.Header
+	retryConfig      *RetryConfig
+	ctx              context.Context
+	apiKey           string
+	endpoint         string
+	maxRetries       int
+	timeout          time.Duration
 }
 
 func NewMistralClient(apiKey string, endpoint string, maxRetries int, timeout time.Duration) *MistralClient {
@@ -56,6 +59,7 @@ func NewMistralClient(apiKey string, endpoint string, maxRetries int, timeout ti
 	}
 
 	return &MistralClient{
+		telemetry:      &mistralTelemetry{},
 		apiKey:         apiKey,
 		explicitAPIKey: explicitAPIKey,
 		endpoint:       endpoint,
@@ -111,6 +115,12 @@ func (c *MistralClient) request(method string, jsonData map[string]interface{}, 
 		}
 		jsonData = body
 	}
+	if c.workflowEncoding != nil {
+		jsonData, err = c.workflowEncoding.encodeRequest(c.requestContext(), method, uri.EscapedPath(), jsonData)
+		if err != nil {
+			return nil, err
+		}
+	}
 	jsonValue, err := json.Marshal(jsonData)
 	if err != nil {
 		return nil, err
@@ -135,6 +145,15 @@ func (c *MistralClient) request(method string, jsonData map[string]interface{}, 
 	if resp.StatusCode >= 400 {
 		defer resp.Body.Close()
 		responseBytes, _ := io.ReadAll(resp.Body)
+		if resp.StatusCode == http.StatusBadRequest && (method == http.MethodPost || method == http.MethodPatch) && strings.HasPrefix(strings.TrimPrefix(uri.Path, "/"), "v1/connectors") {
+			var data struct {
+				Detail *string             `json:"detail"`
+				Code   *ConnectorErrorCode `json:"code"`
+			}
+			if json.Unmarshal(responseBytes, &data) == nil && data.Detail != nil {
+				return nil, &ConnectorErrorResponse{Detail: *data.Detail, Code: data.Code, Response: resp}
+			}
+		}
 		return nil, fmt.Errorf("(HTTP Error %d) %s", resp.StatusCode, string(responseBytes))
 	}
 
@@ -157,5 +176,19 @@ func (c *MistralClient) request(method string, jsonData map[string]interface{}, 
 		return nil, err
 	}
 
+	if c.workflowEncoding != nil {
+		err = c.workflowEncoding.decodeResponse(c.requestContext(), method, strings.TrimPrefix(uri.EscapedPath(), "/"), result)
+		if err != nil {
+			return nil, err
+		}
+	}
 	return result, nil
+}
+
+// WithHTTPClient borrows client for requests, including connector gateway calls.
+// The caller controls the transport, connection pooling, and timeouts.
+func (c *MistralClient) WithHTTPClient(client *http.Client) *MistralClient {
+	copy := *c
+	copy.httpClient = client
+	return &copy
 }

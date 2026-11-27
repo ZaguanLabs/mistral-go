@@ -1,5 +1,14 @@
 # Changelog
 
+## 3.9.0 - 2026-11-27
+
+- Port the Python SDK 3.9.0 service and model changes for triggers, webhooks, billing, subscriptions, scorers, bulk dataset records, workflow tags, deployment archives and audio sessions.
+- Add realtime speech synthesis, multimodal embeddings, conversation input variants and updated moderation, context and response schemas.
+- Add workflow payload encoding, encrypted schedule signatures, key rotation, compression, blob offloading and a configurable GCS client.
+- Add opt-in OpenTelemetry with dedicated, global and application providers and rotated service-account authentication.
+- Keep batch result files by default, update retry behavior and support application-managed HTTP clients for connectors.
+- Require Go 1.26 to use the patched HTTP and telemetry dependencies.
+
 ## 3.4.0 - 2026-10-25
 
 - Add audio agents/sessions, Responses and input-token counting, and managed-index summary APIs.

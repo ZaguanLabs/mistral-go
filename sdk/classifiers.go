@@ -1,8 +1,10 @@
 package sdk
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
+	"sort"
 )
 
 // ClassificationInput represents input for classification/moderation
@@ -40,7 +42,9 @@ type ModerationCategory struct {
 
 // ModerationResult represents the moderation result for a single input
 type ModerationResult struct {
-	Categories []ModerationCategory `json:"categories"`
+	CategoryScores map[string]float64   `json:"category_scores,omitempty"`
+	Thresholds     map[string]bool      `json:"-"`
+	Categories     []ModerationCategory `json:"categories"`
 }
 
 // ModerationResponse represents the response from content moderation
@@ -58,28 +62,35 @@ type ModerationResponse struct {
 //
 // Returns moderation results with category scores
 func (c *MistralClient) Moderate(model string, inputs []ClassificationInput) (*ModerationResponse, error) {
-	reqMap := map[string]interface{}{
-		"model":  model,
-		"inputs": inputs,
-	}
+	return c.ModerateWithParams(ModerationRequest{Model: model, Inputs: inputs})
+}
 
-	response, err := c.request(http.MethodPost, reqMap, "v1/moderations", false, nil)
-	if err != nil {
-		return nil, err
+func (r *ModerationResult) UnmarshalJSON(data []byte) error {
+	var wire struct {
+		Categories     json.RawMessage    `json:"categories"`
+		CategoryScores map[string]float64 `json:"category_scores"`
 	}
-
-	respData, ok := response.(map[string]interface{})
-	if !ok {
-		return nil, fmt.Errorf("invalid response type: %T", response)
+	if err := json.Unmarshal(data, &wire); err != nil {
+		return err
 	}
-
-	var moderationResponse ModerationResponse
-	err = mapToStruct(respData, &moderationResponse)
-	if err != nil {
-		return nil, err
+	result := ModerationResult{CategoryScores: wire.CategoryScores}
+	if len(wire.Categories) > 0 && wire.Categories[0] == '[' {
+		if err := json.Unmarshal(wire.Categories, &result.Categories); err != nil {
+			return err
+		}
+	} else {
+		if len(wire.Categories) > 0 {
+			if err := json.Unmarshal(wire.Categories, &result.Thresholds); err != nil {
+				return err
+			}
+		}
+		for k, v := range result.CategoryScores {
+			result.Categories = append(result.Categories, ModerationCategory{CategoryName: k, Score: v})
+		}
+		sort.Slice(result.Categories, func(i, j int) bool { return result.Categories[i].CategoryName < result.Categories[j].CategoryName })
 	}
-
-	return &moderationResponse, nil
+	*r = result
+	return nil
 }
 
 // ModerateChat performs chat moderation.

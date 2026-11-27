@@ -380,11 +380,12 @@ type AudioAgentSessionListPage struct {
 	NextPageToken *string                    `json:"next_page_token,omitempty"`
 }
 type AudioAgentSessionSummary struct {
-	ID            string     `json:"id"`
-	AgentID       string     `json:"agent_id"`
-	StartedAt     *time.Time `json:"started_at,omitempty"`
-	Duration      *int       `json:"duration,omitempty"`
-	PhoneNumberID *string    `json:"phone_number_id,omitempty"`
+	ID             string                `json:"id"`
+	AgentID        string                `json:"agent_id"`
+	StartedAt      *time.Time            `json:"started_at,omitempty"`
+	Duration       *int                  `json:"duration,omitempty"`
+	PhoneNumberID  *string               `json:"phone_number_id,omitempty"`
+	BridgeMetadata *AmazonConnectContact `json:"bridge_metadata,omitempty"`
 }
 type AudioAgentUpdateRequest struct {
 	Name          string                         `json:"name"`
@@ -590,6 +591,7 @@ type AudioSessionResponse struct {
 	CreatedAt       time.Time                  `json:"created_at"`
 	PhoneCall       *AudioSessionPhoneCall     `json:"phone_call,omitempty"`
 	Transcripts     []Transcript               `json:"transcripts,omitempty"`
+	BridgeMetadata  *AmazonConnectContact      `json:"bridge_metadata,omitempty"`
 }
 
 func (v AudioSessionResponse) MarshalJSON() ([]byte, error) {
@@ -2122,9 +2124,13 @@ func (v *CreateResponseRequest) UnmarshalJSON(data []byte) error {
 }
 
 type ResponsesError struct {
-	AdditionalProperties map[string]any `json:"-"`
-	Code                 Code           `json:"code"`
-	Message              string         `json:"message"`
+	AdditionalProperties map[string]any         `json:"-"`
+	Code                 Code                   `json:"code"`
+	Message              string                 `json:"message"`
+	Reason               ResponsesErrorReason   `json:"reason"`
+	Misalignment         *ResponsesMisalignment `json:"misalignment,omitempty"`
+	Param                *string                `json:"param,omitempty"`
+	Type                 *string                `json:"type,omitempty"`
 }
 
 func (v ResponsesError) MarshalJSON() ([]byte, error) {
@@ -2139,7 +2145,7 @@ func (v ResponsesError) MarshalJSON() ([]byte, error) {
 	}
 	for key, value := range v.AdditionalProperties {
 		switch key {
-		case "code", "message":
+		case "misalignment", "type", "param", "reason", "code", "message":
 			continue
 		}
 		data, err := json.Marshal(value)
@@ -2160,6 +2166,10 @@ func (v *ResponsesError) UnmarshalJSON(data []byte) error {
 	if err := json.Unmarshal(data, &fields); err != nil {
 		return err
 	}
+	delete(fields, "misalignment")
+	delete(fields, "type")
+	delete(fields, "param")
+	delete(fields, "reason")
 	delete(fields, "code")
 	delete(fields, "message")
 	*v = ResponsesError(decoded)
@@ -2761,8 +2771,8 @@ type GetSummaryResponseSummary struct {
 	Translated bool          `json:"translated"`
 }
 type HangUpTool struct {
-	Type   string            `json:"type,omitempty"`
-	Filler *StaticToolFiller `json:"filler,omitempty"`
+	Type   string `json:"type,omitempty"`
+	Filler any    `json:"filler,omitempty"`
 }
 
 func (v HangUpTool) MarshalJSON() ([]byte, error) {
@@ -3917,6 +3927,7 @@ type ResponsesCustomTool struct {
 	DeferLoading         *bool                              `json:"defer_loading,omitempty"`
 	Description          *string                            `json:"description,omitempty"`
 	Format               *ResponsesCustomToolFormat         `json:"format,omitempty"`
+	Async                *bool                              `json:"async,omitempty"`
 }
 
 func (v ResponsesCustomTool) MarshalJSON() ([]byte, error) {
@@ -3941,7 +3952,7 @@ func (v ResponsesCustomTool) MarshalJSON() ([]byte, error) {
 	}
 	for key, value := range v.AdditionalProperties {
 		switch key {
-		case "name", "type", "allowed_callers", "defer_loading", "description", "format":
+		case "async", "name", "type", "allowed_callers", "defer_loading", "description", "format":
 			continue
 		}
 		data, err := json.Marshal(value)
@@ -3962,6 +3973,7 @@ func (v *ResponsesCustomTool) UnmarshalJSON(data []byte) error {
 	if err := json.Unmarshal(data, &fields); err != nil {
 		return err
 	}
+	delete(fields, "async")
 	delete(fields, "name")
 	delete(fields, "type")
 	delete(fields, "allowed_callers")
@@ -4237,7 +4249,7 @@ type ResponsesFunctionCallArgumentsDoneEvent struct {
 	AdditionalProperties map[string]any `json:"-"`
 	Arguments            string         `json:"arguments"`
 	ItemID               string         `json:"item_id"`
-	Name                 string         `json:"name"`
+	Name                 string         `json:"name,omitempty"`
 	OutputIndex          int            `json:"output_index"`
 	SequenceNumber       int            `json:"sequence_number"`
 	Type                 string         `json:"type,omitempty"`
@@ -4307,6 +4319,8 @@ type ResponsesFunctionCallOutput struct {
 	ID                   *string                            `json:"id,omitempty"`
 	Caller               *ResponsesFunctionCallOutputCaller `json:"caller,omitempty"`
 	Status               *ResponsesFunctionCallOutputStatus `json:"status,omitempty"`
+	Name                 *string                            `json:"name,omitempty"`
+	Namespace            *string                            `json:"namespace,omitempty"`
 }
 
 func (v ResponsesFunctionCallOutput) MarshalJSON() ([]byte, error) {
@@ -4324,7 +4338,7 @@ func (v ResponsesFunctionCallOutput) MarshalJSON() ([]byte, error) {
 	}
 	for key, value := range v.AdditionalProperties {
 		switch key {
-		case "call_id", "output", "type", "id", "caller", "status":
+		case "name", "namespace", "call_id", "output", "type", "id", "caller", "status":
 			continue
 		}
 		data, err := json.Marshal(value)
@@ -4345,6 +4359,8 @@ func (v *ResponsesFunctionCallOutput) UnmarshalJSON(data []byte) error {
 	if err := json.Unmarshal(data, &fields); err != nil {
 		return err
 	}
+	delete(fields, "name")
+	delete(fields, "namespace")
 	delete(fields, "call_id")
 	delete(fields, "output")
 	delete(fields, "type")
@@ -4489,6 +4505,7 @@ type ResponsesFunctionTool struct {
 	DeferLoading         *bool                                `json:"defer_loading,omitempty"`
 	Description          *string                              `json:"description,omitempty"`
 	OutputSchema         map[string]any                       `json:"output_schema,omitempty"`
+	Async                *bool                                `json:"async,omitempty"`
 }
 
 func (v ResponsesFunctionTool) MarshalJSON() ([]byte, error) {
@@ -4527,7 +4544,7 @@ func (v ResponsesFunctionTool) MarshalJSON() ([]byte, error) {
 	}
 	for key, value := range v.AdditionalProperties {
 		switch key {
-		case "name", "parameters", "strict", "type", "allowed_callers", "defer_loading", "description", "output_schema":
+		case "async", "name", "parameters", "strict", "type", "allowed_callers", "defer_loading", "description", "output_schema":
 			continue
 		}
 		data, err := json.Marshal(value)
@@ -4548,6 +4565,7 @@ func (v *ResponsesFunctionTool) UnmarshalJSON(data []byte) error {
 	if err := json.Unmarshal(data, &fields); err != nil {
 		return err
 	}
+	delete(fields, "async")
 	delete(fields, "name")
 	delete(fields, "parameters")
 	delete(fields, "strict")
@@ -4694,6 +4712,7 @@ type ResponsesFunctionToolCall struct {
 	Caller               *ResponsesFunctionToolCallCaller `json:"caller,omitempty"`
 	Namespace            *string                          `json:"namespace,omitempty"`
 	Status               *ResponsesFunctionToolCallStatus `json:"status,omitempty"`
+	Async                *bool                            `json:"async,omitempty"`
 }
 
 func (v ResponsesFunctionToolCall) MarshalJSON() ([]byte, error) {
@@ -4711,7 +4730,7 @@ func (v ResponsesFunctionToolCall) MarshalJSON() ([]byte, error) {
 	}
 	for key, value := range v.AdditionalProperties {
 		switch key {
-		case "arguments", "call_id", "name", "type", "id", "caller", "namespace", "status":
+		case "async", "arguments", "call_id", "name", "type", "id", "caller", "namespace", "status":
 			continue
 		}
 		data, err := json.Marshal(value)
@@ -4732,6 +4751,7 @@ func (v *ResponsesFunctionToolCall) UnmarshalJSON(data []byte) error {
 	if err := json.Unmarshal(data, &fields); err != nil {
 		return err
 	}
+	delete(fields, "async")
 	delete(fields, "arguments")
 	delete(fields, "call_id")
 	delete(fields, "name")
@@ -4875,8 +4895,9 @@ func (v *ResponsesInProgressEvent) UnmarshalJSON(data []byte) error {
 }
 
 type ResponsesInputFileResponsesPromptCacheBreakpoint struct {
-	AdditionalProperties map[string]any `json:"-"`
-	Mode                 string         `json:"mode,omitempty"`
+	AdditionalProperties map[string]any         `json:"-"`
+	Mode                 string                 `json:"mode,omitempty"`
+	Ttl                  *ResponsesInputFileTTL `json:"ttl,omitempty"`
 }
 
 func (v ResponsesInputFileResponsesPromptCacheBreakpoint) MarshalJSON() ([]byte, error) {
@@ -4894,7 +4915,7 @@ func (v ResponsesInputFileResponsesPromptCacheBreakpoint) MarshalJSON() ([]byte,
 	}
 	for key, value := range v.AdditionalProperties {
 		switch key {
-		case "mode":
+		case "ttl", "mode":
 			continue
 		}
 		data, err := json.Marshal(value)
@@ -4915,6 +4936,7 @@ func (v *ResponsesInputFileResponsesPromptCacheBreakpoint) UnmarshalJSON(data []
 	if err := json.Unmarshal(data, &fields); err != nil {
 		return err
 	}
+	delete(fields, "ttl")
 	delete(fields, "mode")
 	*v = ResponsesInputFileResponsesPromptCacheBreakpoint(decoded)
 	if len(fields) > 0 {
@@ -4999,8 +5021,9 @@ func (v *ResponsesInputFile) UnmarshalJSON(data []byte) error {
 }
 
 type ResponsesInputFileContentResponsesPromptCacheBreakpoint struct {
-	AdditionalProperties map[string]any `json:"-"`
-	Mode                 string         `json:"mode,omitempty"`
+	AdditionalProperties map[string]any                `json:"-"`
+	Mode                 string                        `json:"mode,omitempty"`
+	Ttl                  *ResponsesInputFileContentTTL `json:"ttl,omitempty"`
 }
 
 func (v ResponsesInputFileContentResponsesPromptCacheBreakpoint) MarshalJSON() ([]byte, error) {
@@ -5018,7 +5041,7 @@ func (v ResponsesInputFileContentResponsesPromptCacheBreakpoint) MarshalJSON() (
 	}
 	for key, value := range v.AdditionalProperties {
 		switch key {
-		case "mode":
+		case "ttl", "mode":
 			continue
 		}
 		data, err := json.Marshal(value)
@@ -5039,6 +5062,7 @@ func (v *ResponsesInputFileContentResponsesPromptCacheBreakpoint) UnmarshalJSON(
 	if err := json.Unmarshal(data, &fields); err != nil {
 		return err
 	}
+	delete(fields, "ttl")
 	delete(fields, "mode")
 	*v = ResponsesInputFileContentResponsesPromptCacheBreakpoint(decoded)
 	if len(fields) > 0 {
@@ -5123,8 +5147,9 @@ func (v *ResponsesInputFileContent) UnmarshalJSON(data []byte) error {
 }
 
 type ResponsesInputImageResponsesPromptCacheBreakpoint struct {
-	AdditionalProperties map[string]any `json:"-"`
-	Mode                 string         `json:"mode,omitempty"`
+	AdditionalProperties map[string]any          `json:"-"`
+	Mode                 string                  `json:"mode,omitempty"`
+	Ttl                  *ResponsesInputImageTTL `json:"ttl,omitempty"`
 }
 
 func (v ResponsesInputImageResponsesPromptCacheBreakpoint) MarshalJSON() ([]byte, error) {
@@ -5142,7 +5167,7 @@ func (v ResponsesInputImageResponsesPromptCacheBreakpoint) MarshalJSON() ([]byte
 	}
 	for key, value := range v.AdditionalProperties {
 		switch key {
-		case "mode":
+		case "ttl", "mode":
 			continue
 		}
 		data, err := json.Marshal(value)
@@ -5163,6 +5188,7 @@ func (v *ResponsesInputImageResponsesPromptCacheBreakpoint) UnmarshalJSON(data [
 	if err := json.Unmarshal(data, &fields); err != nil {
 		return err
 	}
+	delete(fields, "ttl")
 	delete(fields, "mode")
 	*v = ResponsesInputImageResponsesPromptCacheBreakpoint(decoded)
 	if len(fields) > 0 {
@@ -5243,8 +5269,9 @@ func (v *ResponsesInputImage) UnmarshalJSON(data []byte) error {
 }
 
 type ResponsesInputImageContentResponsesPromptCacheBreakpoint struct {
-	AdditionalProperties map[string]any `json:"-"`
-	Mode                 string         `json:"mode,omitempty"`
+	AdditionalProperties map[string]any                 `json:"-"`
+	Mode                 string                         `json:"mode,omitempty"`
+	Ttl                  *ResponsesInputImageContentTTL `json:"ttl,omitempty"`
 }
 
 func (v ResponsesInputImageContentResponsesPromptCacheBreakpoint) MarshalJSON() ([]byte, error) {
@@ -5262,7 +5289,7 @@ func (v ResponsesInputImageContentResponsesPromptCacheBreakpoint) MarshalJSON() 
 	}
 	for key, value := range v.AdditionalProperties {
 		switch key {
-		case "mode":
+		case "ttl", "mode":
 			continue
 		}
 		data, err := json.Marshal(value)
@@ -5283,6 +5310,7 @@ func (v *ResponsesInputImageContentResponsesPromptCacheBreakpoint) UnmarshalJSON
 	if err := json.Unmarshal(data, &fields); err != nil {
 		return err
 	}
+	delete(fields, "ttl")
 	delete(fields, "mode")
 	*v = ResponsesInputImageContentResponsesPromptCacheBreakpoint(decoded)
 	if len(fields) > 0 {
@@ -5363,8 +5391,9 @@ func (v *ResponsesInputImageContent) UnmarshalJSON(data []byte) error {
 }
 
 type ResponsesInputTextResponsesPromptCacheBreakpoint struct {
-	AdditionalProperties map[string]any `json:"-"`
-	Mode                 string         `json:"mode,omitempty"`
+	AdditionalProperties map[string]any         `json:"-"`
+	Mode                 string                 `json:"mode,omitempty"`
+	Ttl                  *ResponsesInputTextTTL `json:"ttl,omitempty"`
 }
 
 func (v ResponsesInputTextResponsesPromptCacheBreakpoint) MarshalJSON() ([]byte, error) {
@@ -5382,7 +5411,7 @@ func (v ResponsesInputTextResponsesPromptCacheBreakpoint) MarshalJSON() ([]byte,
 	}
 	for key, value := range v.AdditionalProperties {
 		switch key {
-		case "mode":
+		case "ttl", "mode":
 			continue
 		}
 		data, err := json.Marshal(value)
@@ -5403,6 +5432,7 @@ func (v *ResponsesInputTextResponsesPromptCacheBreakpoint) UnmarshalJSON(data []
 	if err := json.Unmarshal(data, &fields); err != nil {
 		return err
 	}
+	delete(fields, "ttl")
 	delete(fields, "mode")
 	*v = ResponsesInputTextResponsesPromptCacheBreakpoint(decoded)
 	if len(fields) > 0 {
@@ -5479,8 +5509,9 @@ func (v *ResponsesInputText) UnmarshalJSON(data []byte) error {
 }
 
 type ResponsesInputTextContentResponsesPromptCacheBreakpoint struct {
-	AdditionalProperties map[string]any `json:"-"`
-	Mode                 string         `json:"mode,omitempty"`
+	AdditionalProperties map[string]any                `json:"-"`
+	Mode                 string                        `json:"mode,omitempty"`
+	Ttl                  *ResponsesInputTextContentTTL `json:"ttl,omitempty"`
 }
 
 func (v ResponsesInputTextContentResponsesPromptCacheBreakpoint) MarshalJSON() ([]byte, error) {
@@ -5498,7 +5529,7 @@ func (v ResponsesInputTextContentResponsesPromptCacheBreakpoint) MarshalJSON() (
 	}
 	for key, value := range v.AdditionalProperties {
 		switch key {
-		case "mode":
+		case "ttl", "mode":
 			continue
 		}
 		data, err := json.Marshal(value)
@@ -5519,6 +5550,7 @@ func (v *ResponsesInputTextContentResponsesPromptCacheBreakpoint) UnmarshalJSON(
 	if err := json.Unmarshal(data, &fields); err != nil {
 		return err
 	}
+	delete(fields, "ttl")
 	delete(fields, "mode")
 	*v = ResponsesInputTextContentResponsesPromptCacheBreakpoint(decoded)
 	if len(fields) > 0 {
@@ -7030,6 +7062,7 @@ type ResponsesToolFunction struct {
 	OutputSchema         map[string]any                       `json:"output_schema,omitempty"`
 	Parameters           any                                  `json:"parameters,omitempty"`
 	Strict               *bool                                `json:"strict,omitempty"`
+	Async                *bool                                `json:"async,omitempty"`
 }
 
 func (v ResponsesToolFunction) MarshalJSON() ([]byte, error) {
@@ -7061,7 +7094,7 @@ func (v ResponsesToolFunction) MarshalJSON() ([]byte, error) {
 	}
 	for key, value := range v.AdditionalProperties {
 		switch key {
-		case "name", "type", "allowed_callers", "defer_loading", "description", "output_schema", "parameters", "strict":
+		case "async", "name", "type", "allowed_callers", "defer_loading", "description", "output_schema", "parameters", "strict":
 			continue
 		}
 		data, err := json.Marshal(value)
@@ -7082,6 +7115,7 @@ func (v *ResponsesToolFunction) UnmarshalJSON(data []byte) error {
 	if err := json.Unmarshal(data, &fields); err != nil {
 		return err
 	}
+	delete(fields, "async")
 	delete(fields, "name")
 	delete(fields, "type")
 	delete(fields, "allowed_callers")
@@ -7344,9 +7378,9 @@ type ToolsCapability struct {
 	ListChanged *bool `json:"listChanged,omitempty"`
 }
 type TransferCallTool struct {
-	Destinations []TransferTarget  `json:"destinations"`
-	Type         string            `json:"type,omitempty"`
-	Filler       *StaticToolFiller `json:"filler,omitempty"`
+	Destinations []TransferTarget `json:"destinations"`
+	Type         string           `json:"type,omitempty"`
+	Filler       any              `json:"filler,omitempty"`
 }
 
 func (v TransferCallTool) MarshalJSON() ([]byte, error) {
@@ -7488,7 +7522,7 @@ type VoiceAgentCustomConnector struct {
 	Type              string                                  `json:"type,omitempty"`
 	Authorization     *VoiceAgentCustomConnectorAuthorization `json:"authorization,omitempty"`
 	ToolConfiguration any                                     `json:"tool_configuration,omitempty"`
-	Filler            *StaticToolFiller                       `json:"filler,omitempty"`
+	Filler            any                                     `json:"filler,omitempty"`
 }
 
 func (v VoiceAgentCustomConnector) MarshalJSON() ([]byte, error) {
@@ -7500,10 +7534,10 @@ func (v VoiceAgentCustomConnector) MarshalJSON() ([]byte, error) {
 }
 
 type VoiceAgentDocumentLibraryTool struct {
-	LibraryIds        []string          `json:"library_ids"`
-	ToolConfiguration any               `json:"tool_configuration,omitempty"`
-	Type              string            `json:"type,omitempty"`
-	Filler            *StaticToolFiller `json:"filler,omitempty"`
+	LibraryIds        []string `json:"library_ids"`
+	ToolConfiguration any      `json:"tool_configuration,omitempty"`
+	Type              string   `json:"type,omitempty"`
+	Filler            any      `json:"filler,omitempty"`
 }
 
 func (v VoiceAgentDocumentLibraryTool) MarshalJSON() ([]byte, error) {
@@ -7550,7 +7584,7 @@ func (v VoiceAgentErrorEvent) MarshalJSON() ([]byte, error) {
 type VoiceAgentFunctionTool struct {
 	Function  Function                    `json:"function"`
 	Type      *VoiceAgentFunctionToolType `json:"type,omitempty"`
-	Filler    *StaticToolFiller           `json:"filler,omitempty"`
+	Filler    any                         `json:"filler,omitempty"`
 	TimeoutMs *int                        `json:"timeout_ms,omitempty"`
 }
 
@@ -7564,10 +7598,10 @@ func (v VoiceAgentFunctionTool) MarshalJSON() ([]byte, error) {
 }
 
 type VoiceAgentFunctionToolRequest struct {
-	Function  FunctionRequest   `json:"function"`
-	Type      string            `json:"type,omitempty"`
-	Filler    *StaticToolFiller `json:"filler,omitempty"`
-	TimeoutMs *int              `json:"timeout_ms,omitempty"`
+	Function  FunctionRequest `json:"function"`
+	Type      string          `json:"type,omitempty"`
+	Filler    any             `json:"filler,omitempty"`
+	TimeoutMs *int            `json:"timeout_ms,omitempty"`
 }
 
 func (v VoiceAgentFunctionToolRequest) MarshalJSON() ([]byte, error) {
@@ -7676,9 +7710,9 @@ func (v VoiceAgentTranscriptEvent) MarshalJSON() ([]byte, error) {
 }
 
 type VoiceAgentWebSearchTool struct {
-	ToolConfiguration any               `json:"tool_configuration,omitempty"`
-	Type              string            `json:"type,omitempty"`
-	Filler            *StaticToolFiller `json:"filler,omitempty"`
+	ToolConfiguration any    `json:"tool_configuration,omitempty"`
+	Type              string `json:"type,omitempty"`
+	Filler            any    `json:"filler,omitempty"`
 }
 
 func (v VoiceAgentWebSearchTool) MarshalJSON() ([]byte, error) {

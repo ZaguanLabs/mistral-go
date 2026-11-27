@@ -335,6 +335,8 @@ type BatchCreateOptions struct {
 	TimeoutHours int
 }
 type BatchRunOptions struct {
+	// CleanupResultFiles deletes output and error files after successful materialization.
+	CleanupResultFiles bool
 	BatchCreateOptions
 	PollInterval        time.Duration
 	MaxFailedJobRetries int
@@ -511,8 +513,15 @@ func (b *BatchClient[T]) Wait(ctx context.Context, id string, pollInterval time.
 		ctx, cancel = context.WithTimeout(ctx, 24*time.Hour)
 		defer cancel()
 	}
+	poller := *b
+	if b.Client != nil && b.Client.retryConfig == nil {
+		client := *b.Client
+		client.maxRetries = 1 << 30
+		client.retryConfig = &RetryConfig{Strategy: "backoff", RetryConnectionErrors: true, StatusCodesOverride: []string{"429", "5XX"}, Backoff: BackoffStrategy{InitialInterval: time.Second, MaxInterval: time.Minute, MaxElapsedTime: 15 * time.Minute, Exponent: 2}}
+		poller.Client = &client
+	}
 	for {
-		h, err := b.Get(ctx, id)
+		h, err := poller.Get(ctx, id)
 		if err != nil {
 			return nil, err
 		}
@@ -594,7 +603,7 @@ func (b *BatchClient[T]) StreamResults(ctx context.Context, h *BatchJobHandle, p
 	return nil
 }
 
-// Run owns only files it uploads and the jobs' result files. It materializes
+// Run keeps job result files by default and removes input files it uploads. It materializes
 // results before cleanup, and cancels an in-flight job if the caller aborts.
 // MaxFailedJobRetries resubmits every request and can incur additional charges.
 func (b *BatchClient[T]) Run(ctx context.Context, input any, opts *BatchRunOptions) (result *BatchResult[T], err error) {
@@ -675,7 +684,7 @@ func (b *BatchClient[T]) Run(ctx context.Context, input any, opts *BatchRunOptio
 		}
 		handle = settled
 		for _, id := range []*string{handle.Job.OutputFile, handle.Job.ErrorFile} {
-			if id != nil && *id != "" {
+			if opts.CleanupResultFiles && id != nil && *id != "" {
 				files = append(files, *id)
 			}
 		}

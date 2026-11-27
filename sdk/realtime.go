@@ -85,43 +85,14 @@ type RealtimeConnection struct {
 }
 
 func (c *MistralClient) RealtimeTranscriptionConnect(ctx context.Context, model string, params *RealtimeTranscriptionConnectParams) (*RealtimeConnection, error) {
-	wsURL, err := c.realtimeTranscriptionURL(model)
+	var headers http.Header
+	if params != nil {
+		headers = params.Headers
+	}
+	conn, err := c.dialRealtime(ctx, model, realtimeTranscriptionPath, headers)
 	if err != nil {
 		return nil, err
 	}
-
-	headers := http.Header{}
-	headers.Set("Authorization", "Bearer "+c.apiKey)
-	headers.Set("User-Agent", UserAgent)
-	callerAuth := false
-	if params != nil {
-		for key := range params.Headers {
-			if strings.EqualFold(key, "Authorization") {
-				callerAuth = true
-			}
-		}
-	}
-	if !callerAuth {
-		if err := c.authorizeRequest(&http.Request{Header: headers}); err != nil {
-			return nil, err
-		}
-	}
-	if params != nil {
-		for key, values := range params.Headers {
-			headers.Del(key)
-			for _, value := range values {
-				headers.Add(key, value)
-			}
-		}
-	}
-
-	conn, _, err := websocket.Dial(ctx, wsURL, &websocket.DialOptions{
-		HTTPHeader: headers,
-	})
-	if err != nil {
-		return nil, fmt.Errorf("failed to connect realtime transcription websocket: %w", err)
-	}
-
 	session, initial, err := recvRealtimeHandshake(ctx, conn)
 	if err != nil {
 		_ = conn.Close(websocket.StatusInternalError, "handshake failed")
@@ -335,7 +306,44 @@ func (r *RealtimeConnection) applySessionUpdate(event RealtimeTranscriptionEvent
 	r.mu.Unlock()
 }
 
-func (c *MistralClient) realtimeTranscriptionURL(model string) (string, error) {
+func (c *MistralClient) dialRealtime(ctx context.Context, model, path string, extra http.Header) (*websocket.Conn, error) {
+	wsURL, err := c.realtimeURL(model, path)
+	if err != nil {
+		return nil, err
+	}
+
+	headers := http.Header{}
+	headers.Set("Authorization", "Bearer "+c.apiKey)
+	headers.Set("User-Agent", UserAgent)
+	callerAuth := false
+	for key := range extra {
+		if strings.EqualFold(key, "Authorization") {
+			callerAuth = true
+		}
+	}
+	if !callerAuth {
+		if err := c.authorizeRequest(&http.Request{Header: headers}); err != nil {
+			return nil, err
+		}
+	}
+	for key, values := range extra {
+		headers.Del(key)
+		for _, value := range values {
+			headers.Add(key, value)
+		}
+	}
+
+	conn, _, err := websocket.Dial(ctx, wsURL, &websocket.DialOptions{
+		HTTPHeader: headers,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to connect realtime websocket: %w", err)
+	}
+
+	return conn, nil
+}
+
+func (c *MistralClient) realtimeURL(model, path string) (string, error) {
 	base, err := url.Parse(c.endpoint)
 	if err != nil {
 		return "", err
@@ -349,7 +357,7 @@ func (c *MistralClient) realtimeTranscriptionURL(model string) (string, error) {
 	default:
 		return "", fmt.Errorf("unsupported endpoint scheme %q", base.Scheme)
 	}
-	base.Path = strings.TrimRight(base.Path, "/") + "/" + realtimeTranscriptionPath
+	base.Path = strings.TrimRight(base.Path, "/") + "/" + path
 	query := base.Query()
 	query.Set("model", model)
 	base.RawQuery = query.Encode()

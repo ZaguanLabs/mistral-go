@@ -1,7 +1,9 @@
 package sdk
 
 import (
+	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
 	"time"
@@ -111,12 +113,14 @@ func requestTyped[T any](c *MistralClient, method string, value any, path string
 			return nil, err
 		}
 	}
-	response, err := c.requestMap(method, body, path)
+	response, err := c.request(method, body, path, true, nil)
 	if err != nil {
 		return nil, err
 	}
 	var result T
-	if err := mapToStruct(map[string]interface{}(response), &result); err != nil {
+	reader := response.(io.ReadCloser)
+	defer reader.Close()
+	if err := json.NewDecoder(reader).Decode(&result); err != nil && err != io.EOF {
 		return nil, err
 	}
 	return &result, nil

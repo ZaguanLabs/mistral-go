@@ -80,7 +80,7 @@ func TestPython300Endpoints(t *testing.T) {
 			return e
 		}},
 		{name: "unharden", method: "POST", path: "/v1/workflows/deployments/id/unharden", query: map[string][]string{"workspace_id": {"ws"}}, response: "204", call: func(c *MistralClient) error { return c.UnhardenWorkflowDeployment("id", StringPtr("ws")) }},
-		{name: "deployments", method: "GET", path: "/v1/workflows/deployments", query: map[string][]string{"owner": {"me"}}, call: func(c *MistralClient) error {
+		{name: "deployments", method: "GET", path: "/v1/workflows/deployments", query: map[string][]string{"owner": {"me"}, "limit": {"100"}}, call: func(c *MistralClient) error {
 			_, e := c.ListWorkflowDeploymentsWithParams(&ListWorkflowDeploymentsParams{Owner: StringPtr("me")})
 			return e
 		}},

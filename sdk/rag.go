@@ -8,9 +8,10 @@ import (
 )
 
 type RegisterIngestionPipelineConfigurationRequest struct {
-	Name                string                            `json:"name"`
-	PipelineComposition any                               `json:"pipeline_composition"`
-	TargetIndexes       []IngestionPipelineTargetIndexRef `json:"target_indexes,omitempty"`
+	Name                string `json:"name"`
+	PipelineComposition any    `json:"pipeline_composition"`
+	// Deprecated: upstream no longer accepts target indexes.
+	TargetIndexes []IngestionPipelineTargetIndexRef `json:"target_indexes,omitempty"`
 }
 
 type IngestionPipelineTargetIndexRef struct {
@@ -109,17 +110,9 @@ func (c *MistralClient) RegisterIngestionPipelineConfiguration(req *RegisterInge
 	if req == nil {
 		return nil, fmt.Errorf("request cannot be nil")
 	}
-	targetIndexes := make([]IngestionPipelineTargetIndexRef, len(req.TargetIndexes))
-	copy(targetIndexes, req.TargetIndexes)
-	for i := range targetIndexes {
-		if targetIndexes[i].Type == "" {
-			targetIndexes[i].Type = IngestionPipelineTargetIndexTypeVespa
-		}
-	}
 	body := optionalRequestMap(map[string]any{
 		"name":                 req.Name,
 		"pipeline_composition": req.PipelineComposition,
-		"target_indexes":       targetIndexes,
 	})
 	return c.requestMap(http.MethodPut, body, "v1/rag/ingestion_pipeline_configurations")
 }
@@ -135,10 +128,12 @@ func (c *MistralClient) UpdateIngestionPipelineRunInfo(id string, req *UpdateIng
 	return c.requestMap(http.MethodPut, body, fmt.Sprintf("v1/rag/ingestion_pipeline_configurations/%s/run_info", id))
 }
 
+// Deprecated: the current search-index API uses the managed-index methods.
 func (c *MistralClient) ListSearchIndexes() ([]SearchIndexResponse, error) {
 	return c.GetSearchIndexSummaries()
 }
 
+// Deprecated: the current search-index API uses the managed-index methods.
 func (c *MistralClient) GetSearchIndexSummaries() ([]SearchIndexResponse, error) {
 	response, err := c.request(http.MethodGet, nil, "v1/rag/indexes/summary", false, nil)
 	if err != nil {
@@ -155,6 +150,7 @@ func (c *MistralClient) GetSearchIndexSummaries() ([]SearchIndexResponse, error)
 	return indexes, nil
 }
 
+// Deprecated: the current search-index API uses the managed-index methods.
 func (c *MistralClient) RegisterSearchIndex(req *RegisterSearchIndexRequest) (*SearchIndexResponse, error) {
 	if req == nil {
 		return nil, fmt.Errorf("request cannot be nil")
@@ -179,10 +175,12 @@ func (c *MistralClient) RegisterSearchIndex(req *RegisterSearchIndexRequest) (*S
 	return &index, nil
 }
 
+// Deprecated: the current search-index API uses the managed-index methods.
 func (c *MistralClient) UnregisterSearchIndex(indexID string) (APIResponse, error) {
 	return c.requestMap(http.MethodDelete, nil, fmt.Sprintf("v1/rag/indexes/index/%s", indexID))
 }
 
+// Deprecated: the current search-index API uses the managed-index methods.
 func (c *MistralClient) UpdateSearchIndexMetrics(indexID string, req *UpdateSearchIndexMetricsRequest) (APIResponse, error) {
 	if req == nil {
 		return nil, fmt.Errorf("request cannot be nil")

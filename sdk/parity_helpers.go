@@ -25,6 +25,10 @@ func optionalRequestMap(values map[string]any) map[string]interface{} {
 			continue
 		}
 		switch typed := value.(type) {
+		case map[string]any:
+			if typed != nil {
+				req[key] = typed
+			}
 		case *string:
 			if typed != nil {
 				req[key] = *typed

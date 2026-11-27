@@ -138,10 +138,21 @@ func (c *MistralClient) retryDelay(attempt int, header http.Header) time.Duratio
 	}
 	return time.Duration(delay)
 }
-func (c *MistralClient) doRequest(req *http.Request) (*http.Response, error) {
+func (c *MistralClient) doRequest(req *http.Request) (result *http.Response, resultErr error) {
 	if c.ctx != nil {
 		req = req.Clone(c.ctx)
 	}
+	req, span := c.traceRequest(req)
+	defer func() {
+		if span == nil {
+			return
+		}
+		if resultErr != nil || result == nil || result.Body == nil {
+			finishRequestSpan(span, result, resultErr)
+			return
+		}
+		result.Body = &tracedResponseBody{ReadCloser: result.Body, span: span, response: result, capture: strings.Contains(result.Header.Get("Content-Type"), "application/json")}
+	}()
 	if err := c.authorizeRequest(req); err != nil {
 		if req.Body != nil {
 			req.Body.Close()
@@ -156,7 +167,10 @@ func (c *MistralClient) doRequest(req *http.Request) (*http.Response, error) {
 		attempts = 1
 	}
 	start := time.Now()
-	client := &http.Client{Timeout: c.timeout}
+	client := c.httpClient
+	if client == nil {
+		client = &http.Client{Timeout: c.timeout}
+	}
 	for attempt := 0; attempt < attempts; attempt++ {
 		if attempt > 0 && req.Body != nil {
 			if req.GetBody == nil {

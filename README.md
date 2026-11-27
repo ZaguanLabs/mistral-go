@@ -1,14 +1,11 @@
 # Mistral Go SDK
 
-**Version 3.4.0** — Python SDK 3.4.0 compatibility
+**Version 3.9.0** — Python SDK 3.9.0 compatibility
 
-[![Minimal Dependencies](https://img.shields.io/badge/dependencies-minimal-brightgreen.svg)](https://github.com/ZaguanLabs/mistral-go)
-[![Go Version](https://img.shields.io/badge/go-%3E%3D1.25-blue.svg)](https://golang.org/)
+[![Go Version](https://img.shields.io/badge/go-%3E%3D1.26-blue.svg)](https://golang.org/)
 [![Pure Go](https://img.shields.io/badge/pure-go-success.svg)](https://pkg.go.dev/std)
 
-A Go SDK for the Mistral AI API, designed to provide developers with powerful tools to integrate advanced AI capabilities into their applications. This SDK has been significantly enhanced to match the official Mistral Python SDK v3.4.0.
-
-REST uses the Go standard library. Realtime audio uses a WebSocket dependency; connector MCP sessions use the official MCP Go SDK. Go 1.25 or newer is required.
+A Go client for the Mistral AI API. Version 3.9.0 requires Go 1.26 or newer. REST calls use `net/http`. Realtime audio uses WebSockets, and connector sessions use the official MCP Go SDK.
 
 ## Features
 
@@ -32,6 +29,16 @@ REST uses the Go standard library. Realtime audio uses a WebSocket dependency; c
 - **Connectors API**: Connector management, tool calls, authentication methods, and credentials
 - **Observability API**: Campaigns, datasets, records, judges, chat completion events, logs, spans, span evaluations, and traces
 - **RAG API**: Ingestion pipeline configuration and search index summaries, details, metrics, schema summaries, and schema files
+
+## Version 3.9.0
+
+Manage webhooks, triggers, scorers, deployment archives and workflow tags. Inspect billing with a dashboard context key, insert dataset records in bulk, and query the available pipeline result fields.
+
+Use `RealtimeSpeakStream` for text-to-speech over a WebSocket. `CreateEmbeddings` accepts multimodal content and batches. Use `UpdateAudioSession` to change an existing audio session over HTTP.
+
+Workflow encoding supports AES-GCM key rotation, encrypted schedule inputs, Zstandard compression and optional payload storage. Configure it with `WithWorkflowEncoding`. To export tracing data, select a provider with `WithTelemetry` and flush an owned exporter with `ShutdownTelemetry`.
+
+Batch submission keeps result files by default. Set `CleanupResultFiles` to delete them after successful materialization. [Release notes](docs/RELEASE_NOTES_v3.9.0.md)
 
 ## Version 3.4.0
 
@@ -719,7 +726,7 @@ import "github.com/ZaguanLabs/mistral-go/v3/sdk"
 
 info := sdk.GetVersionInfo()
 fmt.Printf("SDK: %s v%s\n", info.SDKName, info.Version)
-fmt.Printf("Feature Parity: %s\n", info.FeatureParity) // "100%"
+fmt.Printf("Feature Parity: %s\n", info.FeatureParity) // "Python SDK 3.9.0"
 ```
 
 ## Contributing

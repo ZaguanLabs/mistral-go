@@ -147,8 +147,7 @@ func TestV293RequestAdditions(t *testing.T) {
 		{
 			name: "IngestionTargetIndexes", method: http.MethodPut, path: "/v1/rag/ingestion_pipeline_configurations",
 			assert: func(t *testing.T, _ *http.Request, body map[string]any) {
-				targets, ok := body["target_indexes"].([]any)
-				if !ok || len(targets) != 1 || targets[0].(map[string]any)["type"] != "vespa" {
+				if _, exists := body["target_indexes"]; exists {
 					t.Fatalf("target_indexes = %#v", body["target_indexes"])
 				}
 			},

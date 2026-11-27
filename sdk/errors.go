@@ -2,6 +2,7 @@ package sdk
 
 import (
 	"fmt"
+	"net/http"
 )
 
 // MistralError is the base error type for all Mistral errors.
@@ -53,4 +54,15 @@ func NewMistralConnectionError(message string) *MistralConnectionError {
 	return &MistralConnectionError{
 		MistralError: MistralError{Message: message},
 	}
+}
+
+// ConnectorErrorResponse carries the service's machine-readable connector failure code.
+type ConnectorErrorResponse struct {
+	Detail   string
+	Code     *ConnectorErrorCode
+	Response *http.Response
+}
+
+func (e *ConnectorErrorResponse) Error() string {
+	return fmt.Sprintf("(HTTP Error %d) %s", e.Response.StatusCode, e.Detail)
 }

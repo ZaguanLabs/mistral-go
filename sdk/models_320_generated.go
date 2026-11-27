@@ -431,28 +431,31 @@ type EvaluationRunScoreV2 struct {
 	Error     *string        `json:"error,omitempty"`
 }
 type EvaluationRunV2Response struct {
-	ID             string                          `json:"id"`
-	CreatedAt      time.Time                       `json:"created_at"`
-	UpdatedAt      time.Time                       `json:"updated_at"`
-	DeletedAt      *time.Time                      `json:"deleted_at"`
-	CreatorID      string                          `json:"creator_id"`
-	EvaluationID   string                          `json:"evaluation_id"`
-	Name           string                          `json:"name"`
-	Description    *string                         `json:"description"`
-	Tags           []string                        `json:"tags"`
-	Metadata       map[string]any                  `json:"metadata_"`
-	NumGenerations int                             `json:"num_generations"`
-	Evaluators     []EvaluatorV2                   `json:"evaluators"`
-	RunInfo        map[string]any                  `json:"run_info,omitempty"`
-	Status         *string                         `json:"status,omitempty"`
-	DatasetID      *string                         `json:"dataset_id,omitempty"`
-	RunEvaluators  []EvaluatorV2                   `json:"run_evaluators,omitempty"`
-	System         *SystemV2                       `json:"system,omitempty"`
-	Statistics     map[string]EvaluatorStatistics  `json:"statistics,omitempty"`
-	GoalResults    map[string]GoalResult           `json:"goal_results,omitempty"`
-	Passed         *bool                           `json:"passed,omitempty"`
-	RunScores      map[string]EvaluationRunScoreV2 `json:"run_scores,omitempty"`
-	Optimization   *RunOptimizationRef             `json:"optimization,omitempty"`
+	ID                string                             `json:"id"`
+	CreatedAt         time.Time                          `json:"created_at"`
+	UpdatedAt         time.Time                          `json:"updated_at"`
+	DeletedAt         *time.Time                         `json:"deleted_at"`
+	CreatorID         string                             `json:"creator_id"`
+	EvaluationID      string                             `json:"evaluation_id"`
+	Name              string                             `json:"name"`
+	Description       *string                            `json:"description"`
+	Tags              []string                           `json:"tags"`
+	Metadata          map[string]any                     `json:"metadata_"`
+	NumGenerations    int                                `json:"num_generations"`
+	Evaluators        []EvaluatorV2                      `json:"evaluators"`
+	RunInfo           map[string]any                     `json:"run_info,omitempty"`
+	Status            *string                            `json:"status,omitempty"`
+	DatasetID         *string                            `json:"dataset_id,omitempty"`
+	RunEvaluators     []EvaluatorV2                      `json:"run_evaluators,omitempty"`
+	System            *SystemV2                          `json:"system,omitempty"`
+	Statistics        map[string]EvaluatorStatistics     `json:"statistics,omitempty"`
+	GoalResults       map[string]GoalResult              `json:"goal_results,omitempty"`
+	Passed            *bool                              `json:"passed,omitempty"`
+	RunScores         map[string]EvaluationRunRunScoreV2 `json:"run_scores,omitempty"`
+	Optimization      *RunOptimizationRef                `json:"optimization,omitempty"`
+	CreatorType       *PrincipalType                     `json:"creator_type,omitempty"`
+	RecordCount       *int                               `json:"record_count,omitempty"`
+	FailedRecordCount *int                               `json:"failed_record_count,omitempty"`
 }
 
 func (v EvaluationRunV2Response) MarshalJSON() ([]byte, error) {
@@ -508,30 +511,33 @@ func (v EvaluationRunV2Response) MarshalJSON() ([]byte, error) {
 }
 
 type EvaluationRunV2WithRefsResponse struct {
-	ID             string                          `json:"id"`
-	CreatedAt      time.Time                       `json:"created_at"`
-	UpdatedAt      time.Time                       `json:"updated_at"`
-	DeletedAt      *time.Time                      `json:"deleted_at"`
-	CreatorID      string                          `json:"creator_id"`
-	EvaluationID   string                          `json:"evaluation_id"`
-	Name           string                          `json:"name"`
-	Description    *string                         `json:"description"`
-	Tags           []string                        `json:"tags"`
-	Metadata       map[string]any                  `json:"metadata_"`
-	NumGenerations int                             `json:"num_generations"`
-	Evaluators     []EvaluatorV2                   `json:"evaluators"`
-	RunInfo        map[string]any                  `json:"run_info,omitempty"`
-	Status         *string                         `json:"status,omitempty"`
-	DatasetID      *string                         `json:"dataset_id,omitempty"`
-	RunEvaluators  []EvaluatorV2                   `json:"run_evaluators,omitempty"`
-	System         *SystemV2                       `json:"system,omitempty"`
-	Statistics     map[string]EvaluatorStatistics  `json:"statistics,omitempty"`
-	GoalResults    map[string]GoalResult           `json:"goal_results,omitempty"`
-	Passed         *bool                           `json:"passed,omitempty"`
-	RunScores      map[string]EvaluationRunScoreV2 `json:"run_scores,omitempty"`
-	Optimization   *RunOptimizationRef             `json:"optimization,omitempty"`
-	Evaluation     *RunEvaluationSummary           `json:"evaluation,omitempty"`
-	Project        *RunProjectSummary              `json:"project,omitempty"`
+	ID                string                             `json:"id"`
+	CreatedAt         time.Time                          `json:"created_at"`
+	UpdatedAt         time.Time                          `json:"updated_at"`
+	DeletedAt         *time.Time                         `json:"deleted_at"`
+	CreatorID         string                             `json:"creator_id"`
+	EvaluationID      string                             `json:"evaluation_id"`
+	Name              string                             `json:"name"`
+	Description       *string                            `json:"description"`
+	Tags              []string                           `json:"tags"`
+	Metadata          map[string]any                     `json:"metadata_"`
+	NumGenerations    int                                `json:"num_generations"`
+	Evaluators        []EvaluatorV2                      `json:"evaluators"`
+	RunInfo           map[string]any                     `json:"run_info,omitempty"`
+	Status            *string                            `json:"status,omitempty"`
+	DatasetID         *string                            `json:"dataset_id,omitempty"`
+	RunEvaluators     []EvaluatorV2                      `json:"run_evaluators,omitempty"`
+	System            *SystemV2                          `json:"system,omitempty"`
+	Statistics        map[string]EvaluatorStatistics     `json:"statistics,omitempty"`
+	GoalResults       map[string]GoalResult              `json:"goal_results,omitempty"`
+	Passed            *bool                              `json:"passed,omitempty"`
+	RunScores         map[string]EvaluationRunRunScoreV2 `json:"run_scores,omitempty"`
+	Optimization      *RunOptimizationRef                `json:"optimization,omitempty"`
+	Evaluation        *RunEvaluationSummary              `json:"evaluation,omitempty"`
+	Project           *RunProjectSummary                 `json:"project,omitempty"`
+	CreatorType       *PrincipalType                     `json:"creator_type,omitempty"`
+	RecordCount       *int                               `json:"record_count,omitempty"`
+	FailedRecordCount *int                               `json:"failed_record_count,omitempty"`
 }
 
 func (v EvaluationRunV2WithRefsResponse) MarshalJSON() ([]byte, error) {
@@ -603,6 +609,7 @@ type EvaluationV2 struct {
 	Tags        []string       `json:"tags"`
 	Metadata    map[string]any `json:"metadata_"`
 	IsFavorite  *bool          `json:"is_favorite,omitempty"`
+	CreatorType *PrincipalType `json:"creator_type,omitempty"`
 }
 
 func (v EvaluationV2) MarshalJSON() ([]byte, error) {
@@ -629,21 +636,24 @@ func (v UnknownStatistic) MarshalJSON() ([]byte, error) {
 }
 
 type EvaluatorV2 struct {
-	ID            string                `json:"id"`
-	CreatedAt     time.Time             `json:"created_at"`
-	UpdatedAt     time.Time             `json:"updated_at"`
-	DeletedAt     *time.Time            `json:"deleted_at"`
-	Name          string                `json:"name"`
-	Description   *string               `json:"description"`
-	Tags          []string              `json:"tags"`
-	NumScores     int                   `json:"num_scores"`
-	Goal          *GoalSpec             `json:"goal,omitempty"`
-	AggregateGoal *GoalSpec             `json:"aggregate_goal,omitempty"`
-	Statistics    []Statistic           `json:"statistics,omitempty"`
-	Weight        *float64              `json:"weight,omitempty"`
-	Direction     *EvaluatorV2Direction `json:"direction,omitempty"`
-	MinValue      *float64              `json:"min_value,omitempty"`
-	MaxValue      *float64              `json:"max_value,omitempty"`
+	ID               string                `json:"id"`
+	CreatedAt        time.Time             `json:"created_at"`
+	UpdatedAt        time.Time             `json:"updated_at"`
+	DeletedAt        *time.Time            `json:"deleted_at"`
+	Name             string                `json:"name"`
+	Description      *string               `json:"description"`
+	Tags             []string              `json:"tags"`
+	NumScores        int                   `json:"num_scores"`
+	Goal             *GoalSpec             `json:"goal,omitempty"`
+	AggregateGoal    *GoalSpec             `json:"aggregate_goal,omitempty"`
+	Statistics       []Statistic           `json:"statistics,omitempty"`
+	Weight           *float64              `json:"weight,omitempty"`
+	Direction        *EvaluatorV2Direction `json:"direction,omitempty"`
+	MinValue         *float64              `json:"min_value,omitempty"`
+	MaxValue         *float64              `json:"max_value,omitempty"`
+	Display          []DisplaySpec         `json:"display,omitempty"`
+	Goals            []GoalSpec            `json:"goals,omitempty"`
+	MetricDirections []MetricDirectionSpec `json:"metric_directions,omitempty"`
 }
 
 func (v EvaluatorV2) MarshalJSON() ([]byte, error) {
@@ -717,8 +727,9 @@ type GetPipelineResults struct {
 	PipelineResults FeedResultGetPipelineResult `json:"pipeline_results"`
 }
 type GoalResult struct {
-	Passed  *bool            `json:"passed"`
-	Results []GoalResultItem `json:"results"`
+	Passed  *bool             `json:"passed"`
+	Results []GoalResultItem  `json:"results"`
+	Missing []MissingGoalItem `json:"missing,omitempty"`
 }
 type GoalResultItem struct {
 	Metric    string                   `json:"metric"`
@@ -983,6 +994,7 @@ type Optimization struct {
 	WorkflowRunID       *string        `json:"workflow_run_id,omitempty"`
 	ObjectiveSpec       map[string]any `json:"objective_spec,omitempty"`
 	Outcome             map[string]any `json:"outcome,omitempty"`
+	CreatorType         *PrincipalType `json:"creator_type,omitempty"`
 }
 
 func (v Optimization) MarshalJSON() ([]byte, error) {
@@ -1040,6 +1052,7 @@ type OptimizationDetail struct {
 	Outcome             map[string]any         `json:"outcome,omitempty"`
 	Evaluation          *OptimizationReference `json:"evaluation,omitempty"`
 	Project             *OptimizationReference `json:"project,omitempty"`
+	CreatorType         *PrincipalType         `json:"creator_type,omitempty"`
 }
 
 func (v OptimizationDetail) MarshalJSON() ([]byte, error) {
@@ -1369,6 +1382,8 @@ type PipelineResult struct {
 	JudgeScores       map[string]float64 `json:"judge_scores"`
 	JudgeLabels       map[string]string  `json:"judge_labels"`
 	JudgeExplanations map[string]string  `json:"judge_explanations"`
+	OperationName     string             `json:"operation_name"`
+	ToolName          string             `json:"tool_name"`
 }
 type PipelineResultsRequest struct {
 	PipelineConfigSlugs []string `json:"pipeline_config_slugs"`
@@ -1399,6 +1414,7 @@ type Project struct {
 	Description *string                    `json:"description"`
 	IsFavorite  *bool                      `json:"is_favorite,omitempty"`
 	Evaluations []ProjectEvaluationSummary `json:"evaluations,omitempty"`
+	CreatorType *PrincipalType             `json:"creator_type,omitempty"`
 }
 
 func (v Project) MarshalJSON() ([]byte, error) {
@@ -1570,9 +1586,10 @@ func (v RunStatisticsResponse) MarshalJSON() ([]byte, error) {
 }
 
 type ScalarStatisticValue struct {
-	ID    string   `json:"id"`
-	Type  *string  `json:"type,omitempty"`
-	Value *float64 `json:"value,omitempty"`
+	ID          string   `json:"id"`
+	Type        *string  `json:"type,omitempty"`
+	Value       *float64 `json:"value,omitempty"`
+	SampleCount *int     `json:"sample_count,omitempty"`
 }
 
 func (v ScalarStatisticValue) MarshalJSON() ([]byte, error) {
@@ -1634,8 +1651,9 @@ type SearchAllEvaluationRunsResponse struct {
 	Runs PaginatedResultEvaluationRunV2WithRefsResponse `json:"runs"`
 }
 type SimpleNumericStatisticSpec struct {
-	Kind SimpleNumericStatisticSpecKind `json:"kind"`
-	Goal *GoalSpec                      `json:"goal,omitempty"`
+	Kind      SimpleNumericStatisticSpecKind `json:"kind"`
+	Goal      *GoalSpec                      `json:"goal,omitempty"`
+	WeightKey *string                        `json:"weight_key,omitempty"`
 }
 type SystemFilter struct {
 	Name   *SystemNameFilterGroup  `json:"name,omitempty"`
@@ -1707,6 +1725,8 @@ type SystemV2 struct {
 	DeletedAt *time.Time        `json:"deleted_at"`
 	Name      string            `json:"name"`
 	Params    map[string]Params `json:"params"`
+	Kind      *string           `json:"kind,omitempty"`
+	Spec      map[string]any    `json:"spec,omitempty"`
 }
 type TagFilter struct {
 	Combinator *FilterCombinator `json:"combinator,omitempty"`
@@ -1786,6 +1806,7 @@ type WhoamiResponse struct {
 	Principal    Principal           `json:"principal"`
 	Organization *WhoamiOrganization `json:"organization,omitempty"`
 	Workspace    any                 `json:"workspace,omitempty"`
+	CustomerID   *string             `json:"customer_id,omitempty"`
 }
 type WhoamiServiceAccountPrincipal struct {
 	ServiceAccountID string  `json:"service_account_id"`

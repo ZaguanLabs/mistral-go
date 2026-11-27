@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"reflect"
 	"strings"
 )
 
@@ -81,7 +82,26 @@ func ParseChatCompletion[T any](response *ChatCompletionResponse) (*ParsedChatCo
 		parsed.Choices[i].ChatCompletionResponseChoice = choice
 		if choice.Message.Content != "" {
 			var value T
-			if err := json.Unmarshal([]byte(choice.Message.Content), &value); err != nil {
+			data := bytes.TrimSpace([]byte(choice.Message.Content))
+			if json.Valid(data) && data[0] != '{' {
+				var received any
+				if err := json.Unmarshal(data, &received); err != nil {
+					return nil, err
+				}
+				kind := "null"
+				switch received.(type) {
+				case []any:
+					kind = "array"
+				case float64:
+					kind = "number"
+				case bool:
+					kind = "boolean"
+				case string:
+					kind = "string"
+				}
+				return nil, fmt.Errorf("expected a JSON object for %v, got %s", reflect.TypeFor[T](), kind)
+			}
+			if err := json.Unmarshal(data, &value); err != nil {
 				return nil, err
 			}
 			parsed.Choices[i].Parsed = &value
